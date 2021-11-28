@@ -21,9 +21,9 @@ else:
 # 本地开发环境
 RUN_MODE = "DEVELOP"
 # APP本地静态资源目录
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 # 前端静态url
-BK_STATIC_URL = STATIC_URL + "dist"
+BK_STATIC_URL = STATIC_URL + "dist/"
 
 # 自定义本地环境日志级别
 # from blueapps.conf.log import set_log_level # noqa
