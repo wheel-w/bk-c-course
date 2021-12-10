@@ -33,7 +33,7 @@ from blueapps.conf.log import get_logging_config_dict
 
 # 请在这里加入你的自定义 APP
 INSTALLED_APPS += (  # noqa
-    "course"
+    "course",
     "home_application",
     "mako_application",
 )
@@ -64,9 +64,7 @@ INSTALLED_APPS += (  # noqa
 # )
 
 # 自定义中间件
-MIDDLEWARE += (
-    "blueapps.middleware.bkui.middlewares.BkuiPageMiddleware",
-)
+MIDDLEWARE += ("blueapps.middleware.bkui.middlewares.BkuiPageMiddleware",)
 
 # 添加首页搜索范围
 TEMPLATES[0]["DIRS"] += (os.path.join(BASE_DIR, "static", "dist"),)
