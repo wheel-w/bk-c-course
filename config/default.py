@@ -33,6 +33,7 @@ from blueapps.conf.log import get_logging_config_dict
 
 # 请在这里加入你的自定义 APP
 INSTALLED_APPS += (  # noqa
+    "course"
     "home_application",
     "mako_application",
 )
