@@ -1,3 +1,5 @@
-.idea/
-__pycache__/
+.gitignore
+__pycache__
+.idea
+node_modules
 local_settings.py
