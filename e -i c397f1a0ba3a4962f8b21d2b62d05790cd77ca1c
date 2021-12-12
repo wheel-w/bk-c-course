@@ -1,0 +1,104 @@
+[33mcommit ec46de443c8b8c6bd8195c5015b2caf8476c9abb[m[33m ([m[1;36mHEAD -> [m[1;32mcourse_model[m[33m)[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Fri Dec 10 21:36:37 2021 +0800
+
+    feature:course
+
+[33mcommit c397f1a0ba3a4962f8b21d2b62d05790cd77ca1c[m[33m ([m[1;31mmaster/course_model[m[33m)[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Fri Dec 10 20:54:47 2021 +0800
+
+    feature:course_model
+
+[33mcommit 49a55e4bb049da519565b1652804d638941bc792[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Fri Dec 10 11:10:38 2021 +0800
+
+    feature:course_model
+
+[33mcommit cf9ee09fd9a7b85ea5fd73cbb447017c73596a4d[m[33m ([m[1;31mxaut-saas/master[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/course_model[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Fri Dec 10 10:04:23 2021 +0800
+
+    minor:创建course app
+
+[33mcommit deef41c4e3e0572fecd48895888b8f15eedf8123[m[33m ([m[1;31mxaut-saas/first_branch[m[33m, [m[1;31mxaut-saas/F1_branch[m[33m)[m
+Merge: 6b6642e fa80b05
+Author: wheel-w <2425024187@qq.com>
+Date:   Wed Dec 8 08:48:13 2021 +0000
+
+    !9 配置小程序环境
+    Merge pull request !9 from 陈梓健/mini
+
+[33mcommit fa80b05ff8c60f474cc23e04a268589da4fade39[m
+Author: 御琴三夏浅流笙 <9950318+yuqinsanx@user.noreply.gitee.com>
+Date:   Tue Dec 7 22:47:38 2021 +0800
+
+    feature:添加小程序环境
+
+[33mcommit 6b6642e254ad4ccf820a499fee8af2cc2d1ae7c9[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Tue Dec 7 09:54:04 2021 +0000
+
+    add .pre-commit-config.yaml.
+
+[33mcommit 03a2da3ec35c8447eb7f5971692218ff8d37f00c[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Tue Dec 7 09:53:15 2021 +0000
+
+    add .flake8.
+
+[33mcommit 3616b0b31b27211d0550ad6131193652ea1b708f[m
+Author: 计元杰 <3281813461@qq.com>
+Date:   Tue Dec 7 09:30:21 2021 +0000
+
+    update templates/403.html.
+
+[33mcommit bd94881a95728065838d41c2057be7fa096a4280[m
+Author: 计元杰 <3281813461@qq.com>
+Date:   Tue Dec 7 09:29:56 2021 +0000
+
+    update templates/403.html.
+
+[33mcommit dd991df2ca0a4f7d27a9bafa0fb2eda180443fb4[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 23:11:00 2021 +0800
+
+    minor:新增termianl环境变量配置
+
+[33mcommit 272d75d604c5d974a83791087190f222760ad4d9[m[33m ([m[1;32mmaster[m[33m)[m
+Merge: a6c55ab 8568693
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 18:09:47 2021 +0800
+
+    Merge remote-tracking branch 'saas/master'
+
+[33mcommit a6c55ab6860fca718b2d511306886fdb3c80124d[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 18:09:02 2021 +0800
+
+    minor:添加wiki图片
+
+[33mcommit 85686931580b97ef94ae9f8f5c19011fa76dc1f4[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 09:32:47 2021 +0000
+
+    add default pipeline template yaml
+
+[33mcommit 48b421c92c94670e48a16dc3a40f584878f2e9cb[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Nov 28 22:40:53 2021 +0800
+
+    minor:设置数据库属性的环境变量
+
+[33mcommit 41f62fca46b4898b089d829e5d67a95108ef6b54[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Nov 28 22:32:18 2021 +0800
+
+    minor:修改静态资源路径
+
+[33mcommit 072d664cc0de0016ceba81d9516f757f45ea4bc7[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Nov 28 22:27:58 2021 +0800
+
+    init
