@@ -13,10 +13,12 @@ import preload from '@/common/preload'
 Vue.use(VueRouter)
 
 const MainEntry = () => import(/* webpackChunkName: 'entry' */'@/views')
-const Example1 = () => import(/* webpackChunkName: 'example1' */'@/views/example1')
-const Example2 = () => import(/* webpackChunkName: 'example2' */'@/views/example2')
-const Example3 = () => import(/* webpackChunkName: 'example3' */'@/views/example3')
 const NotFound = () => import(/* webpackChunkName: 'none' */'@/views/404')
+const Person = () => import('@/views/person')
+const Home = () => import('@/views/home')
+const Classmanage = () => import('@/views/class_manage')
+const Myclass = () => import('@/views/my_class')
+const Welcome = () => import('@/views/welcome')
 
 const routes = [
     {
@@ -26,20 +28,30 @@ const routes = [
         alias: '',
         children: [
             {
-                path: 'example1',
+                path: 'welcome',
                 alias: '',
-                name: 'example1',
-                component: Example1
+                name: 'welcome',
+                component: Welcome
             },
             {
-                path: 'example2',
-                name: 'example2',
-                component: Example2
+                path: 'person',
+                name: 'person',
+                component: Person
             },
             {
-                path: 'example3',
-                name: 'example3',
-                component: Example3
+                path: 'home',
+                name: 'home',
+                component: Home
+            },
+            {
+                path: 'class_manage',
+                name: 'class_manage',
+                component: Classmanage
+            },
+            {
+                path: 'my_class',
+                name: 'my_class',
+                component: Myclass
             }
         ]
     },
