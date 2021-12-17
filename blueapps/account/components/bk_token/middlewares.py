@@ -19,13 +19,13 @@ from django.core.cache import caches
 
 from blueapps.account.components.bk_token.forms import AuthenticationForm
 from blueapps.account.conf import ConfFixture
+from blueapps.account.components.bk_token.backends import get_member_user
 from blueapps.account.handlers.response import ResponseHandler
 
 try:
     from django.utils.deprecation import MiddlewareMixin
 except Exception:  # pylint: disable=broad-except
     MiddlewareMixin = object
-
 
 logger = logging.getLogger("component")
 cache = caches["login_db"]
@@ -60,6 +60,7 @@ class LoginRequiredMiddleware(MiddlewareMixin):
                 cache_session = cache.get(session_key)
                 is_match = cache_session and bk_token == cache_session.get("bk_token")
                 if is_match and request.user.is_authenticated:
+                    request.user = get_member_user(request.user)
                     return None
 
             user = auth.authenticate(request=request, bk_token=bk_token)
@@ -68,9 +69,11 @@ class LoginRequiredMiddleware(MiddlewareMixin):
 
             if user is not None and request.user.is_authenticated:
                 # 登录成功，重新调用自身函数，即可退出
+                request.user = user
                 cache.set(
                     session_key, {"bk_token": bk_token}, settings.LOGIN_CACHE_EXPIRED
                 )
+
                 return self.process_view(request, view, args, kwargs)
 
         handler = ResponseHandler(ConfFixture, settings)
