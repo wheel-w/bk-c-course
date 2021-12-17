@@ -22,6 +22,7 @@ from blueapps.account import get_user_model
 from blueapps.account.conf import ConfFixture
 from blueapps.account.utils.http import send
 from blueapps.utils import client
+from course.models import Member, MEMBER_ATTR_LIST
 
 logger = logging.getLogger("component")
 
@@ -47,14 +48,8 @@ class TokenBackend(ModelBackend):
             # 判断是否获取到用户信息,获取不到则返回None
             if not get_user_info_result:
                 return None
-            user.set_property(key="qq", value=user_info.get("qq", ""))
-            user.set_property(key="language", value=user_info.get("language", ""))
-            user.set_property(key="time_zone", value=user_info.get("time_zone", ""))
-            user.set_property(key="role", value=user_info.get("role", ""))
-            user.set_property(key="phone", value=user_info.get("phone", ""))
-            user.set_property(key="email", value=user_info.get("email", ""))
-            user.set_property(key="wx_userid", value=user_info.get("wx_userid", ""))
-            user.set_property(key="chname", value=user_info.get("chname", ""))
+
+            member, _ = Member.objects.get_or_create(id=user.id, username=username, class_number=username[:-1])
 
             # 用户如果不是管理员，则需要判断是否存在平台权限，如果有则需要加上
             if not user.is_superuser and not user.is_staff:
@@ -63,6 +58,9 @@ class TokenBackend(ModelBackend):
                 user.is_superuser = is_admin
                 user.is_staff = is_admin
                 user.save()
+
+            for attr_name in MEMBER_ATTR_LIST:
+                setattr(user, attr_name, getattr(member, attr_name))
 
             return user
 
@@ -170,3 +168,12 @@ class TokenBackend(ModelBackend):
                 )
             )
             return False, None
+
+
+def get_member_user(user):
+    member = Member.objects.get(id=user.id)
+
+    for attr_name in MEMBER_ATTR_LIST:
+        setattr(user, attr_name, getattr(member, attr_name))
+
+    return user
