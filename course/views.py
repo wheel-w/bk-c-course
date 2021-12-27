@@ -4,12 +4,12 @@ from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import model_to_dict
 from django.http import JsonResponse, QueryDict
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Course, Member, UserCourseContact
 
+
 # Create your views here.
-
-
 def is_teacher(fun):
     def inner(request, *args, **kwargs):
         try:
@@ -18,7 +18,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                identity.first()["identity"] == Member.Identity.TEACHER
+                    identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -33,6 +33,7 @@ def is_teacher(fun):
     return inner
 
 
+@csrf_exempt
 @is_teacher
 def manage_course(request):
     # 增
@@ -98,30 +99,29 @@ def manage_course(request):
     if request.method == "PUT":
         req = QueryDict(request.body)
         course_id = req.get("course_id")
+        if not course_id:
+            return JsonResponse(
+                {"result": False, "message": "修改失败！课程id不能为空", "code": 415, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
         try:
-            if not course_id:
-                return JsonResponse(
-                    {"result": False, "message": "课程id不能为空", "code": 415, "data": []},
-                    json_dumps_params={"ensure_ascii": False},
-                )
-            else:
-                course = Course.objects.get(id=course_id)
-                course.course_name = req.get("course_name", course.course_name)
-                course.course_introduction = req.get(
-                    "course_introduction", course.course_introduction
-                )
-                course.teacher = req.get("teacher", course.teacher)
-                course.manage_student = req.get("manage_student", Course.manage_student)
-                course.save()
-                return JsonResponse(
-                    {"result": True, "message": "修改成功", "code": 200, "data": []},
-                    json_dumps_params={"ensure_ascii": False},
-                )
-        except Course.DoesNotExist:
+            course = Course.objects.get(id=course_id)
+            course.course_name = req.get("course_name", course.course_name)
+            course.course_introduction = req.get(
+                "course_introduction", course.course_introduction
+            )
+            course.teacher = req.get("teacher", course.teacher)
+            course.manage_student = req.get("manage_student", Course.manage_student)
+            course.save()
+            return JsonResponse(
+                {"result": True, "message": "修改成功", "code": 200, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
+        except Exception:
             return JsonResponse(
                 {
                     "result": False,
-                    "message": "修改出现异常，课程id不存在",
+                    "message": "修改失败，请检查您输入的格式是否正确或课程id是否存在",
                     "code": 415,
                     "data": [],
                 },
@@ -136,32 +136,16 @@ def search_courses_by_userid(request):
         course_ids = UserCourseContact.objects.filter(user_id=user_id).values_list(
             "course_id", flat=True
         )
-        if course_ids:
-            course_names = Course.objects.in_bulk(course_ids).values()
-            course_name = serializers.serialize(
-                "json", course_names, ensure_ascii=False
-            )
-            return JsonResponse(
-                {
-                    "result": True,
-                    "message": "查询成功",
-                    "code": 200,
-                    "id": user_id,
-                    "data": course_name,
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
-        else:
-            courses = Course.objects.all()
-            course_list = []
-            for course in courses:
-                course_list.append(model_to_dict(course))
-            return JsonResponse(
-                {
-                    "result": False,
-                    "message": "所查询用户没有相关课程",
-                    "code": 404,
-                    "data": json.dumps(course_list, ensure_ascii=False),
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
+        course = Course.objects.in_bulk(course_ids).values()
+        courses = serializers.serialize(
+            "json", course, ensure_ascii=False
+        )
+        return JsonResponse(
+            {
+                "result": True,
+                "message": "查询成功",
+                "code": 200,
+                "data": courses,
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
