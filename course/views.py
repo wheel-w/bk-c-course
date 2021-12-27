@@ -46,7 +46,7 @@ def manage_course(request):
             return JsonResponse(
                 {
                     "result": False,
-                    "message": "请检查您输入的课程姓名和您的教师工号姓名！",
+                    "message": "请检查您输入的课程名称和您的教师工号姓名！",
                     "code": 400,
                     "date": [],
                 },
@@ -54,18 +54,24 @@ def manage_course(request):
             )
         course_introduction = request.POST.get("course_introduction", "无")  # 课程简介
         manage_student = request.POST.get("manage_student", "")  # 学生管理员
-        news_course_info = Course.objects.create(
-            course_name=course_name,
-            course_introduction=course_introduction,
-            teacher=teacher,
-            create_people=user.username,
-            manage_student=manage_student,
-        )  # 将得到的数据加到course表
-        UserCourseContact.objects.create(user_id=user_id, course_id=news_course_info.id)
-        return JsonResponse(
-            {"result": True, "message": "增加成功", "code": 201, "date": []},
-            json_dumps_params={"ensure_ascii": False},
-        )
+        if isinstance(course_introduction, str) and isinstance(manage_student, str) and isinstance(teacher, str):
+            news_course_info = Course.objects.create(
+                course_name=course_name,
+                course_introduction=course_introduction,
+                teacher=teacher,
+                create_people=user.username,
+                manage_student=manage_student,
+            )  # 将得到的数据加到course表
+            UserCourseContact.objects.create(user_id=user_id, course_id=news_course_info.id)
+            return JsonResponse(
+                {"result": True, "message": "增加成功", "code": 201, "date": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
+        else:
+            return JsonResponse(
+                {"result": True, "message": "增加失败，请检查您输入的课程简介和学生管理员和教师字段是否为字符串类型", "code": 412, "date": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
 
     # 删
     if request.method == "DELETE":
@@ -89,7 +95,7 @@ def manage_course(request):
                 {
                     "result": False,
                     "message": "删除失败，您输入的课程id不存在！",
-                    "code": 400,
+                    "code": 412,
                     "date": [],
                 },
                 json_dumps_params={"ensure_ascii": False},
@@ -105,7 +111,13 @@ def manage_course(request):
                 json_dumps_params={"ensure_ascii": False},
             )
         try:
-            course = Course.objects.get(id=course_id)
+            try:
+                course = Course.objects.get(id=course_id)
+            except ObjectDoesNotExist:
+                return JsonResponse(
+                    {"result": False, "message": "修改失败！输入的课程id不存在", "code": 415, "data": []},
+                    json_dumps_params={"ensure_ascii": False},
+                )
             course.course_name = req.get("course_name", course.course_name)
             course.course_introduction = req.get(
                 "course_introduction", course.course_introduction
@@ -121,7 +133,7 @@ def manage_course(request):
             return JsonResponse(
                 {
                     "result": False,
-                    "message": "修改失败，请检查您输入的格式是否正确或课程id是否存在",
+                    "message": "修改失败，您输入的格式不正确",
                     "code": 415,
                     "data": [],
                 },
