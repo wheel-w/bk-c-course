@@ -62,6 +62,7 @@ class Member(models.Model):
     openid = models.CharField("wechat唯一标识", max_length=50, blank=True, null=True)
     class_number = models.CharField("学号/工号", max_length=30, unique=True, blank=True, null=True, )
     name = models.CharField("姓名", max_length=30, blank=True, null=True)
+    college = models.CharField("学院", max_length=40, blank=True, null=True)
     professional_class = models.CharField("专业班级", max_length=30, blank=True, null=True)
     gender = models.CharField(max_length=20, choices=GENDER, blank=True, null=True)
     identity = models.CharField(max_length=20, choices=IDENTITY, default=Identity.NOT_CERTIFIED)
