@@ -1,11 +1,12 @@
 import json
-
+import logging
 from django.core import serializers
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.forms import model_to_dict
-from django.http import JsonResponse, QueryDict
-from django.views.decorators.csrf import csrf_exempt
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from django.db.models import Q
+from django.http import JsonResponse
 
+from blueapps.core.exceptions import DatabaseError
 from .models import Course, Member, UserCourseContact
 
 
@@ -33,27 +34,28 @@ def is_teacher(fun):
     return inner
 
 
-@csrf_exempt
 @is_teacher
 def manage_course(request):
     # 增
     if request.method == "POST":
+        logger = logging.getLogger("root")
         user_id = request.user.id
         user = Member.objects.get(id=user_id)  # 获取当前登录用户
-        course_name = request.POST.get("course_name", False)  # 想创建的课程名称
-        teacher = request.POST.get("teacher", False)  # 授课教师
+        req = json.loads(request.body)
+        course_name = req.get("course_name")  # 想创建的课程名称
+        teacher = req.get("teacher")  # 授课教师
         if not (course_name and teacher):
             return JsonResponse(
                 {
                     "result": False,
                     "message": "请检查您输入的课程名称和您的教师工号姓名！",
                     "code": 400,
-                    "date": [],
+                    "data": [],
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
-        course_introduction = request.POST.get("course_introduction", "无")  # 课程简介
-        manage_student = request.POST.get("manage_student", "")  # 学生管理员
+        course_introduction = req.get("course_introduction")  # 课程简介
+        manage_student = req.get("manage_student")  # 学生管理员
         try:
             news_course_info = Course.objects.create(
                 course_name=course_name,
@@ -64,46 +66,54 @@ def manage_course(request):
             )  # 将得到的数据加到course表
             UserCourseContact.objects.create(user_id=user_id, course_id=news_course_info.id)
             return JsonResponse(
-                {"result": True, "message": "增加成功", "code": 201, "date": []},
+                {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
             )
-        except ValidationError:
+        except DatabaseError as e:
+            logger.exception(e)
             return JsonResponse(
-                {"result": True, "message": "增加失败，请检查您输入的课程简介和学生管理员和教师字段是否为字符串类型", "code": 412, "date": []},
+                {"result": True, "message": "增加失败，请检查您输入信息", "code": 412, "data": []},
                 json_dumps_params={"ensure_ascii": False},
             )
 
     # 删
     if request.method == "DELETE":
-        req = QueryDict(request.body)
-        course_id = req.get("course_id")
+        user_id = request.user.id
+        logger = logging.getLogger("root")
+        user = Member.objects.get(id=user_id)
+        course_id = request.GET.get("course_id")
         if not course_id:
             return JsonResponse(
-                {"result": False, "message": "删除失败！课程id不能为空", "code": 400, "date": []},
+                {"result": False, "message": "删除失败！课程id不能为空", "code": 400, "data": []},
                 json_dumps_params={"ensure_ascii": False},
             )
         try:
-            Course.objects.get(id=course_id)
-            Course.objects.filter(id=course_id).delete()
-            UserCourseContact.objects.filter(course_id=course_id).delete()
-            return JsonResponse(
-                {"result": True, "message": "删除成功", "code": 200, "date": []},
-                json_dumps_params={"ensure_ascii": False},
-            )
-        except Course.DoesNotExist:
+            with transaction.atomic():
+                Course.objects.get(
+                    Q(id=course_id) & (Q(create_people=user.username) | Q(teacher=user.username))).delete()
+                UserCourseContact.objects.filter(course_id=course_id).delete()
+                return JsonResponse(
+                    {"result": True, "message": "删除成功", "code": 200, "data": []},
+                    json_dumps_params={"ensure_ascii": False},
+                )
+        except ObjectDoesNotExist as e:
+            logger.exception(e)
             return JsonResponse(
                 {
                     "result": False,
-                    "message": "删除失败，您输入的课程id不存在！",
+                    "message": "删除失败！",
                     "code": 412,
-                    "date": [],
+                    "data": [],
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
 
     # 改
     if request.method == "PUT":
-        req = QueryDict(request.body)
+        user_id = request.user.id
+        user = Member.objects.get(id=user_id)
+        req = json.loads(request.body)
+        logger = logging.getLogger("root")
         course_id = req.get("course_id")
         if not course_id:
             return JsonResponse(
@@ -111,13 +121,7 @@ def manage_course(request):
                 json_dumps_params={"ensure_ascii": False},
             )
         try:
-            course = Course.objects.get(id=course_id)
-        except ObjectDoesNotExist:
-            return JsonResponse(
-                {"result": False, "message": "修改失败！输入的课程id不存在", "code": 412, "data": []},
-                json_dumps_params={"ensure_ascii": False},
-            )
-        try:
+            course = Course.objects.get(Q(id=course_id) & (Q(create_people=user.username) | Q(teacher=user.username)))
             course.course_name = req.get("course_name", course.course_name)
             course.course_introduction = req.get(
                 "course_introduction", course.course_introduction
@@ -129,11 +133,12 @@ def manage_course(request):
                 {"result": True, "message": "修改成功", "code": 200, "data": []},
                 json_dumps_params={"ensure_ascii": False},
             )
-        except ValidationError:
+        except DatabaseError as e:
+            logger.exception(e)
             return JsonResponse(
                 {
                     "result": False,
-                    "message": "修改失败，请检查您输入的课程名称，课程简介，学生管理员和教师字段是否为字符串类型",
+                    "message": "修改失败",
                     "code": 412,
                     "data": [],
                 },
