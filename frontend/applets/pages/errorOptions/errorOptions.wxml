@@ -1,0 +1,15 @@
+<view class="tip">当前第{{current+1}}题/共{{total}}错题</view>
+<view>题目：{{subject.title}}</view>
+  <view wx:for="{{subject.options}}" class="item">
+    <text class="{{subject.userSelect==item.code?'red':''}}">{{item.code}}:{{item.option}}</text>
+  </view>
+  <view>正确答案是:
+    <text wx:for="{{subject.answer}}">{{item}}</text>
+  </view>
+  <view>
+    您的选择是: {{subject.userSelect}}
+  </view>
+<view class="btn_root">
+  <button type="primary" bindtap="pre" size="mini">上一个错题</button>
+  <button type="primary" bindtap="next" size="mini">下一个错题</button>
+</view>
