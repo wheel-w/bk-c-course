@@ -1,7 +1,7 @@
 import json
 
 from django.core import serializers
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms import model_to_dict
 from django.http import JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
@@ -54,7 +54,7 @@ def manage_course(request):
             )
         course_introduction = request.POST.get("course_introduction", "无")  # 课程简介
         manage_student = request.POST.get("manage_student", "")  # 学生管理员
-        if isinstance(course_introduction, str) and isinstance(manage_student, str) and isinstance(teacher, str):
+        try:
             news_course_info = Course.objects.create(
                 course_name=course_name,
                 course_introduction=course_introduction,
@@ -67,7 +67,7 @@ def manage_course(request):
                 {"result": True, "message": "增加成功", "code": 201, "date": []},
                 json_dumps_params={"ensure_ascii": False},
             )
-        else:
+        except ValidationError:
             return JsonResponse(
                 {"result": True, "message": "增加失败，请检查您输入的课程简介和学生管理员和教师字段是否为字符串类型", "code": 412, "date": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -107,17 +107,17 @@ def manage_course(request):
         course_id = req.get("course_id")
         if not course_id:
             return JsonResponse(
-                {"result": False, "message": "修改失败！课程id不能为空", "code": 415, "data": []},
+                {"result": False, "message": "修改失败！课程id不能为空", "code": 400, "data": []},
                 json_dumps_params={"ensure_ascii": False},
             )
         try:
-            try:
-                course = Course.objects.get(id=course_id)
-            except ObjectDoesNotExist:
-                return JsonResponse(
-                    {"result": False, "message": "修改失败！输入的课程id不存在", "code": 415, "data": []},
-                    json_dumps_params={"ensure_ascii": False},
-                )
+            course = Course.objects.get(id=course_id)
+        except ObjectDoesNotExist:
+            return JsonResponse(
+                {"result": False, "message": "修改失败！输入的课程id不存在", "code": 412, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
+        try:
             course.course_name = req.get("course_name", course.course_name)
             course.course_introduction = req.get(
                 "course_introduction", course.course_introduction
@@ -129,12 +129,12 @@ def manage_course(request):
                 {"result": True, "message": "修改成功", "code": 200, "data": []},
                 json_dumps_params={"ensure_ascii": False},
             )
-        except Exception:
+        except ValidationError:
             return JsonResponse(
                 {
                     "result": False,
-                    "message": "修改失败，您输入的格式不正确",
-                    "code": 415,
+                    "message": "修改失败，请检查您输入的课程名称，课程简介，学生管理员和教师字段是否为字符串类型",
+                    "code": 412,
                     "data": [],
                 },
                 json_dumps_params={"ensure_ascii": False},
