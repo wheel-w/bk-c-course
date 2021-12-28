@@ -1,0 +1,17 @@
+/* pages/duoxuan/duoxuan.wxss */.inputtext{
+  width: 100%;
+  margin-left: 50px;
+  margin-right: 50px;
+  border-bottom: 1px solid gray;
+  margin-top: 20px;
+  
+}
+.tip{
+  text-align: center;
+  color: red;
+  margin: 15rpx;
+  font-size: 42rpx;
+}
+.item{
+  margin: 20rpx;
+}

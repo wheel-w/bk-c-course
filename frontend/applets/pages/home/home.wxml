@@ -1,0 +1,3 @@
+<button type="primary" bindtap="goDanxuan">单选</button>
+
+<button type="primary" bindtap="goDuoxuan">多选</button>

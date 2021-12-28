@@ -1,0 +1,25 @@
+
+<view class='container'>
+  <image src='/images/bg.jpg' bindload="imageLoad" style="width:100%; height:{{images[index].height}}rpx"></image>
+  <!-- <view class="divLine"></view> -->
+
+<form bindsubmit="register">
+  <view>
+    <input placeholder='账号' name="account" bindinput="getName" />
+  </view>
+  <view>
+  <input  password='true' placeholder='密码' name="pwd" bindinput="getPassword"/>
+  </view>
+  <view class='button'>
+  <button class='buttoncolor' form-type='submit' style="background:#0164a6">注册</button>
+  </view>
+  <view class='title'>
+    <text>请用您学分制主页的账号密码进行认证，认证后可进入答题系统，且以后无需再认证！</text>
+   
+  </view>
+</form>
+</view>
+
+
+
+
