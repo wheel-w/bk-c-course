@@ -115,7 +115,7 @@ def manage_course(request):
                 "course_introduction", course.course_introduction
             )
             course.teacher = req.get("teacher", course.teacher)
-            course.manage_student = req.get("manage_student", Course.manage_student)
+            course.manage_student = req.get("manage_student", course.manage_student)
             course.save()
             return JsonResponse(
                 {"result": True, "message": "修改成功", "code": 200, "data": []},
