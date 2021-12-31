@@ -137,7 +137,10 @@ def manage_course(request):
 # 查课程列表
 def search_courses_by_userid(request):
     if request.method == "GET":
-        course = Course.objects.in_bulk().values()
+        course_ids = UserCourseContact.objects.filter(user_id=request.user.id).values_list(
+            "course_id", flat=True
+        )
+        course = Course.objects.in_bulk(course_ids).values()
         courses = serializers.serialize(
             "json", course, ensure_ascii=False
         )
@@ -150,7 +153,6 @@ def search_courses_by_userid(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
-
 
 # 下拉显示老师名称列表
 def search_teacher_names(request):
