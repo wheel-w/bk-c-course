@@ -3,15 +3,44 @@ import logging
 
 from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from blueapps.core.exceptions import DatabaseError
 
 from .models import Course, Member, UserCourseContact
 
 # Create your views here.
+
+
+def update_user_info(request):
+    """
+    更新用户信息
+    """
+    if request.method == "POST":
+        user = request.user
+        member_info = json.loads(request.body)
+        try:
+            can_edit_prop_list = [
+                "phone_number",
+                "qq_number",
+                "email_number",
+                "wechat_number",
+            ]
+            kwargs = {prop: member_info[prop] for prop in can_edit_prop_list}
+            Member.objects.filter(id=user.id).update(**kwargs)
+            return JsonResponse(
+                {"result": True, "message": "更新成功", "code": 201, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
+        except IntegrityError or DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse(
+                {"result": False, "message": "更新失败", "code": 412, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
+
+
 logger = logging.getLogger("root")
 
 
@@ -38,7 +67,6 @@ def is_teacher(fun):
     return inner
 
 
-@csrf_exempt
 @is_teacher
 def manage_course(request):
     # 增
@@ -77,107 +105,105 @@ def manage_course(request):
                 json_dumps_params={"ensure_ascii": False},
             )
 
-        # 删
-        if request.method == "DELETE":
-            course_id = request.GET.get("course_id")
-            if not course_id:
-                return JsonResponse(
-                    {
-                        "result": False,
-                        "message": "删除失败！课程id不能为空",
-                        "code": 400,
-                        "data": [],
-                    },
-                    json_dumps_params={"ensure_ascii": False},
-                )
-            try:
-                with transaction.atomic():
-                    user_info = "{}({})".format(
-                        request.user.class_number, request.user.name
-                    )
-                    course = Course.objects.get(id=course_id)
-                    if course.create_people == user_info or course.teacher == user_info:
-                        course.delete()
-                        UserCourseContact.objects.filter(course_id=course_id).delete()
-                        return JsonResponse(
-                            {
-                                "result": True,
-                                "message": "删除成功",
-                                "code": 200,
-                                "data": [],
-                            },
-                            json_dumps_params={"ensure_ascii": False},
-                        )
-                    else:
-                        return JsonResponse(
-                            {
-                                "result": False,
-                                "message": "删除失败，权限不够",
-                                "code": 403,
-                                "data": [],
-                            },
-                            json_dumps_params={"ensure_ascii": False},
-                        )
-            except ObjectDoesNotExist as e:
-                logger.exception(e)
-                return JsonResponse(
-                    {
-                        "result": False,
-                        "message": "删除失败！",
-                        "code": 412,
-                        "data": [],
-                    },
-                    json_dumps_params={"ensure_ascii": False},
-                )
-
-        # 改
-        if request.method == "PUT":
-            req = json.loads(request.body)
-            course_id = req.pop("id", "")
-            if not course_id:
-                return JsonResponse(
-                    {
-                        "result": False,
-                        "message": "修改失败！课程id不能为空",
-                        "code": 400,
-                        "data": [],
-                    },
-                    json_dumps_params={"ensure_ascii": False},
-                )
-            try:
+    # 删
+    if request.method == "DELETE":
+        course_id = request.GET.get("course_id")
+        if not course_id:
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "删除失败！课程id不能为空",
+                    "code": 400,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+        try:
+            with transaction.atomic():
                 user_info = "{}({})".format(
                     request.user.class_number, request.user.name
                 )
                 course = Course.objects.get(id=course_id)
                 if course.create_people == user_info or course.teacher == user_info:
-                    for k, v in req.items():
-                        setattr(course, k, v)
-                    course.save()
+                    course.delete()
+                    UserCourseContact.objects.filter(course_id=course_id).delete()
                     return JsonResponse(
-                        {"result": True, "message": "修改成功", "code": 200, "data": []},
+                        {
+                            "result": True,
+                            "message": "删除成功",
+                            "code": 200,
+                            "data": [],
+                        },
                         json_dumps_params={"ensure_ascii": False},
                     )
                 else:
                     return JsonResponse(
                         {
                             "result": False,
-                            "message": "修改失败，权限不够",
+                            "message": "删除失败，权限不够",
                             "code": 403,
                             "data": [],
                         },
                         json_dumps_params={"ensure_ascii": False},
                     )
-            except DatabaseError as e:
-                logger.exception(e)
+        except ObjectDoesNotExist as e:
+            logger.exception(e)
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "删除失败！",
+                    "code": 412,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+
+    # 改
+    if request.method == "PUT":
+        req = json.loads(request.body)
+        course_id = req.pop("id", "")
+        if not course_id:
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "修改失败！课程id不能为空",
+                    "code": 400,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+        try:
+            user_info = "{}({})".format(request.user.class_number, request.user.name)
+            course = Course.objects.get(id=course_id)
+            if course.create_people == user_info or course.teacher == user_info:
+                for k, v in req.items():
+                    setattr(course, k, v)
+                course.save()
+                return JsonResponse(
+                    {"result": True, "message": "修改成功", "code": 200, "data": []},
+                    json_dumps_params={"ensure_ascii": False},
+                )
+            else:
                 return JsonResponse(
                     {
                         "result": False,
-                        "message": "修改失败",
-                        "code": 412,
+                        "message": "修改失败，权限不够",
+                        "code": 403,
                         "data": [],
                     },
                     json_dumps_params={"ensure_ascii": False},
                 )
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "修改失败",
+                    "code": 412,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
 
 
 # 查课程列表
@@ -187,7 +213,7 @@ def search_courses_by_userid(request):
             user_id=request.user.id
         ).values_list("course_id", flat=True)
         course = Course.objects.in_bulk(course_ids).values()
-        courses = serializers.serialize("json", course, ensure_ascii=False)
+        courses = serializers.serialize("python", course, ensure_ascii=False)
         return JsonResponse(
             {
                 "result": True,
