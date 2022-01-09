@@ -25,3 +25,6 @@ python-json-logger==0.1.7
 whitenoise==3.3.0
 six==1.11.0
 gunicorn==19.6.0
+
+Cython==0.29.23
+lxml==4.7.1
