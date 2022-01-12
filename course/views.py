@@ -110,13 +110,13 @@ def manage_course(request):
             course = Course.objects.get(
                 Q(id=course_id) & (Q(create_people="{0}({1})".format(request.user.class_number, request.user.name))
                                    | Q(teacher="{0}({1})".format(request.user.class_number, request.user.name))))
-            course.course_name = req.get("course_name", course.course_name)
-            course.course_introduction = req.get(
+            course_name = req.get("course_name", course.course_name)
+            course_introduction = req.get(
                 "course_introduction", course.course_introduction
             )
-            course.teacher = req.get("teacher", course.teacher)
-            course.manage_student = req.get("manage_student", course.manage_student)
-            course.save()
+            teacher = req.get("teacher", course.teacher)
+            manage_student = req.get("manage_student", course.manage_student)
+            course.objects.update(course_name=course_name, course_introduction=course_introduction, teacher=teacher, manage_student=manage_student)
             return JsonResponse(
                 {"result": True, "message": "修改成功", "code": 200, "data": []},
                 json_dumps_params={"ensure_ascii": False},
