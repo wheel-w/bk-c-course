@@ -113,16 +113,21 @@ def manage_course(request):
                     json_dumps_params={"ensure_ascii": False},
                 )
             try:
-                course = Course.objects.get(
-                    Q(id=course_id) & (Q(create_people="{0}({1})".format(request.user.class_number, request.user.name))
-                                       | Q(teacher="{0}({1})".format(request.user.class_number, request.user.name))))
-                for k, v in req.items():
-                    setattr(course, k, v)
-                course.save()
-                return JsonResponse(
-                    {"result": True, "message": "修改成功", "code": 200, "data": []},
-                    json_dumps_params={"ensure_ascii": False},
-                )
+                user_info = "{0}({1})".format(request.user.class_number, request.user.name)
+                course = Course.objects.get(id=course_id)
+                if course.create_people == user_info or course.teacher == user_info:
+                    for k, v in req.items():
+                        setattr(course, k, v)
+                    course.save()
+                    return JsonResponse(
+                        {"result": True, "message": "修改成功", "code": 200, "data": []},
+                        json_dumps_params={"ensure_ascii": False},
+                    )
+                else:
+                    return JsonResponse(
+                        {"result": False, "message": "修改失败，权限不够", "code": 403, "data": []},
+                        json_dumps_params={"ensure_ascii": False},
+                    )
             except DatabaseError as e:
                 logger.exception(e)
                 return JsonResponse(
