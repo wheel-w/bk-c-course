@@ -11,6 +11,35 @@ from blueapps.core.exceptions import DatabaseError
 from .models import Course, Member, UserCourseContact
 
 # Create your views here.
+
+import json
+from django.http import JsonResponse
+from django.db import IntegrityError
+
+from blueapps.core.exceptions import DatabaseError
+from course.models import Member
+
+
+def update_user_info(request):
+    """
+    更新用户信息
+    """
+    if request.method == "POST":
+        user = request.user
+        member_info = json.loads(request.body)
+        try:
+            can_edit_prop_list = ["phone_number", "qq_number", "email_number", "wechat_number"]
+            kwargs = {prop: member_info[prop] for prop in can_edit_prop_list}
+            Member.objects.filter(id=user.id).update(**kwargs)
+            return JsonResponse(
+                {"result": True, "message": "更新成功", "code": 201, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
+        except IntegrityError or DatabaseError as e:
+            return JsonResponse(
+                {"result": False, "message": "更新失败", "code": 412, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
 logger = logging.getLogger("root")
 
 

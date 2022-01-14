@@ -1,8 +1,8 @@
 from django.db import models
 
 # member属性列表
-MEMBER_ATTR_LIST = ["username", "class_number", "name", "professional_class", "gender", "identity", "phone_number",
-                    "email_number", "qq_number", "wechat_number"]
+MEMBER_ATTR_LIST = ["username", "class_number", "name", "college", "professional_class", "gender", "identity",
+                    "phone_number", "email_number", "qq_number", "wechat_number"]
 
 
 # Create your models here.
