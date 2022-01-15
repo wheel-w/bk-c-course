@@ -225,33 +225,23 @@ def search_courses_by_userid(request):
         )
 
 
-# 下拉显示老师名称列表
-def search_teacher_names(request):
+# 下拉列表显示课程名称
+def show_course_names(request):
     if request.method == "GET":
-        try:
-            teacher_names = []
-            teachers = Member.objects.filter(identity="TEACHER")
-            for teacher in teachers:
-                teacher_names.append(
-                    "{}({})".format(teacher.class_number, teacher.name)
-                )
-            return JsonResponse(
-                {
-                    "result": True,
-                    "message": "显示成功",
-                    "code": 200,
-                    "data": json.dumps(teacher_names),
-                },
-                json_dumps_params={"ensure_ascii": False},
+        course_names = []
+        course_info = {}
+        courses = UserCourseContact.objects.filter(user_id=request.user.id)
+        for course in courses:
+            course_info["course_info"] = "({}){}({})".format(
+                course.id, course.course_name, course.teacher
             )
-        except DatabaseError as e:
-            logger.exception(e)
-            return JsonResponse(
-                {
-                    "result": False,
-                    "message": "显示异常",
-                    "code": 400,
-                    "data": [],
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
+            course_names.append(course_info.copy())
+        return JsonResponse(
+            {
+                "result": True,
+                "message": "显示成功",
+                "code": 200,
+                "data": course_names,
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
