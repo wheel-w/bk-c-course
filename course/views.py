@@ -39,13 +39,11 @@ def import_student_excel(request):
     student_contact_list = []
     student_info = {}
     row_sign = 0
-    values_1 = []
     for table in tables:
         rows = table.nrows
         values_0 = table.row_values(0)
         if rows != 1:
             values_1 = table.row_values(1)
-        try:
             if not (values_0[0] == "教学班点名册" and values_1[0] == "学年"):
                 return JsonResponse(
                     {
@@ -93,16 +91,15 @@ def import_student_excel(request):
                     },
                     json_dumps_params={"ensure_ascii": False},
                 )
-        except Exception:
-            return JsonResponse(
-                {
-                    "result": False,
-                    "message": "文件导入错误，可能存在重复值，错误行{0}, 或者您的文件字段不匹配".format(row_sign),
-                    "code": 200,
-                    "data": [],
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
+        return JsonResponse(
+            {
+                "result": False,
+                "message": "请检查您的excel表中的数据是否齐全",
+                "code": 403,
+                "data": [],
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
 
 
 # 根具课程id为课程新加学生
@@ -136,8 +133,7 @@ def add_course_student(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
-    else:
-        UserCourseContact.objects.bulk_create(student_list)
+    UserCourseContact.objects.bulk_create(student_list)
     return JsonResponse(
         {
             "result": True,
@@ -160,10 +156,9 @@ def download_student_excel_template(request):
 
 # 获取学生列表
 def search_course_student(request):
-    req = json.loads(request.body)
     student_info = {}
     student_list = []
-    course_id = req.get("course_id")
+    course_id = request.GET.get("course_id")
     if not course_id:
         return JsonResponse(
             {
@@ -189,7 +184,7 @@ def search_course_student(request):
                 student_info["professional_class"] = user_object.professional_class
                 student_list.append(student_info.copy())
         paginator = Paginator(student_list, 10)  # 分页器对象，10是每页展示的数据条数
-        page = req.get("page", "1")  # 获取当前页码，默认为第一页
+        page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
         student_list_page = paginator.get_page(page)  # 更新students为对应页码的10条数据
         return JsonResponse(
             {
@@ -218,9 +213,8 @@ def search_course_student(request):
 # 删除学生（删除对应学生与课程关系）
 def delete_student_course_contact(request):
     if request.method == "DELETE":
-        req = json.loads(request.body)
-        course_id = req.get("course_id")
-        student_id = req.get("student_id")  # 传递学生id列表
+        course_id = request.GET.get("course_id")
+        student_id = request.GET.get("student_id")  # 传递学生id列表
         try:
             UserCourseContact.objects.filter(user_id__in=student_id, course_id=course_id).delete()
             return JsonResponse(
