@@ -175,7 +175,7 @@ def search_course_student(request):
         user_ids_list = list(user_ids)
         user_objects = Member.objects.in_bulk(user_ids_list)
         for user_object in user_objects:
-            if user_objects.identity == "STUDENT":
+            if user_object.identity == "STUDENT":
                 student_info["student"] = ("{0}({1})".format(user_object.class_number, user_object.name))
                 student_info["student_id"] = user_object.id
                 student_info["id"] = user_object.id
