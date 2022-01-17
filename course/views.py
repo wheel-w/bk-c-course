@@ -2,17 +2,18 @@ import json
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core import serializers
 from django.core.paginator import Paginator
-from django.db import transaction
 from django.http import JsonResponse, FileResponse
-from django.shortcuts import render
 import xlrd
+from django.db import IntegrityError, transaction
 
 from blueapps.core.exceptions import DatabaseError
 
 from course.models import Member, UserCourseContact, Course
 
 logger = logging.getLogger("root")
+
 
 def update_user_info(request):
     """
@@ -42,9 +43,6 @@ def update_user_info(request):
             )
 
 
-logger = logging.getLogger("root")
-
-
 def is_teacher(fun):
     def inner(request, *args, **kwargs):
         try:
@@ -53,7 +51,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                identity.first()["identity"] == Member.Identity.TEACHER
+                    identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -75,8 +73,10 @@ def manage_course(request):
         req = json.loads(request.body)
         course_name = req.get("course_name")  # 想创建的课程名称
         teacher = req.get("teacher")
+        teacher_id = req.get("teacher_id")  # 老师id
         course_introduction = req.get("course_introduction")  # 课程简介
         manage_student = req.get("manage_student")  # 学生管理员
+        manage_student_id = req.get("manage_student_id")  # 学生管理员id列表
         try:
             news_course_info = Course.objects.create(
                 course_name=course_name,
@@ -87,9 +87,8 @@ def manage_course(request):
                 ),
                 manage_student=manage_student,
             )  # 将得到的数据加到course表
-            UserCourseContact.objects.create(
-                user_id=request.user.id, course_id=news_course_info.id
-            )
+            UserCourseContact.objects.create(user_id=request.user.id, course_id=news_course_info.id)
+            UserCourseContact.objects.create(user_id=teacher_id, course_id=news_course_info.id)
             return JsonResponse(
                 {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -229,19 +228,45 @@ def search_courses_by_userid(request):
 # 下拉显示老师名称列表
 def search_teacher_names(request):
     if request.method == "GET":
+        teacher_names = []
+        teachers = Member.objects.filter(identity="TEACHER")
+        for teacher in teachers:
+            teacher_names.append(
+                "{}({})".format(teacher.class_number, teacher.name)
+            )
+        return JsonResponse(
+            {
+                "result": True,
+                "message": "显示成功",
+                "code": 200,
+                "data": json.dumps(teacher_names),
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
+
+
+# 查询全体学生信息
+def search_student_info(request):
+    if request.method == "GET":
         try:
-            teacher_names = []
-            teachers = Member.objects.filter(identity="TEACHER")
-            for teacher in teachers:
-                teacher_names.append(
-                    "{}({})".format(teacher.class_number, teacher.name)
-                )
+            student_info = {}
+            student_infos = []
+            students = Member.objects.filter(identity='STUDENT')
+            for student in students:
+                student_info["student"] = ("{0}({1})".format(student.class_number, student.name))
+                student_info["student_id"] = student.id
+                student_info["professional_class"] = student.professional_class
+                student_info["class_number"] = student.class_number
+                student_info["college"] = student.college
+                student_info["name"] = student.name
+                student_info["gender"] = student.gender
+                student_infos.append(student_info.copy())
             return JsonResponse(
                 {
                     "result": True,
                     "message": "显示成功",
                     "code": 200,
-                    "data": json.dumps(teacher_names),
+                    "data": student_infos,
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
@@ -256,7 +281,6 @@ def search_teacher_names(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
-
 
 
 # 老师为指定课程导入学生信息
@@ -398,4 +422,84 @@ def download_student_excel_template(request):
     return response
 
 
-# Create your views here.
+# 删除学生（删除对应学生与课程关系）
+def delete_student_course_contact(request):
+    if request.method == "DELETE":
+        course_id = request.GET.get("course_id")
+        student_id = request.GET.get("student_id")  # 传递学生id列表
+        try:
+            UserCourseContact.objects.filter(user_id__in=student_id, course_id=course_id).delete()
+            return JsonResponse(
+                {"result": True, "message": "删除成功", "code": 200, "data": []},
+                json_dumps_params={"ensure_ascii": False},
+            )
+        except ObjectDoesNotExist as e:
+            logger.exception(e)
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "删除失败！,课程号不存在",
+                    "code": 412,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+
+
+# 获取课程学生列表
+def search_course_student(request):
+    student_info = {}
+    student_list = []
+    course_id = request.GET.get("course_id")
+    if not course_id:
+        return JsonResponse(
+            {
+                "result": False,
+                "message": "课程id不能为空",
+                "code": 406,
+                "data": [],
+            },
+        )
+    try:
+        user_ids = UserCourseContact.objects.filter(course_id=course_id).values_list(
+            "user_id", flat=True
+        )
+        user_ids_list = list(user_ids)
+        user_objects = Member.objects.in_bulk(user_ids_list)
+        for user_object in user_objects:
+            if user_object.identity == "STUDENT":
+                student_info["student"] = ("{0}({1})".format(user_object.class_number, user_object.name))
+                student_info["student_id"] = user_object.id
+                student_info["id"] = user_object.id
+                student_info["name"] = user_object.name
+                student_info["class_number"] = user_object.class_number
+                student_info["professional_class"] = user_object.professional_class
+                student_list.append(student_info.copy())
+        paginator = Paginator(student_list, 10)  # 分页器对象，10是每页展示的数据条数
+        page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
+        student_list_page = paginator.get_page(page)  # 更新students为对应页码的10条数据
+        return JsonResponse(
+            {
+                "result": True,
+                "message": "成功",
+                "code": 200,
+                "data": student_list_page,
+                "page": json.dumps(int(page)),  # 这是是返回当前页码给前端
+                "page_range": list(paginator.page_range),  # 这个参数是告诉前端一共有多少页
+                "number": len(student_list),
+                "student_list": student_list,
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
+    except DatabaseError:
+        return JsonResponse(
+            {
+                "result": False,
+                "message": "获取失败",
+                "code": 400,
+                "data": [],
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
+
+
