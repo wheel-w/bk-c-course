@@ -195,6 +195,7 @@ def search_course_student(request):
                 "page": json.dumps(int(page)),  # 这是是返回当前页码给前端
                 "page_range": list(paginator.page_range),  # 这个参数是告诉前端一共有多少页
                 "number": len(student_list),
+                "student": student_list,
             },
             json_dumps_params={"ensure_ascii": False},
         )
