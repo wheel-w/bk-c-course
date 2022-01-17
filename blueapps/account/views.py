@@ -44,15 +44,36 @@ def send_code_view(request):
 
 
 def get_user_info(request):
-
-    return JsonResponse(
-        {
-            "code": 0,
-            "data": {
-                "id": request.user.id,
-                "username": request.user.username,
-                "timestamp": time.time(),
+    """
+    获取用户信息
+    """
+    if request.method == "GET":
+        member = request.user
+        return JsonResponse(
+            {
+                "result": True,
+                "code": 200,
+                "data": {
+                    "id": member.id,
+                    "username": member.username,
+                    "timestamp": time.time(),
+                    "class_number": member.class_number,
+                    "name": member.name,
+                    "college": member.college,
+                    "professional_class": member.professional_class,
+                    "gender": member.gender,
+                    "identity": member.identity,
+                    "phone_number": member.phone_number,
+                    "email_number": member.email_number,
+                    "qq_number": member.qq_number,
+                    "wechat_number": member.wechat_number,
+                },
+                "message": "获取用户信息成功",
             },
-            "message": "ok",
-        }
-    )
+            json_dumps_params={"ensure_ascii": False}
+        )
+    else:
+        return JsonResponse(
+            {"result": False, "code": 501, "data": {}, "message": "请求失败"},
+            json_dumps_params={"ensure_ascii": False}
+        )
