@@ -77,6 +77,7 @@ def manage_course(request):
         course_introduction = req.get("course_introduction")  # 课程简介
         manage_student = req.get("manage_student")  # 学生管理员
         manage_student_id = req.get("manage_student_id")  # 学生管理员id列表
+        user_info_list = []
         try:
             news_course_info = Course.objects.create(
                 course_name=course_name,
@@ -87,8 +88,11 @@ def manage_course(request):
                 ),
                 manage_student=manage_student,
             )  # 将得到的数据加到course表
-            UserCourseContact.objects.create(user_id=request.user.id, course_id=news_course_info.id)
-            UserCourseContact.objects.create(user_id=teacher_id, course_id=news_course_info.id)
+            user_info_list.append(UserCourseContact(user_id=request.user.id, course_id=news_course_info.id))
+            user_info_list.append(UserCourseContact(user_id=teacher_id, course_id=news_course_info.id))
+            for manage_student in manage_student_id:
+                user_info_list.append(UserCourseContact(course_id=news_course_info.id, user_id=manage_student))
+            UserCourseContact.objects.bulk_create(user_info_list)
             return JsonResponse(
                 {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -225,62 +229,31 @@ def search_courses_by_userid(request):
         )
 
 
-# 下拉显示老师名称列表
-def search_teacher_names(request):
+# 查询指定身份成员的信息
+def search_member_info(request):
     if request.method == "GET":
-        teacher_names = []
-        teachers = Member.objects.filter(identity="TEACHER")
-        for teacher in teachers:
-            teacher_names.append(
-                "{}({})".format(teacher.class_number, teacher.name)
-            )
+        member_identify = request.GET.get("member_identify")  # 传递用户身份
+        member_info_list = []
+        member_info = {}
+        members = Member.objects.filter(identity=member_identify)
+        for member in members:
+            member_info["member_id"] = member.id  # 返回用户id
+            member_info["member_display_name"] = "{0}({1})".format(member.class_number, member.name)  # 返回工号（姓名）
+            member_info["professional_class"] = member.professional_class  # 用户专业
+            member_info["class_number"] = member.class_number  # 用户学号
+            member_info["college"] = member.college  # 用户学院
+            member_info["name"] = member.name   # 用户姓名
+            member_info["gender"] = member.gender   # 用户性别
+            member_info_list.append(member_info.copy())
         return JsonResponse(
             {
                 "result": True,
                 "message": "显示成功",
                 "code": 200,
-                "data": json.dumps(teacher_names),
+                "data": member_info_list,
             },
             json_dumps_params={"ensure_ascii": False},
         )
-
-
-# 查询全体学生信息
-def search_student_info(request):
-    if request.method == "GET":
-        try:
-            student_info = {}
-            student_infos = []
-            students = Member.objects.filter(identity='STUDENT')
-            for student in students:
-                student_info["student"] = ("{0}({1})".format(student.class_number, student.name))
-                student_info["student_id"] = student.id
-                student_info["professional_class"] = student.professional_class
-                student_info["class_number"] = student.class_number
-                student_info["college"] = student.college
-                student_info["name"] = student.name
-                student_info["gender"] = student.gender
-                student_infos.append(student_info.copy())
-            return JsonResponse(
-                {
-                    "result": True,
-                    "message": "显示成功",
-                    "code": 200,
-                    "data": student_infos,
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
-        except DatabaseError as e:
-            logger.exception(e)
-            return JsonResponse(
-                {
-                    "result": False,
-                    "message": "显示异常",
-                    "code": 400,
-                    "data": [],
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
 
 
 # 老师为指定课程导入学生信息
@@ -374,7 +347,7 @@ def import_student_excel(request):
 def add_course_student(request):
     req = json.loads(request.body)
     course_id = req.get("course_id")
-    student_id = req.get("student_id")
+    student_id_list = req.get("student_id")
     student_list = []
     if not course_id:
         return JsonResponse(
@@ -388,7 +361,7 @@ def add_course_student(request):
         )
     user_ids = UserCourseContact.objects.filter(course_id=course_id).values_list("user_id", flat=True)
     user_ids_list = list(user_ids)
-    for student in student_id:
+    for student in student_id_list:
         if student not in user_ids_list:
             student_list.append(UserCourseContact(user_id=student, course_id=course_id))
     if not student_list:
@@ -475,19 +448,20 @@ def search_course_student(request):
                 student_info["class_number"] = user_object.class_number
                 student_info["professional_class"] = user_object.professional_class
                 student_list.append(student_info.copy())
-        paginator = Paginator(student_list, 10)  # 分页器对象，10是每页展示的数据条数
+        page_size = request.GET.get("page_size", 10)
+        paginator = Paginator(student_list, page_size)  # 分页器对象，10是每页展示的数据条数
         page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
-        student_list_page = paginator.get_page(page)  # 更新students为对应页码的10条数据
+        page_info_list = paginator.get_page(page)  # 更新students为对应页码数据
         return JsonResponse(
             {
                 "result": True,
                 "message": "成功",
                 "code": 200,
-                "data": student_list_page,
-                "page": json.dumps(int(page)),  # 这是是返回当前页码给前端
+                "data": page_info_list,  # 当前页数据
+                "page": int(page),  # 这是是返回当前页码给前端
+                "count": len(student_list),  # 数据总数
                 "page_range": list(paginator.page_range),  # 这个参数是告诉前端一共有多少页
-                "number": len(student_list),
-                "student_list": student_list,
+                "page_size": page_size,  # 当前页大小
             },
             json_dumps_params={"ensure_ascii": False},
         )
@@ -501,5 +475,3 @@ def search_course_student(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
-
-
