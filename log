@@ -1,0 +1,332 @@
+[33mcommit a1aa4bf4e874f6b68365c7fd462593bd8995de16[m[33m ([m[1;36mHEAD -> [m[1;32mgbl[m[33m)[m
+Author: 会跳舞的萝卜 <515189195@qq.com>
+Date:   Fri Jan 14 22:18:54 2022 +0800
+
+    sprintfit:题目表单修改
+
+[33mcommit e46932c7b8b9e29124beab5bb36062ef6c70a36b[m
+Author: 会跳舞的萝卜 <515189195@qq.com>
+Date:   Fri Jan 14 21:48:03 2022 +0800
+
+    '删除weixin/models'
+
+[33mcommit b5089f49ee91e77d10847d45f2d41027532b6101[m
+Author: 会跳舞的萝卜 <515189195@qq.com>
+Date:   Fri Jan 14 21:45:24 2022 +0800
+
+    更改题库表
+
+[33mcommit f357324a427de65a9dd394c490b24a613502401a[m
+Author: 会跳舞的萝卜 <515189195@qq.com>
+Date:   Fri Jan 14 14:22:56 2022 +0800
+
+    题库修改
+
+[33mcommit 48b6c5dca360e12b77af6756445839af52377619[m
+Author: 会跳舞的萝卜 <515189195@qq.com>
+Date:   Fri Jan 14 14:11:43 2022 +0800
+
+    题库，学生答题记录
+
+[33mcommit 0dced0e50fc546ae41f582bbb30fe142cc9977a2[m
+Author: 会跳舞的萝卜 <515189195@qq.com>
+Date:   Thu Jan 13 23:00:08 2022 +0800
+
+    题库表单
+
+[33mcommit 876c70e1496ce27adb3d7984c657f5302223ebd2[m[33m ([m[1;32mmaster[m[33m)[m
+Merge: 2f983bd ca6768f
+Author: 朱佳政 <7365193+CodeJamz@user.noreply.gitee.com>
+Date:   Thu Jan 13 13:06:10 2022 +0000
+
+    !37 课程的增删改查
+    Merge pull request !37 from 黄渭涵/course_find-alter
+
+[33mcommit ca6768f8e0fd0b7825e82a5bd2da83e960ffd415[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Thu Jan 13 12:36:04 2022 +0000
+
+    update course/views.py.
+
+[33mcommit d449513f1ba0daa16034faee819e09b4a785990f[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Thu Jan 13 11:32:59 2022 +0000
+
+    update course/views.py.
+
+[33mcommit b323708c2aa241f66a85519d9600a986ece8f627[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Wed Jan 12 11:22:05 2022 +0000
+
+    update course/views.py.
+
+[33mcommit 2f983bd93b68493736c7c5c20757652133c3b348[m
+Author: 15191008900 <2425024187@qq.com>
+Date:   Sun Jan 9 11:33:18 2022 +0800
+
+    minor:添加migrations文件
+
+[33mcommit 793c7f6dfbbb511f242fa85c49bbc7c5a90f04d6[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Jan 9 03:08:02 2022 +0000
+
+    update requirements.txt.
+
+[33mcommit 9713bc3ad8260acf4e9efe2b1f32ecc50d6be0e1[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Fri Dec 31 18:11:10 2021 +0000
+
+    update course/views.py.
+
+[33mcommit 8ded0d62a34f880b686e351d9257f2f4b2d034f2[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Fri Dec 31 12:05:03 2021 +0000
+
+    update course/views.py.
+
+[33mcommit b3d401c4d479ad7ab849e9b8b6d7aa08f79df507[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Wed Dec 29 14:10:44 2021 +0000
+
+    update course/urls.py.
+
+[33mcommit 1075c342a5563f22a213ea84b66fb173763916aa[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Wed Dec 29 14:09:46 2021 +0000
+
+    update course/views.py.
+
+[33mcommit 91c030ff82b94f27d7f8adc3ce469a96e2319487[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Tue Dec 28 16:48:57 2021 +0000
+
+    update course/views.py.
+
+[33mcommit 01fa0eebf44a361c3f681ec3ec2725b35625cd68[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Tue Dec 28 10:21:53 2021 +0000
+
+    update course/views.py.
+
+[33mcommit 7401a565c0f33b2be83facb208375fafc6173283[m
+Author: 龚博隆 <515189195@qq.com>
+Date:   Tue Dec 28 08:19:37 2021 +0000
+
+    !51 微信认证，学分制主页认证，绑定用户，添加学院字段，更改环境变量命名
+    * 微信认证，学分制主页认证，绑定用户，添加学院字段
+
+[33mcommit 2fc334c000aebcecb549b1e5416f117486ab2217[m
+Author: 陈梓健 <9950318+yuqinsanx@user.noreply.gitee.com>
+Date:   Tue Dec 28 02:28:32 2021 +0000
+
+    !45 注册登录功能
+    * feature:登录注册功能
+
+[33mcommit 8c50b4a0c3d7dd4cfff898eb8abf1589eaf46530[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Mon Dec 27 16:34:07 2021 +0000
+
+    update course/views.py.
+
+[33mcommit 87a63135a6f4b69ec41d112898056b7d086d3412[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Mon Dec 27 12:23:50 2021 +0000
+
+    update course/views.py.
+
+[33mcommit ade418091da5a46ff48edb6fdb0f94d2d3977ee7[m
+Merge: 50d64df 33c7433
+Author: wheel-w <2425024187@qq.com>
+Date:   Fri Dec 17 08:41:43 2021 +0000
+
+    !38 request请求添加member信息
+    Merge pull request !38 from wheel-w/user
+
+[33mcommit 33c7433f96a39e0ec5c706249eaf3f37040571f7[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Fri Dec 17 15:08:09 2021 +0800
+
+    minor:request.user添加成员信息
+
+[33mcommit f1e91d1d2076ce994fff2447dd163ec42fe5d080[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Thu Dec 16 20:52:32 2021 +0800
+
+    feature:course_functions
+
+[33mcommit 13c653c15999e2113736587b3f5937398b327ed1[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Thu Dec 16 14:38:34 2021 +0800
+
+    feature:course_functions
+
+[33mcommit 596570e2d651d45017b0aff5849bfb635889d25c[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Wed Dec 15 16:43:29 2021 +0800
+
+    feature:course_functions
+
+[33mcommit 50d64df7591d97403d1f9bfba57a3c840bd5ab3e[m
+Merge: c3df8c4 5302c8f
+Author: wheel-w <2425024187@qq.com>
+Date:   Mon Dec 13 10:51:44 2021 +0000
+
+    !30 导航栏修改v1
+    导航栏修改v1
+
+[33mcommit 05d245684f389f03c66d88b3092dd1514c93ddbf[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Mon Dec 13 10:34:15 2021 +0000
+
+    删除文件 e -i c397f1a0ba3a4962f8b21d2b62d05790cd77ca1c
+
+[33mcommit 5302c8fa105fc77006eae29b527a125de161bb3e[m
+Author: 崔育荣 <908120624@qq.com>
+Date:   Mon Dec 13 13:55:29 2021 +0800
+
+    导航栏修改V1
+
+[33mcommit ca27ab9bfc5df8aacdeb53521aae3e452ca3212d[m
+Merge: afd7b55 c3df8c4
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Mon Dec 13 13:33:56 2021 +0800
+
+    minor:merge
+
+[33mcommit afd7b556393c87a5db353edc7d61b4e9cb106acb[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Sun Dec 12 18:37:11 2021 +0800
+
+    festure:course_function
+
+[33mcommit 1d8e0a0e27d1656673e606b873db2d8118ae18fa[m
+Author: 计元杰 <3281813461@qq.com>
+Date:   Sat Dec 11 14:10:06 2021 +0000
+
+    !25 成员管理表单
+    * 新增成员表modle
+
+[33mcommit 5f22ab4d9c55271777a293510ceaa237d24ee9a6[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Fri Dec 10 21:36:37 2021 +0800
+
+    feature:course
+
+[33mcommit e5b4d057a5ff7b1855ce2e700ad6a767a7e17b7e[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Fri Dec 10 20:54:47 2021 +0800
+
+    feature:course_model
+
+[33mcommit d8ae7ed07592e9b16858ddbbb3263effbcf46b07[m
+Author: “黄渭涵“ <1245403676@qq.com>
+Date:   Fri Dec 10 11:10:38 2021 +0800
+
+    feature:course_model
+
+[33mcommit 0f0991da9ae3e66c3fdb0e511b9d60de30612c0e[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Fri Dec 10 10:04:23 2021 +0800
+
+    minor:创建course app
+
+[33mcommit c3df8c4ac68a49bcf371422c58cc5655b8635205[m
+Author: 计元杰 <3281813461@qq.com>
+Date:   Sat Dec 11 14:10:06 2021 +0000
+
+    !25 成员管理表单
+    * 新增成员表modle
+
+[33mcommit 4de1efbad66f1c09464538b687c998f00da1f198[m
+Author: 黄渭涵 <1245403676@qq.com>
+Date:   Fri Dec 10 13:44:24 2021 +0000
+
+    !15 课程表
+    * feature:新增课程model
+
+[33mcommit cf9ee09fd9a7b85ea5fd73cbb447017c73596a4d[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Fri Dec 10 10:04:23 2021 +0800
+
+    minor:创建course app
+
+[33mcommit deef41c4e3e0572fecd48895888b8f15eedf8123[m
+Merge: 6b6642e fa80b05
+Author: wheel-w <2425024187@qq.com>
+Date:   Wed Dec 8 08:48:13 2021 +0000
+
+    !9 配置小程序环境
+    Merge pull request !9 from 陈梓健/mini
+
+[33mcommit fa80b05ff8c60f474cc23e04a268589da4fade39[m
+Author: 御琴三夏浅流笙 <9950318+yuqinsanx@user.noreply.gitee.com>
+Date:   Tue Dec 7 22:47:38 2021 +0800
+
+    feature:添加小程序环境
+
+[33mcommit 6b6642e254ad4ccf820a499fee8af2cc2d1ae7c9[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Tue Dec 7 09:54:04 2021 +0000
+
+    add .pre-commit-config.yaml.
+
+[33mcommit 03a2da3ec35c8447eb7f5971692218ff8d37f00c[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Tue Dec 7 09:53:15 2021 +0000
+
+    add .flake8.
+
+[33mcommit 3616b0b31b27211d0550ad6131193652ea1b708f[m
+Author: 计元杰 <3281813461@qq.com>
+Date:   Tue Dec 7 09:30:21 2021 +0000
+
+    update templates/403.html.
+
+[33mcommit bd94881a95728065838d41c2057be7fa096a4280[m
+Author: 计元杰 <3281813461@qq.com>
+Date:   Tue Dec 7 09:29:56 2021 +0000
+
+    update templates/403.html.
+
+[33mcommit dd991df2ca0a4f7d27a9bafa0fb2eda180443fb4[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 23:11:00 2021 +0800
+
+    minor:新增termianl环境变量配置
+
+[33mcommit 272d75d604c5d974a83791087190f222760ad4d9[m
+Merge: a6c55ab 8568693
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 18:09:47 2021 +0800
+
+    Merge remote-tracking branch 'saas/master'
+
+[33mcommit a6c55ab6860fca718b2d511306886fdb3c80124d[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 18:09:02 2021 +0800
+
+    minor:添加wiki图片
+
+[33mcommit 85686931580b97ef94ae9f8f5c19011fa76dc1f4[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Dec 5 09:32:47 2021 +0000
+
+    add default pipeline template yaml
+
+[33mcommit 48b421c92c94670e48a16dc3a40f584878f2e9cb[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Nov 28 22:40:53 2021 +0800
+
+    minor:设置数据库属性的环境变量
+
+[33mcommit 41f62fca46b4898b089d829e5d67a95108ef6b54[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Nov 28 22:32:18 2021 +0800
+
+    minor:修改静态资源路径
+
+[33mcommit 072d664cc0de0016ceba81d9516f757f45ea4bc7[m
+Author: wheel-w <2425024187@qq.com>
+Date:   Sun Nov 28 22:27:58 2021 +0800
+
+    init
