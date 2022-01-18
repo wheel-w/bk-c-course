@@ -84,7 +84,6 @@ class Member(models.Model):
 
 class Chapter(models.Model):
     course_id = models.IntegerField('课程id')
-    # 章节的顺序
     chapter_name = models.TextField('章节名称')
 
 
@@ -113,7 +112,7 @@ class Question(models.Model):
     option_C = models.TextField('选项C', blank=True, null=True)
     option_D = models.TextField('选项D', blank=True, null=True)
     option_E = models.TextField('选项E', blank=True, null=True)
-    answer = models.CharField('问题答案')
+    answer = models.TextField('问题答案')
     explain = models.TextField('答案解析', blank=True, null=True, default='无')
 
 
@@ -122,22 +121,42 @@ class Paper(models.Model):
         EXERCISE = 'EXERCISE'
         TEST = 'TEST'
 
+    class Status:
+        NOT_START = 'NOT_START'
+        START = 'START'
+        ENG = 'END'
+
     TYPES = [
         (Types.EXERCISE, '练习卷'),
         (Types.TEST, '测试卷')
     ]
 
+    STATUS = [
+        (Status.NOT_START, '未开始'),
+        (Status.START, '开始'),
+        (Status.ENG, '结束'),
+    ]
+
     types = models.CharField('试卷类型', max_length=10, choices=TYPES)
+    course_id = models.IntegerField('卷子所属课程id')
     chapter_id = models.IntegerField('卷子所属章节id', blank=True, null=True)
     name = models.TextField('卷子名字')
     teacher = models.IntegerField('出卷老师id')
     create_time = models.DateTimeField('创建时间', auto_now_add=True)
-    start_time = models.DateTimeField('开始时间')
-    end_time = models.DateTimeField('截至时间')
+    start_time = models.DateTimeField('开始时间', blank=True, null=True)
+    end_time = models.DateTimeField('截至时间', blank=True, null=True)
+    status = models.CharField('卷子状态', max_length=10, choices=STATUS)
+
+
+class CustomType(models.Model):
+    course_id = models.IntegerField('课程id')
+    custom_type_name = models.TextField('题目类型名称')
 
 
 class PaperQuestionContact(models.Model):
     paper_id = models.IntegerField('卷子id')
+    custom_type_id = models.IntegerField('卷子中题目自定义类型id')
+    types = models.CharField('题目类型', max_length=20)
     score = models.FloatField('题目分数', default=1)
     question_id = models.IntegerField('题目id')
     question = models.TextField('题目')
