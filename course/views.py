@@ -190,3 +190,4 @@ def search_teacher_names(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
+
