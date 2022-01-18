@@ -191,3 +191,71 @@ def search_teacher_names(request):
                 json_dumps_params={"ensure_ascii": False},
             )
 
+def verify_school_user(request):
+    """
+    功能：通过学分制的账号密码, 进行验证, 并绑定用户
+    输入：request头中带有username,password
+    返回：认证成功： result: True; data: user_id
+         认证失败： result: False; data: []; message：错误信息
+    """
+    if request.method == 'POST':
+        try:
+            username = request.POST.get("username")
+            password = request.POST.get("password")
+            code, user_info = identify_user(username=username, password=password)
+            if code is 1:
+                user = Member.objects.filter(username=username+'X')
+                if user.exists():
+                    user_id = user.values()[0].get('id')
+                    user.update(
+                        class_number=user_info['user_name'],
+                        name=user_info['user_real_name'],
+                        professional_class=user_info['user_class'],
+                        gender=user_info['user_sex'] == '男' and Member.Gender.MAN or Member.Gender.WOMAN,
+                        identity=Member.Identity.STUDENT,
+                        college=user_info['user_college']
+                    )
+                else:
+                    user = Member.objects.create(
+                        username=username + 'X',
+                        class_number=user_info['user_name'],
+                        name=user_info['user_real_name'],
+                        professional_class=user_info['user_class'],
+                        gender=user_info['user_sex'] == '男' and Member.Gender.MAN or Member.Gender.WOMAN,
+                        identity=Member.Identity.STUDENT,
+                        college=user_info['user_college']
+                    )
+                    user_id = user.id
+                data = {
+                    'result': True,
+                    'message': '认证成功',
+                    'code': 201,
+                    'data': {
+                        'user_id': user_id,
+                    }
+                }
+                return JsonResponse(data)
+            else:
+                if code is 2:
+                    data = {
+                        'result': False,
+                        'message': '密码错误',
+                        'data': []
+                    }
+                    return JsonResponse(data)
+                else:
+                    if code is 3:
+                        data = {
+                            'result': False,
+                            'message': '用户名不存在',
+                            'data': []
+                        }
+                        return JsonResponse(data)
+        except Exception as e:
+            data = {
+                'result': False,
+                'message': e,
+                'code': 500,  # 后端出错
+                'data': []
+            }
+            return JsonResponse(data)
