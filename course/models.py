@@ -156,7 +156,7 @@ class CustomType(models.Model):
 class PaperQuestionContact(models.Model):
     paper_id = models.IntegerField('卷子id')
     custom_type_id = models.IntegerField('卷子中题目自定义类型id')
-    types = models.CharField('题目类型', max_length=20)
+    types = models.CharField('题目类型', max_length=20, choices=Paper.TYPES)
     score = models.FloatField('题目分数', default=1)
     question_id = models.IntegerField('题目id')
     question = models.TextField('题目')
