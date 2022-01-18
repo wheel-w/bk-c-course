@@ -19,6 +19,11 @@ const Home = () => import('@/views/home')
 const Classmanage = () => import('@/views/class_manage')
 const Myclass = () => import('@/views/my_class')
 const Welcome = () => import('@/views/welcome')
+const SetQuestion = () => import('@/views/class_manage/class_manage_item/set_question')
+const MyManageClass = () => import('@/views/class_manage/class_manage_item/my_manage_class')
+const MyJoinClass = () => import('@/views/my_class/my_class_item/my_join_class')
+const MyJoinClassDetail = () => import('@/views/my_class/my_class_item/my_join_class_detail')
+const AnswerQuestion = () => import('@/views/my_class/my_class_item/answer_question')
 
 const routes = [
     {
@@ -46,12 +51,41 @@ const routes = [
             {
                 path: 'class_manage',
                 name: 'class_manage',
-                component: Classmanage
+                component: Classmanage,
+                children: [
+                    {
+                        path: 'set_question',
+                        name: 'set_question',
+                        component: SetQuestion
+                    },
+                    {
+                        path: 'my_manage_class',
+                        name: 'my_manage_class',
+                        component: MyManageClass
+                    }
+                ]
             },
             {
                 path: 'my_class',
                 name: 'my_class',
-                component: Myclass
+                component: Myclass,
+                children: [
+                    {
+                        path: 'my_join_class',
+                        name: 'my_join_class',
+                        component: MyJoinClass
+                    },
+                    {
+                        path: 'my_join_class_detail',
+                        name: 'my_join_class_detail',
+                        component: MyJoinClassDetail
+                    },
+                    {
+                        path: 'answer_question',
+                        name: 'answer_question',
+                        component: AnswerQuestion
+                    }
+                ]
             }
         ]
     },

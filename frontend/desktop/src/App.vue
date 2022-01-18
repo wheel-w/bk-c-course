@@ -48,7 +48,7 @@
                     :toggle-active="nav.toggle">
                     <bk-navigation-menu-item
                         v-for="item in nav.list"
-                        :has-child="item.children && !!item.children.length"
+                        :has-child="item.children.length === 0 ? false : true"
                         :key="item.id"
                         :default-active="item.active"
                         v-bind="item">
@@ -57,7 +57,6 @@
                             <bk-navigation-menu-item
                                 v-for="child in item.children"
                                 :key="child.id"
-                                :default-active="child.active"
                                 v-bind="child">
                                 <span>{{child.name}}</span>
                             </bk-navigation-menu-item>
@@ -102,21 +101,50 @@
                             group: true
                         },
                         {
-                            id: 'test',
+                            id: '我的课程',
                             name: '我的课程',
                             icon: 'icon-tree-module-shape',
                             pathName: 'my_class',
+                            children: [
+                                {
+                                    id: 'my_join_class',
+                                    name: '我加入的课程',
+                                    pathName: 'my_join_class'
+                                },
+                                {
+                                    id: 'my_join_class_detail',
+                                    name: '课程详情',
+                                    pathName: 'my_join_class_detail'
+                                },
+                                {
+                                    id: 'answer_question',
+                                    name: '答题',
+                                    pathName: 'answer_question'
+                                }
+                            ],
                             group: true
                         },
                         {
-                            id: 'test3',
+                            id: '课程管理',
                             name: '课程管理',
                             icon: 'icon-tree-process-shape',
                             pathName: 'class_manage',
+                            children: [
+                                {
+                                    id: 'my_manage_class',
+                                    name: '我管理的课程',
+                                    pathName: 'my_manage_class'
+                                },
+                                {
+                                    id: 'set_question',
+                                    name: '我的出题',
+                                    pathName: 'set_question'
+                                }
+                            ],
                             group: true
                         }
                     ],
-                    id: 'home1',
+                    id: 'home',
                     toggle: true,
                     submenuActive: false,
                     title: '蓝鲸测试平台'

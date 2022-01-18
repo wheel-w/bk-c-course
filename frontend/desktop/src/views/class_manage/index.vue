@@ -1,5 +1,5 @@
 <template>
     <div class="wrapper">
-        这是课程管理
+        <router-view></router-view>
     </div>
 </template>
