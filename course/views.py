@@ -77,6 +77,7 @@ def manage_course(request):
         course_introduction = req.get("course_introduction")  # 课程简介
         manage_student = req.get("manage_student")  # 学生管理员
         manage_student_id = req.get("manage_student_id")  # 学生管理员id列表
+        manage_student_list = []
         try:
             news_course_info = Course.objects.create(
                 course_name=course_name,
@@ -89,6 +90,9 @@ def manage_course(request):
             )  # 将得到的数据加到course表
             UserCourseContact.objects.create(user_id=request.user.id, course_id=news_course_info.id)
             UserCourseContact.objects.create(user_id=teacher_id, course_id=news_course_info.id)
+            for manage_student in manage_student_id:
+                manage_student_list.append(UserCourseContact(course_id=news_course_info.id, user_id=manage_student))
+            UserCourseContact.objects.bulk_create(manage_student_list)
             return JsonResponse(
                 {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -475,9 +479,10 @@ def search_course_student(request):
                 student_info["class_number"] = user_object.class_number
                 student_info["professional_class"] = user_object.professional_class
                 student_list.append(student_info.copy())
-        paginator = Paginator(student_list, 10)  # 分页器对象，10是每页展示的数据条数
+        page_size = request.GET.get("page_size", 10)
+        paginator = Paginator(student_list, page_size)  # 分页器对象，10是每页展示的数据条数
         page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
-        student_list_page = paginator.get_page(page)  # 更新students为对应页码的10条数据
+        student_list_page = paginator.get_page(page)  # 更新students为对应页码数据
         return JsonResponse(
             {
                 "result": True,
@@ -488,6 +493,7 @@ def search_course_student(request):
                 "page_range": list(paginator.page_range),  # 这个参数是告诉前端一共有多少页
                 "number": len(student_list),
                 "student_list": student_list,
+                "page_size": page_size,
             },
             json_dumps_params={"ensure_ascii": False},
         )
