@@ -80,3 +80,79 @@ class Member(models.Model):
 
     def __str__(self):
         return "{}({})".format(self.class_number, self.name)
+
+
+class Chapter(models.Model):
+    course_id = models.IntegerField('课程id')
+    # 章节的顺序
+    chapter_name = models.TextField('章节名称')
+
+
+class Question(models.Model):
+    class Types:
+        SINGLE = 'SINGLE'
+        MULTIPLE = 'MULTIPLE'
+        COMPLETION = 'COMPLETION'
+        JUDGE = 'JUDGE'
+        SHORT_ANSWER = 'SHORT_ANSWER'
+
+    TYPES = [
+        (Types.SINGLE, '单选题'),
+        (Types.MULTIPLE, '多选题'),
+        (Types.COMPLETION, '填空题'),
+        (Types.JUDGE, '判断题'),
+        (Types.SHORT_ANSWER, '简答题'),
+    ]
+
+    course_id = models.IntegerField('题目所属课程id')
+    chapter_id = models.IntegerField('题目所属章节id')
+    types = models.CharField('题目类型', max_length=20, choices=TYPES)
+    question = models.TextField('题目')
+    option_A = models.TextField('选项A', blank=True, null=True)
+    option_B = models.TextField('选项B', blank=True, null=True)
+    option_C = models.TextField('选项C', blank=True, null=True)
+    option_D = models.TextField('选项D', blank=True, null=True)
+    option_E = models.TextField('选项E', blank=True, null=True)
+    answer = models.CharField('问题答案')
+    explain = models.TextField('答案解析', blank=True, null=True, default='无')
+
+
+class Paper(models.Model):
+    class Types:
+        EXERCISE = 'EXERCISE'
+        TEST = 'TEST'
+
+    TYPES = [
+        (Types.EXERCISE, '练习卷'),
+        (Types.TEST, '测试卷')
+    ]
+
+    types = models.CharField('试卷类型', max_length=10, choices=TYPES)
+    chapter_id = models.IntegerField('卷子所属章节id', blank=True, null=True)
+    name = models.TextField('卷子名字')
+    teacher = models.IntegerField('出卷老师id')
+    create_time = models.DateTimeField('创建时间', auto_now_add=True)
+    start_time = models.DateTimeField('开始时间')
+    end_time = models.DateTimeField('截至时间')
+
+
+class PaperQuestionContact(models.Model):
+    paper_id = models.IntegerField('卷子id')
+    score = models.FloatField('题目分数', default=1)
+    question_id = models.IntegerField('题目id')
+    question = models.TextField('题目')
+    option_A = models.TextField('选项A', blank=True, null=True)
+    option_B = models.TextField('选项B', blank=True, null=True)
+    option_C = models.TextField('选项C', blank=True, null=True)
+    option_D = models.TextField('选项D', blank=True, null=True)
+    option_E = models.TextField('选项E', blank=True, null=True)
+    answer = models.TextField('问题答案')
+    explain = models.TextField('答案解析', blank=True, null=True, default='无')
+
+
+class StudentAnswer(models.Model):
+    student_id = models.IntegerField('学生id')
+    paper_id = models.IntegerField('卷子id')
+    question_id = models.IntegerField('题目id')
+    answer = models.TextField('学生的作答')
+    score = models.FloatField('学生这道题的得分', blank=True, null=True)
