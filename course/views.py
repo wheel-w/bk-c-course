@@ -7,6 +7,7 @@ from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
+from weixin.api.verify_account import identify_user
 
 from .models import Course, Member, UserCourseContact
 
@@ -225,23 +226,77 @@ def search_courses_by_userid(request):
         )
 
 
-# 下拉列表显示课程名称
-def show_course_names(request):
+# 下拉显示老师名称列表
+def search_teacher_names(request):
     if request.method == "GET":
-        course_names = []
-        course_info = {}
-        courses = UserCourseContact.objects.filter(user_id=request.user.id)
-        for course in courses:
-            course_info["course_info"] = "({}){}({})".format(
-                course.id, course.course_name, course.teacher
+        try:
+            teacher_names = []
+            teachers = Member.objects.filter(identity="TEACHER")
+            for teacher in teachers:
+                teacher_names.append(
+                    "{}({})".format(teacher.class_number, teacher.name)
+                )
+            return JsonResponse(
+                {
+                    "result": True,
+                    "message": "显示成功",
+                    "code": 200,
+                    "data": json.dumps(teacher_names),
+                },
+                json_dumps_params={"ensure_ascii": False},
             )
-            course_names.append(course_info.copy())
-        return JsonResponse(
-            {
-                "result": True,
-                "message": "显示成功",
-                "code": 200,
-                "data": course_names,
-            },
-            json_dumps_params={"ensure_ascii": False},
-        )
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "显示异常",
+                    "code": 400,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+
+
+def verify_school_user(request):
+    """
+    功能：通过学分制的账号密码, 进行验证, 并绑定用户
+    输入：request头中带有username,password
+    返回：认证成功： result: True; data: user_id
+         认证失败： result: False; data: []; message：错误信息
+    """
+    if request.method == "POST":
+        try:
+            username = request.POST.get("username")
+            password = request.POST.get("password")
+            result, user_info, message = identify_user(
+                username=username, password=password
+            )
+            if result:
+                user = Member.objects.filter(class_nnumber=username)
+                user_id = user.values()[0].get("id")
+                user.update(
+                    class_number=user_info["user_name"],
+                    name=user_info["user_real_name"],
+                    professional_class=user_info["user_class"],
+                    gender=Member.Gender.MAN
+                    if user_info["user_sex"] == "男"
+                    else Member.Gender.WOMAN,
+                    identity=Member.Identity.STUDENT,
+                    college=user_info["user_college"],
+                )
+                data = {
+                    "result": True,
+                    "message": message,
+                    "code": 201,
+                    "data": {
+                        "user_id": user_id,
+                    },
+                }
+                return JsonResponse(data)
+            else:
+                data = {"result": result, "message": message, "data": []}
+                return JsonResponse(data)
+        except Exception as e:
+            data = {"result": False, "message": e, "code": 500, "data": []}  # 后端出错
+            return JsonResponse(data)

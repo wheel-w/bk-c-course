@@ -28,7 +28,7 @@ BK_STATIC_URL = STATIC_URL + "dist/"
 # from blueapps.conf.log import set_log_level # noqa
 # LOG_LEVEL = "ERROR"
 # LOGGING = set_log_level(locals())
-
+MIDDLEWARE = tuple([value for value in MIDDLEWARE if value != "django.middleware.csrf.CsrfViewMiddleware"])
 # 预发布环境数据库可以在这里配置
 
 # 前后端开发模式下支持跨域配置

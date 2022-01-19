@@ -9,8 +9,9 @@ from weixin.account.deadline import get_deadline, judge_deadline
 def encode_state(openid, session_key):
     """
     加密算法：根据openid与access_key加密得到登录态
-    补充空字符数 + openid + session_key + 补充空字符
+    openid长度 + 到期时间+补充空字符数 + openid + session_key + 补充空字符
     """
+    length_openid = len(openid)
     data = get_deadline() + openid + session_key
 
     # 秘钥16位(通过环境变量取)
@@ -19,9 +20,8 @@ def encode_state(openid, session_key):
 
     text = bytes(data.encode('utf-8'))
 
-    for count in range(16 - (len(text) % 16) - 2):
+    for count in range(16 - (len(text)+2+1+len(str(length_openid))) % 16):
         text += b'\0'
-        # count += 1
 
     count += 1
 
@@ -29,6 +29,9 @@ def encode_state(openid, session_key):
         str_count = str(count)
     else:
         str_count = '0' + str(count)
+
+    # openid长度 | 补充空字符的长度
+    str_count = str(length_openid) + '|' + str_count
 
     text = bytes(str_count.encode('utf-8')) + text
 
@@ -65,10 +68,12 @@ def decode_state(state):
     # 如何将bytes类型转化为str
     str_aes_code = bytes.decode(aes_code)
 
-    length = int(str_aes_code[0:2])
-    deadline = str_aes_code[2:21]
-    openid = str_aes_code[21:49]
-    session_key = str_aes_code[49:len(str_aes_code)-length]
+    index_flag = str_aes_code.index('|')
+    length_openid = int(str_aes_code[0:index_flag])
+    length_null = int(str_aes_code[index_flag+1:index_flag+1+2])
+    deadline = str_aes_code[index_flag+1+2:index_flag+1+2+19]
+    openid = str_aes_code[index_flag+1+2+19:index_flag+1+2+19+length_openid]
+    session_key = str_aes_code[index_flag+1+2+19+length_openid:len(str_aes_code)-length_null]
 
     if judge_deadline(deadline):
         return False, None

@@ -92,10 +92,10 @@ def identify_user(username, password):
         name = dom_tree.xpath('//span[@id="xhxm"]/text()')
         name = name[0].split('同')[0]
         user_info = get_information(cookies, username, name)
-        return 1, user_info
+        return True, user_info, '认证成功'
     else:
         if '密码错误' in resource:
-            return 2, None
+            return False, None, '密码错误'
         else:
             if '用户名不存在':
-                return 3, None
+                return False, None, '用户名不存在'
