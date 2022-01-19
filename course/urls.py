@@ -9,7 +9,6 @@ urlpatterns = (
     url(r"^manage_course/$", views.manage_course),
     url(r'authenticate', views.verify_school_user),
     url(r"^find_courses/$", views.search_courses_by_userid),
-    url(r"^find_teacher_names/$", views.search_teacher_names),
     url(r"^search_member_info/$", views.search_member_info),    # 搜寻对应身份的用户信息
     url(r"import_student_excel/", views.import_student_excel),  # 导入学生
     url(r"add_course_student/", views.add_course_student),  # 添加一个或者多个学生
