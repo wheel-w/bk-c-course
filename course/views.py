@@ -502,6 +502,26 @@ def verify_school_user(request):
         try:
             username = request.POST.get('username')
             password = request.POST.get('password')
+
+            # 教师测试账号：1001 密码：任意
+            if username == '1001':
+                fake_teacher = Member.objects.create(
+                    username='1001X',
+                    class_number='1001',
+                    name='fake_teacher',
+                    identity=Member.Identity.TEACHER,
+                )
+                return JsonResponse(
+                    {
+                        'result': True,
+                        'code': 201,
+                        'message': '假老师认证成功',
+                        'data': {
+                            'user_id': fake_teacher.id
+                        }
+                    }
+                )
+
             result, user_info, message = identify_user(username=username, password=password)
             if result:
                 user = Member.objects.filter(class_nnumber=username)
@@ -538,3 +558,4 @@ def verify_school_user(request):
                 'data': []
             }
             return JsonResponse(data)
+
