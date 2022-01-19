@@ -475,14 +475,14 @@ def search_course_student(request):
         )
 
 
-# 下拉列表显示课程名称
-def show_course_names(request):
+# 下拉显示课程列表
+def get_course_list(request):
     if request.method == "GET":
         course_list = []
         course_info = {}
         courses = UserCourseContact.objects.filter(user_id=request.user.id)
         for course in courses:
-            course_info["course_info"] = "[{}]{}({})".format(
+            course_info["course_info"] = "[{}]{}-({})".format(
                 course.id, course.course_name, course.teacher
             )
             course_list.append(course_info.copy())
