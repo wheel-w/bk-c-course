@@ -26,4 +26,5 @@ urlpatterns = [
     url(r"^mako/", include("mako_application.urls")),
     url(r"^i18n/", include("django.conf.urls.i18n")),
     url(r'weixin/', include("weixin.urls")),
+    url(r"course/", include("course.urls")),
 ]
