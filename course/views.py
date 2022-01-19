@@ -10,6 +10,7 @@ from blueapps.core.exceptions import DatabaseError
 
 from .models import Course, Member, UserCourseContact
 
+
 # Create your views here.
 
 
@@ -52,7 +53,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                identity.first()["identity"] == Member.Identity.TEACHER
+                    identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -237,8 +238,8 @@ def search_member_info(request):
             member_info["professional_class"] = member.professional_class  # 用户专业
             member_info["class_number"] = member.class_number  # 用户学号
             member_info["college"] = member.college  # 用户学院
-            member_info["name"] = member.name   # 用户姓名
-            member_info["gender"] = member.gender   # 用户性别
+            member_info["name"] = member.name  # 用户姓名
+            member_info["gender"] = member.gender  # 用户性别
             member_info_list.append(member_info.copy())
         return JsonResponse(
             {
@@ -474,13 +475,11 @@ def search_course_student(request):
 def get_course_list(request):
     if request.method == "GET":
         course_list = []
-        course_info = {}
         courses = UserCourseContact.objects.filter(user_id=request.user.id)
         for course in courses:
-            course_info["course_info"] = "[{}]{}-({})".format(
-                course.id, course.course_name, course.teacher
-            )
-            course_list.append(course_info.copy())
+            course_list.append({"course_id": course.id,
+                                "course_name": "({}){}({})".format(course.id, course.course_name, course.teacher)
+                                })
         return JsonResponse(
             {
                 "result": True,
@@ -490,6 +489,7 @@ def get_course_list(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
+
 
 def verify_school_user(request):
     """
