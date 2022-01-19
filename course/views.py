@@ -255,3 +255,52 @@ def search_teacher_names(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
+
+
+def verify_school_user(request):
+    """
+    功能：通过学分制的账号密码, 进行验证, 并绑定用户
+    输入：request头中带有username,password
+    返回：认证成功： result: True; data: user_id
+         认证失败： result: False; data: []; message：错误信息
+    """
+    if request.method == 'POST':
+        try:
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            result, user_info, message = identify_user(username=username, password=password)
+            if result:
+                user = Member.objects.filter(class_nnumber=username)
+                user_id = user.values()[0].get('id')
+                user.update(
+                    class_number=user_info['user_name'],
+                    name=user_info['user_real_name'],
+                    professional_class=user_info['user_class'],
+                    gender=Member.Gender.MAN if user_info['user_sex'] == '男' else Member.Gender.WOMAN,
+                    identity=Member.Identity.STUDENT,
+                    college=user_info['user_college']
+                )
+                data = {
+                    'result': True,
+                    'message': message,
+                    'code': 201,
+                    'data': {
+                        'user_id': user_id,
+                    }
+                }
+                return JsonResponse(data)
+            else:
+                data = {
+                    'result': result,
+                    'message': message,
+                    'data': []
+                }
+                return JsonResponse(data)
+        except Exception as e:
+            data = {
+                'result': False,
+                'message': e,
+                'code': 500,  # 后端出错
+                'data': []
+            }
+            return JsonResponse(data)
