@@ -473,3 +473,25 @@ def search_course_student(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
+
+
+# 下拉列表显示课程名称
+def show_course_names(request):
+    if request.method == "GET":
+        course_list = []
+        course_info = {}
+        courses = UserCourseContact.objects.filter(user_id=request.user.id)
+        for course in courses:
+            course_info["course_info"] = "[{}]{}({})".format(
+                course.id, course.course_name, course.teacher
+            )
+            course_list.append(course_info.copy())
+        return JsonResponse(
+            {
+                "result": True,
+                "message": "显示成功",
+                "code": 200,
+                "data": course_list,
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )

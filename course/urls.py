@@ -11,4 +11,5 @@ urlpatterns = [
     url(r"download_student_excel_template/", views.download_student_excel_template),
     url(r"search_course_student/", views.search_course_student),  # 寻找课程学生列表
     url(r"delete_student_course_contact/", views.delete_student_course_contact),  # 删除一个学生与课程对应关系
+    url(r"^get_course_list/$", views.show_course_names),  # 返回课程名称的下拉列表
 ]
