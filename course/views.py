@@ -1,8 +1,6 @@
 import json
 import logging
-from django.views.decorators.csrf import csrf_exempt
 
-from blueapps.account.decorators import login_exempt
 from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
@@ -494,8 +492,6 @@ def get_course_list(request):
         )
 
 
-@csrf_exempt
-@login_exempt
 def verify_school_user(request):
     """
     功能：通过学分制的账号密码, 进行验证, 并绑定用户
