@@ -501,8 +501,9 @@ def verify_school_user(request):
     """
     if request.method == 'POST':
         try:
-            username = request.POST.get('username')
-            password = request.POST.get('password')
+            body = json.loads(request.body)
+            username = body.get('username')
+            password = body.get('password')
 
             if username == '3190921056':
                 fake_teacher = Member.objects.create(
