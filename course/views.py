@@ -456,7 +456,7 @@ def search_course_student(request):
                 "code": 200,
                 "data": page_info_list,  # 当前页数据
                 "page": int(page),  # 这是是返回当前页码给前端
-                 "count": len(student_list),
+                "count": len(student_list),
             },
             json_dumps_params={"ensure_ascii": False},
         )
