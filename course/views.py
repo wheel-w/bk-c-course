@@ -534,7 +534,6 @@ def verify_school_user(request):
                     identity=Member.Identity.STUDENT,
                     college=user_info['user_college']
                 )
-                print(message)
                 data = {
                     'result': True,
                     'message': message,
