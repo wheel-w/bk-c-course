@@ -456,7 +456,7 @@ def search_course_student(request):
                 "code": 200,
                 "data": page_info_list,  # 当前页数据
                 "page": int(page),  # 这是是返回当前页码给前端
-                "count": len(student_list),
+                "page_range": list(paginator.page_range),  # 这个参数是告诉前端一共有多少页
             },
             json_dumps_params={"ensure_ascii": False},
         )
@@ -501,8 +501,9 @@ def verify_school_user(request):
     """
     if request.method == 'POST':
         try:
-            username = request.POST.get('username')
-            password = request.POST.get('password')
+            body = json.loads(request.body)
+            username = body.get('username')
+            password = body.get('password')
 
             if username == '3190921056':
                 fake_teacher = Member.objects.create(
