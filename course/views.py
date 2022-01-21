@@ -525,7 +525,7 @@ def verify_school_user(request):
 
             result, user_info, message = identify_user(username=username, password=password)
             if result:
-                user = Member.objects.filter(class_nnumber=username)
+                user = Member.objects.filter(class_number=username)
                 user_id = user.values()[0].get('id')
                 user.update(
                     class_number=user_info['user_name'],
@@ -535,6 +535,7 @@ def verify_school_user(request):
                     identity=Member.Identity.STUDENT,
                     college=user_info['user_college']
                 )
+                print(message)
                 data = {
                     'result': True,
                     'message': message,
