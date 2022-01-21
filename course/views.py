@@ -7,6 +7,7 @@ from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
+from weixin.api.verify_account import identify_user
 
 from .models import Course, Member, UserCourseContact
 
