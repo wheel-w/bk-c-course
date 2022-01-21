@@ -501,23 +501,22 @@ def verify_school_user(request):
     """
     if request.method == 'POST':
         try:
-            username = request.POST.get('username')
-            password = request.POST.get('password')
+            body = json.loads(request.body)
+            username = body.get('username')
+            password = body.get('password')
 
-            if username == '3190921056':
-                fake_teacher = Member.objects.create(
-                    username='3190921056X',
-                    class_number='3190921056',
-                    name='fake_teacher',
-                    identity=Member.Identity.TEACHER,
+            if username == 'test_teacher':
+                member = Member.objects.get(
+                    username=request.user.username
                 )
+                member.identity = "TEACHER"
                 return JsonResponse(
                     {
                         'result': True,
                         'code': 201,
-                        'message': '假老师认证成功',
+                        'message': 'mock老师认证成功',
                         'data': {
-                            'user_id': fake_teacher.id
+                            'user_id': member.id
                         }
                     }
                 )
