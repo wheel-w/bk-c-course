@@ -140,7 +140,7 @@ class Paper(models.Model):
     types = models.CharField('试卷类型', max_length=10, choices=TYPES)
     course_id = models.IntegerField('卷子所属课程id')
     chapter_id = models.IntegerField('卷子所属章节id', blank=True, null=True)
-    paper_name = models.charField('卷子名字', max_length=255)
+    paper_name = models.CharField('卷子名字', max_length=255)
     teacher = models.CharField("教师姓名", max_length=90)
     create_time = models.DateTimeField('创建时间', auto_now_add=True)
     start_time = models.DateTimeField('开始时间', blank=True, null=True)
