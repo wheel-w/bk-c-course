@@ -504,7 +504,7 @@ def verify_school_user(request):
             username = request.POST.get('username')
             password = request.POST.get('password')
 
-            if username == '3190921056X':
+            if username == '3190921056':
                 fake_teacher = Member.objects.create(
                     username='3190921056X',
                     class_number='3190921056',
