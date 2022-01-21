@@ -119,29 +119,29 @@ class Question(models.Model):
 class Paper(models.Model):
     class Types:
         EXERCISE = 'EXERCISE'
-        TEST = 'TEST'
+        EXAM = 'EXAM'
 
     class Status:
         NOT_START = 'NOT_START'
-        START = 'START'
-        ENG = 'END'
+        ON_GOING = 'ON_GOING'
+        FINISHED = 'FINISHED'
 
     TYPES = [
         (Types.EXERCISE, '练习卷'),
-        (Types.TEST, '测试卷')
+        (Types.EXAM, '测试卷')
     ]
 
     STATUS = [
         (Status.NOT_START, '未开始'),
-        (Status.START, '开始'),
-        (Status.ENG, '结束'),
+        (Status.ON_GOING, '开始'),
+        (Status.FINISHED, '结束'),
     ]
 
     types = models.CharField('试卷类型', max_length=10, choices=TYPES)
     course_id = models.IntegerField('卷子所属课程id')
     chapter_id = models.IntegerField('卷子所属章节id', blank=True, null=True)
-    paper_name = models.TextField('卷子名字')
-    teacher = models.IntegerField('出卷老师id')
+    paper_name = models.charField('卷子名字', max_length=255)
+    teacher = models.CharField("教师姓名", max_length=90)
     create_time = models.DateTimeField('创建时间', auto_now_add=True)
     start_time = models.DateTimeField('开始时间', blank=True, null=True)
     end_time = models.DateTimeField('截至时间', blank=True, null=True)
@@ -171,7 +171,6 @@ class PaperQuestionContact(models.Model):
 
 class StudentAnswer(models.Model):
     student_id = models.IntegerField('学生id')
-    paper_id = models.IntegerField('卷子id')
-    question_id = models.IntegerField('题目id')
+    PQContact_id = models.IntegerField('卷子与题目关联表单的id')
     answer = models.TextField('学生的作答')
     score = models.FloatField('学生这道题的得分', blank=True, null=True)
