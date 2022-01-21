@@ -516,7 +516,7 @@ def verify_school_user(request):
                         'code': 201,
                         'message': 'mock老师认证成功',
                         'data': {
-                            'user_id': fake_teacher.id
+                            'user_id': member.id
                         }
                     }
                 )
