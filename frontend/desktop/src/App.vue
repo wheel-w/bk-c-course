@@ -4,30 +4,26 @@
             :header-title="nav.id"
             :side-title="nav.title"
             :default-open="true"
-            :navigation-type="'top-bottom'"
-            :need-menu="true"
-            @toggle="handleToggle">
+            :navigation-type="'left-right'"
+            :need-menu="true">
             <template slot="header">
                 <div class="monitor-navigation-header">
-                    <ol class="header-nav">
-                        <bk-popover v-for="(item,index) in header.list" :key="item.id" theme="light navigation-message" :arrow="false" offset="0, -5" placement="bottom" :tippy-options="{ 'hideOnClick': false, flipBehavior: ['bottom'] }">
-                            <li v-show="item.show" class="header-nav-item" :class="{ 'item-active': index === header.active }">
-                                {{item.name}}
-                            </li>
-                            <template slot="content">
-                                <ul class="monitor-navigation-nav">
-                                    <li class="nav-item" v-for="headerNavItem in curHeaderNav.navList" :key="headerNavItem.id">
-                                        {{headerNavItem.name}}
-                                    </li>
-                                </ul>
-                            </template>
-                        </bk-popover>
-                    </ol>
                     <div class="header-select">
+                        <bk-select v-if="nav.id !== 'home' && nav.id !== 'person' && nav.id !== 'exit'" v-model="$store.state.currentCourseId" style="width: 250px;"
+                            ext-cls="select-custom"
+                            ext-popover-cls="select-popover-custom"
+                            searchable
+                            :disabled="false">
+                            <bk-option v-for="option in courseList"
+                                :key="option.course_id"
+                                :id="option.course_id"
+                                :name="option.course_name">
+                            </bk-option>
+                        </bk-select>
                     </div>
                     <bk-popover theme="light navigation-message" :arrow="false" offset="-20, 10" placement="bottom-start" :tippy-options="{ 'hideOnClick': false }">
                         <div class="header-user">
-                            admin
+                            {{ $store.state.user.username }}
                             <i class="bk-icon icon-down-shape"></i>
                         </div>
                         <template slot="content">
@@ -48,7 +44,7 @@
                     :toggle-active="nav.toggle">
                     <bk-navigation-menu-item
                         v-for="item in nav.list"
-                        :has-child="item.children && !!item.children.length"
+                        :has-child="item.children.length === 0 ? false : true"
                         :key="item.id"
                         :default-active="item.active"
                         v-bind="item">
@@ -57,7 +53,6 @@
                             <bk-navigation-menu-item
                                 v-for="child in item.children"
                                 :key="child.id"
-                                :default-active="child.active"
                                 v-bind="child">
                                 <span>{{child.name}}</span>
                             </bk-navigation-menu-item>
@@ -102,30 +97,34 @@
                             group: true
                         },
                         {
-                            id: 'test',
-                            name: '我的课程',
+                            id: 'my_join_class',
+                            name: '课程管理',
                             icon: 'icon-tree-module-shape',
-                            pathName: 'my_class',
+                            pathName: 'my_join_class',
+                            children: [],
                             group: true
                         },
                         {
-                            id: 'test3',
-                            name: '课程管理',
+                            id: 'set_question_index',
+                            name: '出题页面',
                             icon: 'icon-tree-process-shape',
-                            pathName: 'class_manage',
+                            pathName: 'set_question_index',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'answer_question_index',
+                            name: '答题页面',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'answer_question_index',
+                            children: [],
                             group: true
                         }
                     ],
-                    id: 'home1',
+                    id: 'home',
                     toggle: true,
                     submenuActive: false,
-                    title: '蓝鲸测试平台'
-                },
-                header: {
-                    list: [],
-                    selectList: [],
-                    active: 2,
-                    bizId: 1
+                    title: '课程管理系统'
                 },
                 user: {
                     list: [
@@ -140,7 +139,8 @@
                             pathName: 'exit'
                         }
                     ]
-                }
+                },
+                courseList: []
             }
         },
         computed: {
@@ -150,6 +150,7 @@
             }
         },
         created () {
+            this.getCourseList()
             const platform = window.navigator.platform.toLowerCase()
             if (platform.indexOf('win') === 0) {
                 this.systemCls = 'win'
@@ -166,17 +167,26 @@
                     window.location.reload()
                 }, 0)
             })
+            bus.$on('updateNavId', id => {
+                self.nav.id = id
+            })
         },
         methods: {
+            // 点击导航栏跳转对应页面
             handleSelect (id, item) {
                 this.nav.id = id
-                console.info(`你选择了${id}`)
                 this.$router.push({
                     name: item.pathName
                 })
             },
-            handleToggle (v) {
-                this.nav.toggle = v
+            // 获取课程列表
+            async getCourseList () {
+                this.$http.get('/course/get_course_list/').then(res => {
+                    if (res.data.length !== 0) {
+                        this.courseList = res.data
+                        this.$store.commit('updateCourseId', res.data[0].course_id)
+                    }
+                })
             }
         }
     }
@@ -255,7 +265,6 @@
             margin-left: auto;
             margin-right: 34px;
             border: none;
-            background: #252f43;
             color: #d3d9e4;
             -webkit-box-shadow: none;
             box-shadow: none;

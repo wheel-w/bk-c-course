@@ -28,13 +28,13 @@ export default {
         assetsSubDirectory: 'static',
         assetsPublicPath: '/',
         proxyTable: {
-            '/bk_api': { // 代理地址
+            '/bk_api': {  //代理地址
                 // target: 'http://dev.paas-edu.bktencent.com:8000',  //需要代理的地址， 实际生产环境需要访问的地址
                 target: 'https://paas-edu.bktencent.com/t/config-query',
-                changeOrigin: true, // 是否跨域
-                secure: false,
+                changeOrigin: true,  //是否跨域
+                secure: true, // https请求需开启此配置
                 pathRewrite: {
-                    '^/bk_api': '' // 本身的接口地址没有 '/bk_api' 这种通用前缀，所以要rewrite，如果本身有则去掉
+                    '^/bk_api': ''   //本身的接口地址没有 '/bk_api' 这种通用前缀，所以要rewrite，如果本身有则去掉
                 }
             }
         },
