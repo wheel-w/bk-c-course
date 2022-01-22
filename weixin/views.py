@@ -90,7 +90,53 @@ def verify_schooluser(request):
             openid, session_key = data[0], data[1]
 
             # 验证学分制账号与密码
-            code, user_info = identify_user(username=username, password=password)
+            result, user_info, message = identify_user(username=username, password=password)
+
+            if result:
+                user = Member.objects.filter(class_number=username)
+                if user.exists():
+                    user_id = user.values()[0].get('id')
+                    user.update(
+                        openid=openid,
+                        class_number=user_info['user_name'],
+                        name=user_info['user_real_name'],
+                        professional_class=user_info['user_class'],
+                        gender=Member.Gender.MAN if user_info['user_sex'] == '男' else Member.Gender.WOMAN,
+                        identity=Member.Identity.STUDENT,
+                        college=user_info['user_college']
+                    )
+                else:
+                    user = Member.objects.create(
+                        username=username + 'X',
+                        openid=openid,
+                        class_number=user_info['user_name'],
+                        name=user_info['user_real_name'],
+                        professional_class=user_info['user_class'],
+                        gender=Member.Gender.MAN if user_info['user_sex'] == '男' else Member.Gender.WOMAN,
+                        identity=Member.Identity.STUDENT,
+                        college=user_info['user_college']
+                    )
+                    user_id = user.id
+                data = {
+                    'result': result,
+                    'message': message,
+                    'code': 201,
+                    'data': {
+                        'state': state,
+                        'user_id': user_id,
+                    }
+                }
+
+                return JsonResponse(data)
+            else:
+                data = {
+                    'result': result,
+                    'message': message,
+                    'data': {
+                        'state': state,
+                    }
+                }
+                return JsonResponse(data)
         except Exception as e:
             data = {
                 'result': False,
@@ -101,59 +147,3 @@ def verify_schooluser(request):
                 }
             }
             return JsonResponse(data)
-
-        if code is 1:
-            user = Member.objects.filter(openid=openid)
-            if user.exists():
-                user_id = user.values()[0].get('id')
-                user.update(
-                    class_number=user_info['user_name'],
-                    name=user_info['user_real_name'],
-                    professional_class=user_info['user_class'],
-                    gender=user_info['user_sex'] == '男' and Member.Gender.MAN or Member.Gender.WOMAN,
-                    identity=Member.Identity.STUDENT,
-                    college=user_info['user_college']
-                )
-            else:
-                user = Member.objects.create(
-                    username=username + 'X',
-                    openid=openid,
-                    class_number=user_info['user_name'],
-                    name=user_info['user_real_name'],
-                    professional_class=user_info['user_class'],
-                    gender=user_info['user_sex'] == '男' and Member.Gender.MAN or Member.Gender.WOMAN,
-                    identity=Member.Identity.STUDENT,
-                    college=user_info['user_college']
-                )
-                user_id = user.id
-            data = {
-                'result': True,
-                'message': '认证成功',
-                'code': 201,
-                'data': {
-                    'state': state,
-                    'user_id': user_id,
-                }
-            }
-
-            return JsonResponse(data)
-        else:
-            if code is 2:
-                data = {
-                    'result': False,
-                    'message': '密码错误',
-                    'data': {
-                        'state': state,
-                    }
-                }
-                return JsonResponse(data)
-            else:
-                if code is 3:
-                    data = {
-                        'result': False,
-                        'message': '用户名不存在',
-                        'data': {
-                            'state': state,
-                        }
-                    }
-                    return JsonResponse(data)
