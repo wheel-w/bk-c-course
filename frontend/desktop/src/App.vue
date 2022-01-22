@@ -5,19 +5,19 @@
             :side-title="nav.title"
             :default-open="true"
             :navigation-type="'left-right'"
-            :need-menu="true"
-            @toggle="handleToggle">
+            :need-menu="true">
             <template slot="header">
                 <div class="monitor-navigation-header">
                     <div class="header-select">
-                        <bk-select :disabled="false" v-model="course.currentCourseId" style="width: 250px;"
+                        <bk-select v-if="nav.id !== 'home' && nav.id !== 'person' && nav.id !== 'exit'" v-model="$store.state.currentCourseId" style="width: 250px;"
                             ext-cls="select-custom"
                             ext-popover-cls="select-popover-custom"
-                            searchable>
-                            <bk-option v-for="option in course.courseList"
-                                :key="option.id"
-                                :id="option.id"
-                                :name="option.name">
+                            searchable
+                            :disabled="false">
+                            <bk-option v-for="option in courseList"
+                                :key="option.course_id"
+                                :id="option.course_id"
+                                :name="option.course_name">
                             </bk-option>
                         </bk-select>
                     </div>
@@ -97,26 +97,26 @@
                             group: true
                         },
                         {
-                            id: 'my_join_class_detail',
-                            name: '课程详情',
+                            id: 'my_join_class',
+                            name: '课程管理',
                             icon: 'icon-tree-module-shape',
-                            pathName: 'my_join_class_detail',
+                            pathName: 'my_join_class',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'set_question',
+                            id: 'set_question_index',
                             name: '出题页面',
                             icon: 'icon-tree-process-shape',
-                            pathName: 'set_question',
+                            pathName: 'set_question_index',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'answer_question',
+                            id: 'answer_question_index',
                             name: '答题页面',
                             icon: 'icon-tree-process-shape',
-                            pathName: 'answer_question',
+                            pathName: 'answer_question_index',
                             children: [],
                             group: true
                         }
@@ -140,31 +140,13 @@
                         }
                     ]
                 },
-                course: {
-                    courseList: [
-                        {
-                            id: 1,
-                            name: '[1] 高等数学上 王文成'
-                        },
-                        {
-                            id: 2,
-                            name: '[2] 高等数学下 王文成'
-                        }
-                    ],
-                    currentCourseId: 1
-                }
+                courseList: []
             }
         },
         computed: {
             ...mapGetters(['mainContentLoading']),
             curHeaderNav () {
                 return this.header.list[this.header.active] || {}
-            }
-        },
-        watch: {
-            // 监听课程id改变
-            'course.currentCourseId' (newValue) {
-                console.log(newValue)
             }
         },
         created () {
@@ -185,24 +167,25 @@
                     window.location.reload()
                 }, 0)
             })
+            bus.$on('updateNavId', id => {
+                self.nav.id = id
+            })
         },
         methods: {
             // 点击导航栏跳转对应页面
             handleSelect (id, item) {
                 this.nav.id = id
-                console.info(`你选择了${id}`)
                 this.$router.push({
                     name: item.pathName
                 })
             },
-            handleToggle (v) {
-                this.nav.toggle = v
-            },
             // 获取课程列表
-            getCourseList () {
-                this.$http.get('/course/find_courses/').then(res => {
-                    // this.course.courseList = res.data
-                    console.log(res)
+            async getCourseList () {
+                this.$http.get('/course/get_course_list/').then(res => {
+                    if (res.data.length !== 0) {
+                        this.courseList = res.data
+                        this.$store.commit('updateCourseId', res.data[0].course_id)
+                    }
                 })
             }
         }

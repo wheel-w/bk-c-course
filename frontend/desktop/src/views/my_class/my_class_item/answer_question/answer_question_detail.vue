@@ -1,15 +1,14 @@
 <template>
     <div class="wrapper">
-        我是出题界面
+        我是答题详细页面
     </div>
 </template>
 
 <script>
     export default {
-        name: 'set_question'
+        name: 'answer_question_detail'
     }
 </script>
 
 <style scoped>
-
 </style>

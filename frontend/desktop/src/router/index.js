@@ -17,13 +17,13 @@ const NotFound = () => import(/* webpackChunkName: 'none' */'@/views/404')
 const Welcome = () => import('@/views/welcome')
 const Home = () => import('@/views/home')
 const Person = () => import('@/views/person')
-const Classmanage = () => import('@/views/class_manage')
-const SetQuestion = () => import('@/views/class_manage/class_manage_item/set_question')
-const MyManageClass = () => import('@/views/class_manage/class_manage_item/my_manage_class')
-const Myclass = () => import('@/views/my_class')
+const MyClass = () => import('@/views/my_class')
 const MyJoinClass = () => import('@/views/my_class/my_class_item/my_join_class')
 const MyJoinClassDetail = () => import('@/views/my_class/my_class_item/my_join_class_detail')
-const AnswerQuestion = () => import('@/views/my_class/my_class_item/answer_question')
+const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
+const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
+const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
+const SetQuestionDetail = () => import('@/views/my_class/my_class_item/set_question/set_question_detail')
 
 const routes = [
     {
@@ -34,7 +34,6 @@ const routes = [
         children: [
             {
                 path: 'welcome',
-                alias: '',
                 name: 'welcome',
                 component: Welcome
             },
@@ -46,29 +45,13 @@ const routes = [
             {
                 path: 'home',
                 name: 'home',
+                alias: '',
                 component: Home
-            },
-            {
-                path: 'class_manage',
-                name: 'class_manage',
-                component: Classmanage,
-                children: [
-                    {
-                        path: 'set_question',
-                        name: 'set_question',
-                        component: SetQuestion
-                    },
-                    {
-                        path: 'my_manage_class',
-                        name: 'my_manage_class',
-                        component: MyManageClass
-                    }
-                ]
             },
             {
                 path: 'my_class',
                 name: 'my_class',
-                component: Myclass,
+                component: MyClass,
                 children: [
                     {
                         path: 'my_join_class',
@@ -81,9 +64,24 @@ const routes = [
                         component: MyJoinClassDetail
                     },
                     {
-                        path: 'answer_question',
-                        name: 'answer_question',
-                        component: AnswerQuestion
+                        path: 'answer_question_index',
+                        name: 'answer_question_index',
+                        component: AnswerQuestionIndex
+                    },
+                    {
+                        path: 'answer_question_detail',
+                        name: 'answer_question_detail',
+                        component: AnswerQuestionDetail
+                    },
+                    {
+                        path: 'set_question_index',
+                        name: 'set_question_index',
+                        component: SetQuestionIndex
+                    },
+                    {
+                        path: 'set_question_detail',
+                        name: 'set_question_detail',
+                        component: SetQuestionDetail
                     }
                 ]
             }

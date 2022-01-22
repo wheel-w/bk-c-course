@@ -1,12 +1,12 @@
 <template>
     <div class="wrapper">
-        我管理的课程主界面
+        我是详细出题页面
     </div>
 </template>
 
 <script>
     export default {
-        name: 'my_manage_class'
+        name: 'set_question_detail'
     }
 </script>
 
