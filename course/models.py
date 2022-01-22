@@ -80,3 +80,97 @@ class Member(models.Model):
 
     def __str__(self):
         return "{}({})".format(self.class_number, self.name)
+
+
+class Chapter(models.Model):
+    course_id = models.IntegerField('课程id')
+    chapter_name = models.TextField('章节名称')
+
+
+class Question(models.Model):
+    class Types:
+        SINGLE = 'SINGLE'
+        MULTIPLE = 'MULTIPLE'
+        COMPLETION = 'COMPLETION'
+        JUDGE = 'JUDGE'
+        SHORT_ANSWER = 'SHORT_ANSWER'
+
+    TYPES = [
+        (Types.SINGLE, '单选题'),
+        (Types.MULTIPLE, '多选题'),
+        (Types.COMPLETION, '填空题'),
+        (Types.JUDGE, '判断题'),
+        (Types.SHORT_ANSWER, '简答题'),
+    ]
+
+    course_id = models.IntegerField('题目所属课程id')
+    chapter_id = models.IntegerField('题目所属章节id')
+    types = models.CharField('题目类型', max_length=20, choices=TYPES)
+    question = models.TextField('题目')
+    option_A = models.TextField('选项A', blank=True, null=True)
+    option_B = models.TextField('选项B', blank=True, null=True)
+    option_C = models.TextField('选项C', blank=True, null=True)
+    option_D = models.TextField('选项D', blank=True, null=True)
+    option_E = models.TextField('选项E', blank=True, null=True)
+    answer = models.TextField('问题答案')
+    explain = models.TextField('答案解析', blank=True, null=True, default='无')
+
+
+class Paper(models.Model):
+    class Types:
+        EXERCISE = 'EXERCISE'
+        EXAM = 'EXAM'
+
+    class Status:
+        NOT_START = 'NOT_START'
+        ON_GOING = 'ON_GOING'
+        FINISHED = 'FINISHED'
+
+    TYPES = [
+        (Types.EXERCISE, '练习卷'),
+        (Types.EXAM, '测试卷')
+    ]
+
+    STATUS = [
+        (Status.NOT_START, '未开始'),
+        (Status.ON_GOING, '开始'),
+        (Status.FINISHED, '结束'),
+    ]
+
+    types = models.CharField('试卷类型', max_length=10, choices=TYPES)
+    course_id = models.IntegerField('卷子所属课程id')
+    chapter_id = models.IntegerField('卷子所属章节id', blank=True, null=True)
+    paper_name = models.CharField('卷子名字', max_length=255)
+    teacher = models.CharField("教师姓名", max_length=90)
+    create_time = models.DateTimeField('创建时间', auto_now_add=True)
+    start_time = models.DateTimeField('开始时间', blank=True, null=True)
+    end_time = models.DateTimeField('截至时间', blank=True, null=True)
+    status = models.CharField('卷子状态', max_length=10, choices=STATUS)
+
+
+class CustomType(models.Model):
+    course_id = models.IntegerField('课程id')
+    custom_type_name = models.TextField('题目类型名称')
+
+
+class PaperQuestionContact(models.Model):
+    paper_id = models.IntegerField('卷子id')
+    custom_type_id = models.IntegerField('卷子中题目自定义类型id')
+    types = models.CharField('题目类型', max_length=20, choices=Paper.TYPES)
+    score = models.FloatField('题目分数', default=1)
+    question_id = models.IntegerField('题目id')
+    question = models.TextField('题目')
+    option_A = models.TextField('选项A', blank=True, null=True)
+    option_B = models.TextField('选项B', blank=True, null=True)
+    option_C = models.TextField('选项C', blank=True, null=True)
+    option_D = models.TextField('选项D', blank=True, null=True)
+    option_E = models.TextField('选项E', blank=True, null=True)
+    answer = models.TextField('问题答案')
+    explain = models.TextField('答案解析', blank=True, null=True, default='无')
+
+
+class StudentAnswer(models.Model):
+    student_id = models.IntegerField('学生id')
+    PQContact_id = models.IntegerField('卷子与题目关联表单的id')
+    answer = models.TextField('学生的作答')
+    score = models.FloatField('学生这道题的得分', blank=True, null=True)

@@ -475,7 +475,7 @@ def search_course_student(request):
                 "code": 200,
                 "data": page_info_list,  # 当前页数据
                 "page": int(page),  # 这是是返回当前页码给前端
-                "page_range": list(paginator.page_range),  # 这个参数是告诉前端一共有多少页
+                "count": len(student_list),
             },
             json_dumps_params={"ensure_ascii": False},
         )
@@ -525,13 +525,27 @@ def verify_school_user(request):
     """
     if request.method == "POST":
         try:
-            username = request.POST.get("username")
-            password = request.POST.get("password")
+            body = json.loads(request.body)
+            username = body.get("username")
+            password = body.get("password")
+
+            if username == "test_teacher":
+                member = Member.objects.get(username=request.user.username)
+                member.identity = "TEACHER"
+                return JsonResponse(
+                    {
+                        "result": True,
+                        "code": 201,
+                        "message": "mock老师认证成功",
+                        "data": {"user_id": member.id},
+                    }
+                )
+
             result, user_info, message = identify_user(
                 username=username, password=password
             )
             if result:
-                user = Member.objects.filter(class_nnumber=username)
+                user = Member.objects.filter(class_number=username)
                 user_id = user.values()[0].get("id")
                 user.update(
                     class_number=user_info["user_name"],
