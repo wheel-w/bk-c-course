@@ -28,3 +28,4 @@ gunicorn==19.6.0
 
 Cython==0.29.23
 lxml==4.7.1
+xlrd==2.0.1
