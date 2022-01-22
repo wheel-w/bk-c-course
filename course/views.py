@@ -495,7 +495,11 @@ def search_course_student(request):
 def get_course_list(request):
     if request.method == "GET":
         course_list = []
-        courses = UserCourseContact.objects.filter(user_id=request.user.id)
+        course_ids = UserCourseContact.objects.filter(
+            user_id=request.user.id
+        ).values_list("course_id", flat=True)
+        course_ids_list = list(course_ids)
+        courses = Course.objects.filter(id__in=course_ids_list)
         for course in courses:
             course_list.append(
                 {
