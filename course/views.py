@@ -510,6 +510,7 @@ def verify_school_user(request):
                     username=request.user.username
                 )
                 member.identity = "TEACHER"
+                member.save()
                 return JsonResponse(
                     {
                         'result': True,
