@@ -453,7 +453,7 @@ def search_course_student(request):
         )
         user_ids_list = list(user_ids)
         user_objects = Member.objects.in_bulk(user_ids_list)
-        for user_object in user_objects:
+        for index, user_object in user_objects.items():
             if user_object.identity == "STUDENT":
                 student_info["student"] = "{}({})".format(
                     user_object.class_number, user_object.name
