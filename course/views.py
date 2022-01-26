@@ -2,7 +2,6 @@ import json
 import logging
 
 import xlrd
-from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
@@ -77,8 +76,12 @@ def manage_course(request):
         req = json.loads(request.body)
         course_name = req.get("course_name")  # 想创建的课程名称
         teacher = req.get("teacher")
+        teacher_id = req.get("teacher_id")
         course_introduction = req.get("course_introduction")  # 课程简介
         manage_student = req.get("manage_student")  # 学生管理员
+        manage_student_str = ",".join(manage_student)
+        manage_student_ids = req.get("manage_student_ids")
+        manage_student_list = []
         try:
             news_course_info = Course.objects.create(
                 course_name=course_name,
@@ -87,11 +90,21 @@ def manage_course(request):
                 create_people="{}({})".format(
                     request.user.class_number, request.user.name
                 ),
-                manage_student=manage_student,
+                manage_student=manage_student_str,
             )  # 将得到的数据加到course表
             UserCourseContact.objects.create(
                 user_id=request.user.id, course_id=news_course_info.id
             )
+            UserCourseContact.objects.create(
+                user_id=teacher_id, course_id=news_course_info.id
+            )
+            for manage_student_id in manage_student_ids:
+                manage_student_list.append(
+                    UserCourseContact(
+                        user_id=manage_student_id, course_id=news_course_info.id
+                    )
+                )
+            UserCourseContact.objects.bulk_create(manage_student_list)
             return JsonResponse(
                 {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -107,7 +120,6 @@ def manage_course(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
-
     # 删
     if request.method == "DELETE":
         course_id = request.GET.get("course_id")
@@ -212,17 +224,29 @@ def manage_course(request):
 # 查课程列表
 def search_courses_by_userid(request):
     if request.method == "GET":
+        courses_list = []
         course_ids = UserCourseContact.objects.filter(
             user_id=request.user.id
         ).values_list("course_id", flat=True)
-        course = Course.objects.in_bulk(course_ids).values()
-        courses = serializers.serialize("python", course, ensure_ascii=False)
+        courses = Course.objects.filter(id__in=course_ids)
+        for course in courses:
+            manage_student = course.manage_student.split(",")
+            courses_list.append(
+                {
+                    "course_id": course.id,
+                    "course_name": course.course_name,
+                    "course_introduction": course.course_introduction,
+                    "teacher": course.teacher,
+                    "create_people": course.create_people,
+                    "manage_student": manage_student,
+                }
+            )
         return JsonResponse(
             {
                 "result": True,
                 "message": "查询成功",
                 "code": 200,
-                "data": courses,
+                "data": courses_list,
             },
             json_dumps_params={"ensure_ascii": False},
         )
