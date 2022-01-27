@@ -573,7 +573,10 @@ def verify_school_user(request):
                     kwargs["username"] = "{}X".format(user_info["user_name"])
                     kwargs["openid"] = request.user.openid
 
-                user.update(**kwargs)
+                for attr_name, attr_value in kwargs.items():
+                    setattr(user, attr_name, attr_value)
+
+                user.save()
                 data = {
                     "result": True,
                     "message": message,
