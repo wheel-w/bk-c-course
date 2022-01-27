@@ -9,9 +9,10 @@ from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
-from weixin.api.verify_account import identify_user
+from course.utils.verify_account import identify_user
 
-from .models import Course, Member, UserCourseContact
+from course.models import Course, Member, UserCourseContact
+
 
 # Create your views here.
 
@@ -55,7 +56,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                identity.first()["identity"] == Member.Identity.TEACHER
+                    identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -559,29 +560,29 @@ def verify_school_user(request):
                 username=username, password=password
             )
             if result:
-                user = Member.objects.filter(class_number=username)
-                user_id = user.values()[0].get("id")
-                user.update(
-                    class_number=user_info["user_name"],
-                    name=user_info["user_real_name"],
-                    professional_class=user_info["user_class"],
-                    gender=Member.Gender.MAN
-                    if user_info["user_sex"] == "男"
-                    else Member.Gender.WOMAN,
-                    identity=Member.Identity.STUDENT,
-                    college=user_info["user_college"],
-                )
+                user, _ = Member.objects.get_or_create(class_number=username)
+                kwargs = {
+                    "class_number": user_info["user_name"],
+                    "name": user_info["user_real_name"],
+                    "professional_class": user_info["user_class"],
+                    "gender": Member.Gender.MAN if user_info["user_sex"] == "男" else Member.Gender.WOMAN,
+                    "identity": Member.Identity.STUDEN,
+                    "college": user_info["user_college"]
+                }
+                if request.is_wechat():
+                    kwargs["username"] = "{}X".format(user_info["user_name"])
+                    kwargs["openid"] = request.user.openid
+
+                user.update(**kwargs)
                 data = {
                     "result": True,
                     "message": message,
                     "code": 201,
-                    "data": {
-                        "user_id": user_id,
-                    },
+                    "data": {},
                 }
                 return JsonResponse(data)
             else:
-                data = {"result": result, "message": message, "data": []}
+                data = {"result": False, "message": message, "data": []}
                 return JsonResponse(data)
         except Exception as e:
             data = {"result": False, "message": e, "code": 500, "data": []}  # 后端出错
