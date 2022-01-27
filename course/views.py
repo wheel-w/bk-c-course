@@ -566,7 +566,7 @@ def verify_school_user(request):
                     "name": user_info["user_real_name"],
                     "professional_class": user_info["user_class"],
                     "gender": Member.Gender.MAN if user_info["user_sex"] == "男" else Member.Gender.WOMAN,
-                    "identity": Member.Identity.STUDEN,
+                    "identity": Member.Identity.STUDENT,
                     "college": user_info["user_college"]
                 }
                 if request.is_wechat():
