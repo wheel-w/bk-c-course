@@ -2,7 +2,7 @@ import json
 import logging
 
 import xlrd
-from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.http import FileResponse, JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
@@ -46,33 +46,26 @@ def get_chapter_list(request):
 def operate_chapter(request):
     req = json.loads(request.body)
     course_id = req.get("course_id")
-
+    # 获取数据库存在的课程章节
+    existing_chapter_dict = Chapter.objects.in_bulk(course_id=course_id)
     new_chapter_list = []  # 新增章节列表
-    del_id_list = []  # 删除章节id列表
     update_chapter_list = []  # 更新操作的章节列表
-    update_id_list = []  # 更新的章节id列表
-    update_name_list = []  # 更新的章节名称列表
-    chapter_list = req.get("chapter_list")
-    for chapter in chapter_list:
-        if not chapter["id"]:
-            obj = Chapter(course_id=course_id, chapter_name=chapter["chapter_name"])
-            new_chapter_list.append(obj)
-        if not chapter["chapter_name"]:
-            del_id_list.append(chapter["id"])
-        if chapter["id"] and chapter["chapter_name"]:
-            update_id_list.append(chapter["id"])
-            update_name_list.append(chapter["chapter_name"])
+    # 获取前端传入的当前章节列表
+    current_chapter_list = req.get("chapter_list")
+    for current_chapter in current_chapter_list:
+        if "id" in current_chapter:
+            update_chapter_id_list = current_chapter["id"]
+            update_chapter_list.append(Chapter(**current_chapter))
+        else:
+            new_chapter_list.append(Chapter(**current_chapter))
+    del_id_list = list(
+        set(existing_chapter_dict.keys()) - set(update_chapter_id_list)
+    )  # 删除章节id列表
     try:
-        Chapter.objects.bulk_create(new_chapter_list, 20)  # 批量创建数据
-        Chapter.objects.filter(id__in=del_id_list).delete()  # 批量删除
-        chapters = Chapter.objects.filter(id__in=update_id_list)
-        for chapter in chapters:
-            for name in update_name_list:
-                chapter.chapter_name = name
-                update_chapter_list.append(chapter)
-                del update_name_list[0]
-                break
-        Chapter.objects.bulk_update(update_chapter_list, ["chapter_name"])  # 批量更新
+        with transaction.atomic():
+            Chapter.objects.filter(id__in=del_id_list).delete()  # 批量删除
+            Chapter.objects.bulk_update(update_chapter_list, ["chapter_name"])  # 批量更新
+            Chapter.objects.bulk_create(new_chapter_list)  # 批量创建数据
         return JsonResponse(
             {
                 "result": True,
@@ -82,7 +75,7 @@ def operate_chapter(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
-    except ObjectDoesNotExist as e:
+    except DatabaseError as e:
         logger.exception(e)
         return JsonResponse(
             {
