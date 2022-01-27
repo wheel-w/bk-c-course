@@ -46,7 +46,10 @@ class WeixinBackend(ModelBackend):
             user.state = state
             user.openid = weixin_user_info["openid"]
 
-            member = Member.objects.get(openid=weixin_user_info["openid"])
+            try:
+                member = Member.objects.get(openid=weixin_user_info["openid"])
+            except Member.DoesNotExist:
+                member = None
 
             for attr_name in MEMBER_ATTR_LIST:
                 setattr(user, attr_name, getattr(member, attr_name, ""))
@@ -64,7 +67,10 @@ class WeixinBackend(ModelBackend):
         try:
             user, _ = user_model.objects.get_or_create(username=weixin_user_info["openid"])
 
-            member, _ = Member.objects.get_or_create(openid=weixin_user_info["openid"])
+            try:
+                member = Member.objects.get(openid=weixin_user_info["openid"])
+            except Member.DoesNotExist:
+                member = None
 
             for attr_name in MEMBER_ATTR_LIST:
                 setattr(user, attr_name, getattr(member, attr_name))
