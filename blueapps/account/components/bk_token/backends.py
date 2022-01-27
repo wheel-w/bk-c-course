@@ -43,13 +43,14 @@ class TokenBackend(ModelBackend):
 
         user_model = get_user_model()
         try:
-            user, _ = user_model.objects.get_or_create(username=username)
             get_user_info_result, user_info = self.get_user_info(bk_token)
             # 判断是否获取到用户信息,获取不到则返回None
             if not get_user_info_result:
                 return None
 
-            member, _ = Member.objects.get_or_create(id=user.id, username=username, class_number=username[:-1])
+            member, _ = Member.objects.get_or_create(username=username)
+
+            user, _ = user_model.objects.get_or_create(id=member.id, username=username)
 
             # 用户如果不是管理员，则需要判断是否存在平台权限，如果有则需要加上
             if not user.is_superuser and not user.is_staff:

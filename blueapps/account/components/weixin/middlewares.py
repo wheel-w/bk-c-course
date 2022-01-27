@@ -18,10 +18,10 @@ import time
 from django.conf import settings
 from django.contrib import auth
 from django.utils.deprecation import MiddlewareMixin
-
-from blueapps.account.components.weixin.forms import WeixinAuthenticationForm
-from blueapps.account.conf import ConfFixture
 from blueapps.account.handlers.response import ResponseHandler
+from blueapps.account.conf import ConfFixture
+
+from blueapps.account.components.weixin.forms import WeixinAuthenticationForm, WeixinCustomLoginStateForm
 
 logger = logging.getLogger("component")
 
@@ -39,32 +39,34 @@ class WeixinLoginRequiredMiddleware(MiddlewareMixin):
 
         logger.debug("当前请求客户端为微信端")
         login_exempt = getattr(view, "login_exempt", False)
-        if not (login_exempt or request.user.is_authenticated):
+        if not login_exempt:
+
+            state_form = WeixinCustomLoginStateForm(request.headers)
+
+            if state_form.is_valid():
+                state = state_form.cleaned_data["state"]
+                user = auth.authenticate(request=request, state=state, is_wechat=True)
+                if user:
+                    request.user = user
+                    return None
 
             form = WeixinAuthenticationForm(request.GET)
 
             if form.is_valid():
                 code = form.cleaned_data["code"]
-                state = form.cleaned_data["state"]
-                logger.debug(u"微信请求链接，检测到微信验证码，code：{}，state：{}".format(code, state))
+                logger.debug(u"微信请求链接，检测到微信验证码，code：{}".format(code))
 
-                if self.valid_state(request, state):
-                    user = auth.authenticate(request=request, code=code, is_wechat=True)
-                    if user and user.username != request.user.username:
-                        auth.login(request, user)
-                    if request.user.is_authenticated:
-                        # 登录成功，确认登陆正常后退出
-                        return None
-            else:
-                logger.debug(
-                    u"微信请求链接，未检测到微信验证码，url：{}，params：{}".format(
-                        request.path_info, request.GET
-                    )
-                )
+                user = auth.authenticate(request=request, code=code, is_wechat=True)
 
-            self.set_state(request)
+                if user:
+                    auth.login(request, user)
+                if request.user.is_authenticated:
+                    request.user = user
+                    return None
+
             handler = ResponseHandler(ConfFixture, settings)
             return handler.build_weixin_401_response(request)
+
         return None
 
     def process_response(self, request, response):

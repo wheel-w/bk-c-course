@@ -10,6 +10,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import os
 
 from django.conf import settings
 
@@ -32,9 +33,14 @@ class ConfFixture(object):
     IFRAME_HEIGHT = getattr(settings, "IFRAME_HEIGHT", 490)
     IFRAME_WIDTH = getattr(settings, "IFRAME_WIDTH", 460)
 
-    WEIXIN_BACKEND_TYPE = "null"
-    WEIXIN_MIDDLEWARE = "null.NullMiddleware"
-    WEIXIN_BACKEND = "null.NullBackend"
+    WEIXIN_BACKEND_TYPE = "weixin"
+    WEIXIN_MIDDLEWARE = "weixin.middlewares.WeixinLoginRequiredMiddleware"
+    WEIXIN_BACKEND = "weixin.backends.WeixinBackend"
+    WEIXIN_OAUTH_URL = os.environ.get(
+        "BKAPP_WEIXIN_OAUTH_URL", "https://api.weixin.qq.com/sns/jscode2session"
+    )
+    WEIXIN_APP_ID = os.environ.get("BKAPP_WEIXIN_APP_ID", "")
+    WEIXIN_APP_SECRET = os.environ.get("BKAPP_WEIXIN_APP_SECRET", "")
 
     SMS_CLIENT_MODULE = "cmsi"
     SMS_CLIENT_FUNC = "send_sms"

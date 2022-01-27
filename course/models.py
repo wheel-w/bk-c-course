@@ -1,7 +1,7 @@
 from django.db import models
 
 # member属性列表
-MEMBER_ATTR_LIST = ["username", "class_number", "name", "college", "professional_class", "gender", "identity",
+MEMBER_ATTR_LIST = ["id", "username", "class_number", "name", "college", "professional_class", "gender", "identity",
                     "phone_number", "email_number", "qq_number", "wechat_number"]
 
 
@@ -58,9 +58,9 @@ class Member(models.Model):
         (Identity.NOT_CERTIFIED, "未认证")
     ]
 
-    username = models.CharField("saas用户名", max_length=50, unique=True)
-    openid = models.CharField("wechat唯一标识", max_length=50, blank=True, null=True)
-    class_number = models.CharField("学号/工号", max_length=30, unique=True, blank=True, null=True, )
+    username = models.CharField("saas用户名", max_length=50, unique=True, blank=True, null=True)
+    openid = models.CharField("wechat唯一标识", max_length=50, blank=True, null=True, unique=True)
+    class_number = models.CharField("学号/工号", max_length=30, unique=True, blank=True, null=True)
     name = models.CharField("姓名", max_length=30, blank=True, null=True)
     college = models.CharField("学院", max_length=40, blank=True, null=True)
     professional_class = models.CharField("专业班级", max_length=30, blank=True, null=True)

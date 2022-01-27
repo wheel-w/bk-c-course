@@ -3,7 +3,7 @@ import base64
 from Crypto.Cipher import AES
 import json
 
-from weixin.account.deadline import get_deadline, judge_deadline
+from blueapps.account.components.weixin.utils.deadline import get_deadline, judge_deadline
 
 
 def encode_state(openid, session_key):
@@ -20,7 +20,7 @@ def encode_state(openid, session_key):
 
     text = bytes(data.encode('utf-8'))
 
-    for count in range(16 - (len(text)+2+1+len(str(length_openid))) % 16):
+    for count in range(16 - (len(text) + 2 + 1 + len(str(length_openid))) % 16):
         text += b'\0'
 
     count += 1
@@ -70,12 +70,12 @@ def decode_state(state):
 
     index_flag = str_aes_code.index('|')
     length_openid = int(str_aes_code[0:index_flag])
-    length_null = int(str_aes_code[index_flag+1:index_flag+1+2])
-    deadline = str_aes_code[index_flag+1+2:index_flag+1+2+19]
-    openid = str_aes_code[index_flag+1+2+19:index_flag+1+2+19+length_openid]
-    session_key = str_aes_code[index_flag+1+2+19+length_openid:len(str_aes_code)-length_null]
+    length_null = int(str_aes_code[index_flag + 1:index_flag + 1 + 2])
+    deadline = str_aes_code[index_flag + 1 + 2:index_flag + 1 + 2 + 19]
+    openid = str_aes_code[index_flag + 1 + 2 + 19:index_flag + 1 + 2 + 19 + length_openid]
+    session_key = str_aes_code[index_flag + 1 + 2 + 19 + length_openid:len(str_aes_code) - length_null]
 
     if judge_deadline(deadline):
         return False, None
 
-    return True, (openid, session_key)
+    return True, {"openid": openid, "session_key": session_key}

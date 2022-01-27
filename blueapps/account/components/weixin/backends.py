@@ -18,36 +18,75 @@ from django.contrib.auth.backends import ModelBackend
 from blueapps.account import get_user_model
 from blueapps.account.conf import ConfFixture
 from blueapps.account.utils.http import send
+from blueapps.account.components.weixin.utils import login_state
+
+from course.models import Member, MEMBER_ATTR_LIST
 
 logger = logging.getLogger("component")
 
 
 class WeixinBackend(ModelBackend):
-    def authenticate(self, request=None, code=None, is_wechat=True):
+    def authenticate(self, request=None, code=None, state=None, is_wechat=True):
         """
         is_wechat 参数是为了使得 WeixinBackend 与其他 Backend 参数个数不同，在框架选择
         认证 backend 时，快速定位
         """
         logger.debug(u"进入 WEIXIN 认证 Backend")
+        user_model = get_user_model()
+
+        if state:
+            try:
+                result, weixin_user_info = login_state.decode_state(state)
+            except Exception:
+                return None
+            if not result:
+                return None
+
+            user, _ = user_model.objects.get_or_create(username=weixin_user_info["openid"])
+            user.state = state
+            user.openid = weixin_user_info["openid"]
+
+            try:
+                member = Member.objects.get(openid=weixin_user_info["openid"])
+            except Member.DoesNotExist:
+                member = None
+
+            for attr_name in MEMBER_ATTR_LIST:
+                setattr(user, attr_name, getattr(member, attr_name, ""))
+
+            return user
+
         if not code:
             return None
 
-        result, user_info = self.verify_weixin_code(code)
-        logger.debug(u"微信 CODE 验证结果，result：{}，user_info：{}".format(result, user_info))
+        result, weixin_user_info = self.verify_weixin_code(code)
 
         if not result:
             return None
 
-        user_model = get_user_model()
         try:
-            user, _ = user_model.objects.get_or_create(username=user_info["username"])
-            user.nickname = user_info["username"]
-            user.avatar_url = user_info["avatar"]
-            user.save()
+            try:
+                member = Member.objects.get(openid=weixin_user_info["openid"])
+            except Member.DoesNotExist:
+                member = None
+
+            try:
+                user, _ = user_model.objects.get_or_create(id=member.id, username=member.username)
+            except Exception:
+                user, _ = user_model.objects.get_or_create(username="{}-anonymous".format(weixin_user_info["openid"]))
+
+            for attr_name in MEMBER_ATTR_LIST:
+                if attr_name == "id" and not hasattr(member, "id"):
+                    continue
+                setattr(user, attr_name, getattr(member, attr_name, None))
+
+            user.state = login_state.encode_state(**weixin_user_info)
+            user.openid = weixin_user_info["openid"]
+
+            return user
+
         except Exception:  # pylint: disable=broad-except
             logger.exception(u"自动创建 & 更新 User Model 失败")
-        else:
-            return user
 
     def get_user(self, user_id):
         user_model = get_user_model()
@@ -70,18 +109,18 @@ class WeixinBackend(ModelBackend):
             }
         """
         api_params = {
-            "code": code,
+            'appid': ConfFixture.WEIXIN_APP_ID,
+            'secret': ConfFixture.WEIXIN_APP_SECRET,
+            'js_code': code,
+            'grant_type': 'authorization_code'
         }
         try:
-            response = send(ConfFixture.WEIXIN_INFO_URL, "GET", api_params)
-            ret = response.get("ret")
-            if ret == 0:
-                return True, response["data"]
-            else:
-                logger.error(
-                    u"通过微信授权码，获取用户信息失败，error={}，ret={}".format(response["msg"], ret)
-                )
-                return False, None
+            response = send(ConfFixture.WEIXIN_OAUTH_URL, "GET", api_params)
+            return True, {
+                "openid": response.get("openid"),
+                "session_key": response.get("session_key")
+            }
+
         except Exception:  # pylint: disable=broad-except
             logger.exception(u"通过微信授权码，获取用户信息异常")
             return False, None
