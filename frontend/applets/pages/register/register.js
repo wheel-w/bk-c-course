@@ -22,7 +22,18 @@ Page({
           images:image
      })
     },
-
+    //获取用户名
+  getName(event) {
+    this.setData({
+      name: event.detail.value
+    })
+  },
+    // 获取密码
+  getPassword(event) {
+    this.setData({
+      password: event.detail.value
+    })
+  },
   //注册
   register() {
     var that=this;

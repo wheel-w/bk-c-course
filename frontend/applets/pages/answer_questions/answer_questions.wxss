@@ -1,0 +1,55 @@
+.content {
+  border: 0px solid rgb(167, 159, 159);
+  background: white;
+  /* background: #F6F8F8; */
+  margin-bottom: 0rpx;
+  border-bottom:0rpx;
+  text-align: center;
+}
+
+.dis {
+  width: 100%;
+  font-size: 30rpx;
+  color: #009FE5;
+  box-sizing: border-box;
+}
+
+.dis_time {
+  width: 100%;
+  /* white-space: nowrap; */
+}
+
+.cal{
+  text-align: center;
+  color: #009FE5;
+  margin: 10rpx;
+  padding: 10rpx;
+}
+
+.btn_root{
+  margin:30rpx;
+  display: flex;
+  justify-content: space-between;
+}
+
+.radio{
+  width: 95%;
+  padding: 20rpx;
+
+}
+
+.tit{
+  padding: 20rpx;
+  padding-bottom: 0rpx;
+  padding-top: 0rpx;
+}
+
+radio-group .wx-radio-input.wx-radio-input-checked{
+  border: 1rpx solid #366fdb !important;
+  background:#366fdb !important;
+}
+
+.input{
+  width: 100%;
+  padding: 20rpx;
+}

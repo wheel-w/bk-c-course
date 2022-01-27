@@ -1,0 +1,74 @@
+<view class="content">
+  <block wx:for="{{listData}}" wx:key="idx" wx:for-item="item" wx:for-index="{{idx}}">
+    <view class="dis">
+    <view class="flex solid-bottom padding justify-between">
+      <view class="cuIcon-time lg">{{item.countDown}}</view>
+      <view class="cuIcon-form lg'"bindtap='card'>答题卡</view>
+    </view>
+  </view>
+      <view class="dis">
+        <!-- <view class='cuIcon-time lg '>{{item.countDown}}</view> -->
+        <view class="cal">第{{current}}/{{total}}题</view>
+      </view>
+  </block>
+</view>
+<view class="line"></view>
+<view class="tit">
+<view class="padding-xl radius shadow-warp bg-white margin-top">{{current}}.{{subject.title}}</view> 
+</view>
+<!-- 单选 -->
+<!-- <view wx:if="{{subject.type == 'CH'}}"> -->
+  <radio-group bindchange="Click" class="radio">
+  <view wx:for="{{subject.options}}" class="padding-xl radius shadow-warp bg-white margin-top">
+    <radio style="transform: scale(0.6)" value="{{item.code}}"checked="{{item.selected}}"/>
+    <text>{{item.code}}:{{item.option}}</text>
+  </view>
+</radio-group>
+<!-- </view> -->
+<!-- 多选 -->
+<view wx:if="{{subject.type == 'AA'}}">
+  <checkbox-group bindchange="moreClick" class="radio">
+  <view wx:for="{{subject.options}}" class="padding-xl radius shadow-warp bg-white margin-top">
+    <checkbox style="transform: scale(0.6)" value="{{item.code}}"checked="{{item.selected}}"/>
+    <text>{{item.code}}:{{item.option}}</text>
+  </view>
+</checkbox-group>
+
+</view>
+<!-- 判断 -->
+<view wx:if="{{subject.type == 'AB'}}">
+  <radio-group bindchange="Click" class="radio">
+  <view wx:for="{{subject.options}}" class="padding-xl radius shadow-warp bg-white margin-top">
+    <radio style="transform: scale(0.6)" value="{{item.code}}"checked="{{item.selected}}"/>
+    <text>{{item.code}}:{{item.option}}</text>
+  </view>
+</radio-group>
+</view>
+<!-- 填空 -->
+<view wx:if="{{subject.type == 'AC'}}" class="input">
+<view class="cu-form-group margin-top">
+		<textarea maxlength="-1" disabled="{{modalName!=null}}" bindinput="Write" placeholder="请输入你的答案"></textarea>
+	</view>
+</view>
+<!-- 简答题 -->
+<view wx:if="{{subject.type == 'AD'}}" class="input">
+<form bindreset="clean">
+  <view class="cu-form-group margin-top">
+    <textarea maxlength="-1" disabled="{{modalName!=null}}" bindinput="Write" placeholder="请输入你的答案" value='{{inputValue}}'></textarea>
+  </view>
+  <view class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="preclearInputEvent" size="mini">上一题</button>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="nextclearInputEvent" size="mini">下一题</button>
+
+</view>
+<button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="submit" formType="reset">提交</button>
+</form>
+</view>
+<!-- 按钮 -->
+<view wx:if="{{subject.type != 'AD'}}||{{subject.type != 'AD'}}" class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="pre" size="mini">上一题</button>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="next" size="mini">下一题</button>
+
+</view>
+<button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="submit">提交</button>
+
