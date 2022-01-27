@@ -57,7 +57,8 @@ class WeixinLoginRequiredMiddleware(MiddlewareMixin):
                 logger.debug(u"微信请求链接，检测到微信验证码，code：{}".format(code))
 
                 user = auth.authenticate(request=request, code=code, is_wechat=True)
-                if user and user.username != request.user.username:
+
+                if user:
                     auth.login(request, user)
                 if request.user.is_authenticated:
                     request.user = user

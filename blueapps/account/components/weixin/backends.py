@@ -65,15 +65,20 @@ class WeixinBackend(ModelBackend):
             return None
 
         try:
-            user, _ = user_model.objects.get_or_create(username=weixin_user_info["openid"])
-
             try:
                 member = Member.objects.get(openid=weixin_user_info["openid"])
             except Member.DoesNotExist:
                 member = None
 
+            try:
+                user, _ = user_model.objects.get_or_create(id=member.id, username=member.username)
+            except Exception:
+                user, _ = user_model.objects.get_or_create(username="{}-anonymous".format(weixin_user_info["openid"]))
+
             for attr_name in MEMBER_ATTR_LIST:
-                setattr(user, attr_name, getattr(member, attr_name))
+                if attr_name == "id" and not hasattr(member, "id"):
+                    continue
+                setattr(user, attr_name, getattr(member, attr_name, None))
 
             user.state = login_state.encode_state(**weixin_user_info)
             user.openid = weixin_user_info["openid"]
