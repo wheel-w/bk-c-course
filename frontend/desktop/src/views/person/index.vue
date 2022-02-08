@@ -1,7 +1,7 @@
 <template>
     <div class="personal">
         <!-- ------------------ -->
-        <YyDescriptions title="个人中心" :form-config="infoConfig" :span="6">
+        <YyDescriptions ref="info" title="个人中心" :form-config="infoConfig" :span="6">
             <div slot="hander">
                 <bk-button theme="primary" size="small" @click="isShowDialog = true">
                     认证
@@ -81,6 +81,9 @@
                 )
                 console.log(res)
 
+                // 这个是刷新 就是重新获取 更新后的数据
+                this.$refs.info.getUserInfoResult()
+                
                 // Message组件
                 const config = {
                     message: '',
