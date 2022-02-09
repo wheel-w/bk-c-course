@@ -2,7 +2,7 @@
 
 from django.conf.urls import url
 
-from . import views
+from . import question_views, views
 
 urlpatterns = (
     url(r"^update_user_info/$", views.update_user_info, name="update_user_info"),
@@ -18,4 +18,13 @@ urlpatterns = (
         r"^delete_student_course_contact/$", views.delete_student_course_contact
     ),  # 删除一个学生与课程对应关系
     url(r"^get_course_list/$", views.get_course_list),  # 返回课程名称的下拉列表
+    url(r"^get_chapter_list/$", question_views.get_chapter_list),  # 返回章节的下拉列表
+    url(r"^operate_chapter/$", question_views.operate_chapter),  # 章节的增删改
+    url(
+        r"^download_set_question_excel_template/$",
+        question_views.download_set_question_excel_template,
+    ),  # 下载选择题模板
+    url(r"^import_question_excel/$", question_views.import_question_excel),  # 导入问题
+    url(r"^teacher_set_question/$", question_views.teacher_set_question),  # 出题的增删改
+    url(r"^get_question_list/$", question_views.get_question_list),  # 返回课程的题目列表
 )
