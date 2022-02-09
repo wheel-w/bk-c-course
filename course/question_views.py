@@ -2,6 +2,7 @@ import json
 import logging
 
 import xlrd
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.http import FileResponse, JsonResponse
 
@@ -10,6 +11,28 @@ from blueapps.core.exceptions import DatabaseError
 from .models import Chapter, Course, Question
 
 logger = logging.getLogger("root")
+
+
+# 出题操作权限装饰器
+def set_question_rights(fun):
+    def inner(request, *args, **kwargs):
+        course_id = request.GET.get("course_id")
+        user_info = "{}({})".format(request.user.class_number, request.user.name)
+        try:
+            course = Course.objects.get(id=course_id)
+            if course.create_people == user_info or course.teacher == user_info:
+                return fun(request, *args, **kwargs)
+            else:
+                return JsonResponse(
+                    {"result": False, "code": 403, "message": "您没有操作权限！", "data": []}
+                )
+        except ObjectDoesNotExist as e:
+            logger.exception(e)
+            return JsonResponse(
+                {"result": False, "code": 401, "message": "请求错误！课程id不存在", "data": []}
+            )  # 返回信息
+
+    return inner
 
 
 # 获取章节列表
@@ -43,6 +66,7 @@ def get_chapter_list(request):
 
 
 # 章节的批量增删改
+@set_question_rights
 def operate_chapter(request):
     req = json.loads(request.body)
     course_id = req.get("course_id")
@@ -50,11 +74,12 @@ def operate_chapter(request):
     existing_chapter_dict = Chapter.objects.in_bulk(course_id=course_id)
     new_chapter_list = []  # 新增章节列表
     update_chapter_list = []  # 更新操作的章节列表
+    update_chapter_id_list = []  # 更新操作的章节id
     # 获取前端传入的当前章节列表
     current_chapter_list = req.get("chapter_list")
     for current_chapter in current_chapter_list:
         if "id" in current_chapter:
-            update_chapter_id_list = current_chapter["id"]
+            update_chapter_id_list.append(current_chapter["id"])
             update_chapter_list.append(Chapter(**current_chapter))
         else:
             new_chapter_list.append(Chapter(**current_chapter))
@@ -88,7 +113,7 @@ def operate_chapter(request):
         )
 
 
-types_dict = {
+TYPES_DICT = {
     "单选题": "SINGLE",
     "多选题": "MULTIPLE",
     "填空题": "COMPLETION",
@@ -98,6 +123,7 @@ types_dict = {
 
 
 # 老师为指定课程导入问题信息
+@set_question_rights
 def import_question_excel(request):
     excel_files = request.FILES.get("excel_file")
     suffix = excel_files.name.split(".")[-1]
@@ -116,86 +142,85 @@ def import_question_excel(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
-    tables = data.sheets()
+    table = data.sheets()
     question_info = {}
     question_info_list = []
     question_title = set()
     question_list = []
     row_sign = 0
-    for table in tables:
-        rows = table.nrows
-        values_0 = table.row_values(0)
-        if rows != 1:
-            if not (values_0[0] == "questType" and values_0[1] == "questTitle"):
-                return JsonResponse(
-                    {
-                        "result": False,
-                        "message": "文件格式错误,请检查文件内容是否符合模板规范",
-                        "code": 403,
-                        "data": [],
-                    },
-                    json_dumps_params={"ensure_ascii": False},
-                )
-            for row in range(1, rows):
-                row_values = table.row_values(row)
-                question_info["types"] = types_dict[row_values[0]]
-                question_info["question"] = row_values[1]
-                question_info["option_A"] = row_values[3]
-                question_info["option_B"] = row_values[4]
-                question_info["option_C"] = row_values[5]
-                question_info["option_D"] = row_values[6]
-                question_info["option_E"] = row_values[7]
-                question_info["answer"] = row_values[2]
-                question_info["explain"] = row_values[8]
-                question_info_list.append(question_info.copy())
-                question_title.add(row_values[1])
-                row_sign = row_sign + 1
-            chapter_object = Chapter.objects.filter(id=chapter_id, course_id=course_id)
-            if not chapter_object:
-                return JsonResponse(
-                    {
-                        "result": False,
-                        "message": "章节不存在",
-                        "code": 406,
-                        "data": [],
-                    },
-                    json_dumps_params={"ensure_ascii": False},
-                )
-            for content in question_info_list:
-                question_list.append(
-                    Question(
-                        course_id=course_id,
-                        chapter_id=chapter_id,
-                        types=content["types"],
-                        question=content["question"],
-                        option_A=content["option_A"],
-                        option_B=content["option_B"],
-                        option_C=content["option_C"],
-                        option_D=content["option_D"],
-                        option_E=content["option_E"],
-                        answer=content["answer"],
-                        explain=content["explain"],
-                    )
-                )
-            Question.objects.bulk_create(question_list)
+    rows = table.nrows
+    values_0 = table.row_values(0)
+    if rows != 1:
+        if not (values_0[0] == "questType" and values_0[1] == "questTitle"):
             return JsonResponse(
                 {
-                    "result": True,
-                    "message": "导入成功,共导入{}行数据".format(row_sign),
-                    "code": 200,
+                    "result": False,
+                    "message": "文件格式错误,请检查文件内容是否符合模板规范",
+                    "code": 403,
                     "data": [],
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
+        for row in range(1, rows):
+            row_values = table.row_values(row)
+            question_info["types"] = TYPES_DICT[row_values[0]]
+            question_info["question"] = row_values[1]
+            question_info["option_A"] = row_values[3]
+            question_info["option_B"] = row_values[4]
+            question_info["option_C"] = row_values[5]
+            question_info["option_D"] = row_values[6]
+            question_info["option_E"] = row_values[7]
+            question_info["answer"] = row_values[2]
+            question_info["explain"] = row_values[8]
+            question_info_list.append(question_info.copy())
+            question_title.add(row_values[1])
+            row_sign = row_sign + 1
+        chapter_object = Chapter.objects.filter(course_id=course_id)
+        if not chapter_object:
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "章节不存在",
+                    "code": 406,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+        for content in question_info_list:
+            question_list.append(
+                Question(
+                    course_id=course_id,
+                    chapter_id=chapter_id,
+                    types=content["types"],
+                    question=content["question"],
+                    option_A=content["option_A"],
+                    option_B=content["option_B"],
+                    option_C=content["option_C"],
+                    option_D=content["option_D"],
+                    option_E=content["option_E"],
+                    answer=content["answer"],
+                    explain=content["explain"],
+                )
+            )
+        Question.objects.bulk_create(question_list)
         return JsonResponse(
             {
-                "result": False,
-                "message": "请检查您的excel表中的数据是否齐全",
-                "code": 403,
+                "result": True,
+                "message": "导入成功,共导入{}行数据".format(row_sign),
+                "code": 200,
                 "data": [],
             },
             json_dumps_params={"ensure_ascii": False},
         )
+    return JsonResponse(
+        {
+            "result": False,
+            "message": "请检查您的excel表中的数据是否齐全",
+            "code": 403,
+            "data": [],
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )
 
 
 # 出题模板下载
@@ -252,12 +277,14 @@ def get_question_list(request):
         )
 
 
+# 问题的增删改
+@set_question_rights
 def teacher_set_question(request):
     # 增
     if request.method == "POST":
         req = json.loads(request.body)
         question_type = req.get("types")
-        question_type_value = types_dict[question_type]
+        question_type_value = TYPES_DICT[question_type]
         chapter_id = req.get("chapter_id")
         course_id = req.get("course_id")
         question = req.get("question")
@@ -300,22 +327,8 @@ def teacher_set_question(request):
     # 删
     if request.method == "DELETE":
         question_id_list = request.GET.get("question_id_list")  # 可以传递多个问题id
-        course_id = request.GET.get("course_id")
         try:
-            user_info = "{}({})".format(request.user.class_number, request.user.name)
-            course = Course.objects.get(id=course_id)
-            if not (course.create_people == user_info or course.teacher == user_info):
-                return JsonResponse(
-                    {
-                        "result": False,
-                        "message": "删除失败，你没有删除该题目的权限",
-                        "code": 406,
-                        "data": [],
-                    },
-                    json_dumps_params={"ensure_ascii": False},
-                )
-            else:
-                Question.objects.filter(id__in=question_id_list).delete()
+            Question.objects.filter(id__in=question_id_list).delete()
             return JsonResponse(
                 {
                     "result": True,
@@ -330,7 +343,7 @@ def teacher_set_question(request):
             return JsonResponse(
                 {
                     "result": False,
-                    "message": "删除失败，权限不够",
+                    "message": "删除失败",
                     "code": 403,
                     "data": [],
                 },
@@ -340,7 +353,6 @@ def teacher_set_question(request):
     if request.method == "PUT":
         req = json.loads(request.body)
         question_id = req.pop("question_id", "")
-        course_id = req.pop("course_id")
         if not question_id:
             return JsonResponse(
                 {
@@ -352,23 +364,10 @@ def teacher_set_question(request):
                 json_dumps_params={"ensure_ascii": False},
             )
         try:
-            user_info = "{}({})".format(request.user.class_number, request.user.name)
-            course = Course.objects.get(id=course_id)
-            if not (course.create_people == user_info or course.teacher == user_info):
-                return JsonResponse(
-                    {
-                        "result": False,
-                        "message": "修改失败，你没有修改该题目的权限",
-                        "code": 406,
-                        "data": [],
-                    },
-                    json_dumps_params={"ensure_ascii": False},
-                )
-            else:
-                question = Question.objects.get(id=question_id)
-                for k, v in req.items():
-                    setattr(question, k, v)
-                question.save()
+            question = Question.objects.get(id=question_id)
+            for k, v in req.items():
+                setattr(question, k, v)
+            question.save()
             return JsonResponse(
                 {"result": True, "message": "修改成功", "code": 200, "data": []},
                 json_dumps_params={"ensure_ascii": False},
