@@ -31,5 +31,5 @@ urlpatterns = (
     url(r"^question_title/$", paper_views.question_title),
     url(r"^paper/$", paper_views.paper),
     url(r"^manage_paper_question_contact/$", paper_views.manage_paper_question_contact),
-    url(r"^manage_question/$", paper_views.synchronous_paper),
+    url(r"^synchronous_paper/$", paper_views.synchronous_paper),
 )
