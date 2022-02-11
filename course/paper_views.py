@@ -447,6 +447,7 @@ def manage_paper_question_contact(request):
                 json_dumps_params={"ensure_ascii": False},
             )
 
+
 @is_teacher
 def synchronous_paper(request):
     if request.method == "PUT":
