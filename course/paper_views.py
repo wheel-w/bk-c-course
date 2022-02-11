@@ -449,7 +449,7 @@ def manage_paper_question_contact(request):
 
 
 @is_teacher
-def manage_question(request):
+def synchronous_paper(request):
     if request.method == "PUT":
         """
         功能: 同步题库与卷子中的题目
