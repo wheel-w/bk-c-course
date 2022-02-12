@@ -7,10 +7,10 @@
             </bk-button>
         </div>
         <div class="content">
-            <div class="content-item" v-for="item in courseList" :key="item.pk" @click="toMyClassDetail(item.pk)">
-                <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.fields.course_name }}</h3>
-                <span>课程id：{{ item.pk }}</span>
-                <span>任教老师：{{ item.fields.teacher }}</span>
+            <div class="content-item" v-for="item in courseList" :key="item.course_id" @click="toMyClassDetail(item.course_id)">
+                <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.course_name }}</h3>
+                <span>课程id：{{ item.course_id }}</span>
+                <span>任教老师：{{ item.teacher }}</span>
             </div>
         </div>
     </div>
@@ -89,6 +89,7 @@
     padding-left: 1%;
 }
 .content-item:hover {
+    cursor: pointer;
     transition: 300ms;
     box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.19);
 }
