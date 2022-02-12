@@ -1,7 +1,8 @@
+import os
 import datetime
 
 # 登录态的有效时间
-VALID_TIME = 6
+VALID_TIME = int(os.getenv("BKAPP_WEIXIN_STATE_VALID_TIME", 3))
 
 
 def get_deadline():

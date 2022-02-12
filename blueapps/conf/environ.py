@@ -112,7 +112,7 @@ WEIXIN_URL_PREFIX = "weixin"
 WEIXIN_SITE_URL = "{}{}/".format(SITE_URL, WEIXIN_URL_PREFIX)
 
 # 平台微信 URL 域名
-WEIXIN_BK_URL = os.getenv("BKPAAS_WEIXIN_URL", "https://mt.bk.tencent.com")
+WEIXIN_BK_URL = os.getenv("BKAPP_WEIXIN_URL", "https://mt.bk.tencent.com")
 
 # APP 微信本地静态资源目录
 # TODO 环境变量中无WEXIN_STATIC_URL或BKPAAS_WEIXIN_STATIC_URL

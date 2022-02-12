@@ -1,7 +1,8 @@
 from django.db import models
+from django_mysql.models import JSONField
 
 # member属性列表
-MEMBER_ATTR_LIST = ["username", "class_number", "name", "college", "professional_class", "gender", "identity",
+MEMBER_ATTR_LIST = ["id", "username", "class_number", "name", "college", "professional_class", "gender", "identity",
                     "phone_number", "email_number", "qq_number", "wechat_number"]
 
 
@@ -58,9 +59,9 @@ class Member(models.Model):
         (Identity.NOT_CERTIFIED, "未认证")
     ]
 
-    username = models.CharField("saas用户名", max_length=50, unique=True)
-    openid = models.CharField("wechat唯一标识", max_length=50, blank=True, null=True)
-    class_number = models.CharField("学号/工号", max_length=30, unique=True, blank=True, null=True, )
+    username = models.CharField("saas用户名", max_length=50, unique=True, blank=True, null=True)
+    openid = models.CharField("wechat唯一标识", max_length=50, blank=True, null=True, unique=True)
+    class_number = models.CharField("学号/工号", max_length=30, unique=True, blank=True, null=True)
     name = models.CharField("姓名", max_length=30, blank=True, null=True)
     college = models.CharField("学院", max_length=40, blank=True, null=True)
     professional_class = models.CharField("专业班级", max_length=30, blank=True, null=True)
@@ -117,14 +118,16 @@ class Question(models.Model):
 
 
 class Paper(models.Model):
+    status_list = ['DRAFT', 'RELEASE', 'MARKED']
+
     class Types:
         EXERCISE = 'EXERCISE'
         EXAM = 'EXAM'
 
     class Status:
-        NOT_START = 'NOT_START'
-        ON_GOING = 'ON_GOING'
-        FINISHED = 'FINISHED'
+        DRAFT = 'DRAFT'
+        RELEASE = 'RELEASE'
+        MARKED = 'MARKED'
 
     TYPES = [
         (Types.EXERCISE, '练习卷'),
@@ -132,16 +135,18 @@ class Paper(models.Model):
     ]
 
     STATUS = [
-        (Status.NOT_START, '未开始'),
-        (Status.ON_GOING, '开始'),
-        (Status.FINISHED, '结束'),
+        (Status.DRAFT, '草稿'),
+        (Status.RELEASE, '已发布'),
+        (Status.MARKED, '已批阅')
     ]
 
     types = models.CharField('试卷类型', max_length=10, choices=TYPES)
     course_id = models.IntegerField('卷子所属课程id')
     chapter_id = models.IntegerField('卷子所属章节id', blank=True, null=True)
     paper_name = models.CharField('卷子名字', max_length=255)
-    teacher = models.CharField("教师姓名", max_length=90)
+    teacher = models.CharField('教师姓名', max_length=90)
+    question_order = JSONField('存储题目顺序的Json', default=None, blank=True, null=True)
+
     create_time = models.DateTimeField('创建时间', auto_now_add=True)
     start_time = models.DateTimeField('开始时间', blank=True, null=True)
     end_time = models.DateTimeField('截至时间', blank=True, null=True)
@@ -155,8 +160,7 @@ class CustomType(models.Model):
 
 class PaperQuestionContact(models.Model):
     paper_id = models.IntegerField('卷子id')
-    custom_type_id = models.IntegerField('卷子中题目自定义类型id')
-    types = models.CharField('题目类型', max_length=20, choices=Paper.TYPES)
+    types = models.CharField('题目类型', max_length=20, choices=Question.TYPES)
     score = models.FloatField('题目分数', default=1)
     question_id = models.IntegerField('题目id')
     question = models.TextField('题目')

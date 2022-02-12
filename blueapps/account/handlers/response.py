@@ -10,7 +10,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
 from django.conf import settings
 from django.http import HttpResponseRedirect, JsonResponse
 from django.utils.translation import ugettext_lazy as _
@@ -121,19 +120,13 @@ class ResponseHandler(object):
         """
         todo，说明 url 格式
         """
-        _login_url = self._conf.WEIXIN_OAUTH_URL
-        _next = request.build_absolute_uri()
 
-        extra_args = {
-            "appid": self._conf.WEIXIN_APP_ID,
-            "response_type": "code",
-            "scope": "snsapi_base",
-            "state": request.session["WEIXIN_OAUTH_STATE"],
+        context = {
+            "result": False,
+            "code": "-1",
+            "message": _(u"您的微信登录认证失败,请与管理人员联系"),
         }
-        _redirect = build_redirect_url(
-            _next, _login_url, "redirect_uri", extra_args=extra_args
-        )
-        return HttpResponseRedirect(_redirect)
+        return JsonResponse(context, status=401)
 
     def build_rio_401_response(self, request):
         context = {
