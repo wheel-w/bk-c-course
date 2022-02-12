@@ -2,13 +2,40 @@ import json
 import logging
 
 from MySQLdb import DatabaseError
+from celery.task import task
 from django.db import transaction
 from django.http import JsonResponse
+from django.utils import timezone
 
-from .models import CustomType, Member, Paper, PaperQuestionContact, Question
+from django.views.decorators.csrf import csrf_exempt
+from blueapps.account.decorators import login_exempt
+
+from .models import CustomType, Member, Paper, PaperQuestionContact, Question, StudentAnswer
 from .views import is_teacher
 
 logger = logging.getLogger("root")
+"""
+1. 录入卷子的时候数据库操作是事务操作
+2. 在卷子状态为MARKED时，预览卷子与批改答题混在一起（数据量的问题）
+3. 学生看查卷子列表
+4. 查询卷子的时候，前端分类还是后端分类 (前端分类 ok)
+"""
+
+
+@task()
+def judge_objective(PQContact_ids, student_id):
+    try:
+        PQContact_ids = [int(i) for i in PQContact_ids]
+        student_answer = StudentAnswer.objects.filter(PQContact_id__in=PQContact_ids, student_id=student_id)
+        answer = {pq.id: (pq.answer, pq.score) for pq in PaperQuestionContact.objects.filter(id__in=PQContact_ids)}
+        for question in student_answer:
+            if question.answer == answer[question.PQContact_id][0]:
+                question.score = answer[question.PQContact_id][1]
+            else:
+                question.score = 0
+        StudentAnswer.objects.bulk_update(student_answer, ['score'])
+    except DatabaseError as e:
+        logger.exception(e)
 
 
 @is_teacher
@@ -109,9 +136,59 @@ def question_title(request):
         })
 
 
-@is_teacher
 def paper(request):
     method = request.method
+
+    if method == "GET":
+        """
+        功能: 
+             老师
+             1. 根据老师id，返回给老师的所有卷子
+             2. 根据老师id与课程id，返回对应老师教的本门课程的所有卷子
+             3. 根据question_id查询所含该题目的卷子（同步题目使用）
+             学生
+             1. 根据老师与课程去查
+                         
+        输入：老师id或老师与课程id
+        返回：对应卷子信息
+        """
+        body = json.loads(request.body)
+        query_param = {}
+        if request.user.identity == Member.Identity.TEACHER:
+            query_param = {'teacher': str(Member.objects.get(id=request.user.id))}
+        if request.user.identity == Member.Identity.STUDENT and 'course_id' not in body.keys():
+            return JsonResponse({'result': False, 'code': 403, 'message': '请求参数不完整', 'data': {}})
+        if 'course_id' in body.keys():
+            query_param['course_id'] = body.get('course_id')
+        if 'question_id' in body.keys():
+            question_id = body.get('question_id')
+            query_param['id__in'] = [pq.paper_id for pq in
+                                     PaperQuestionContact.objects.filter(question_id=question_id)]
+        try:
+            paper_info = list(Paper.objects.filter(**query_param).values())
+
+        except Exception as e:
+            logger.exception(e)
+            return JsonResponse({
+                'result': False,
+                'message': '查询失败(请检查日志)',
+                'code': 500,
+                'data': {}
+            })
+        return JsonResponse({
+            'result': True,
+            'message': '查询成功',
+            'code': 200,
+            'data': paper_info
+        })
+
+    if request.user.identity != Member.Identity.TEACHER:
+        return JsonResponse({
+            'result': False,
+            'code': 403,
+            'message': '您没有操作权限！',
+            'data': {}
+        })
 
     if method == "POST":
         """
@@ -248,41 +325,6 @@ def paper(request):
 
         return JsonResponse(return_data)
 
-    if method == "GET":
-        """
-        功能: 1. 根据老师id，返回给老师的所有卷子
-             2. 根据老师id与课程id，返回对应老师教的本门课程的所有卷子
-             3. 根据question_id查询所含该题目的卷子
-        输入：老师id或老师与课程id
-        返回：对应卷子信息
-        """
-        body = json.loads(request.body)
-        query_param = {'teacher': str(Member.objects.get(id=request.user.id))}
-        if 'course_id' in body.keys():
-            query_param['course_id'] = body.get('course_id')
-        try:
-            if 'question_id' in body.keys():
-                question_id = body.get('question_id')
-                query_param['id__in'] = [pq.paper_id for pq in
-                                         PaperQuestionContact.objects.filter(question_id=question_id)]
-
-            paper_info = list(Paper.objects.filter(**query_param).values())
-
-        except Exception as e:
-            logger.exception(e)
-            return JsonResponse({
-                'result': False,
-                'message': '查询失败(请检查日志)',
-                'code': 500,
-                'data': {}
-            })
-        return JsonResponse({
-            'result': True,
-            'message': '查询成功',
-            'code': 200,
-            'data': paper_info
-        })
-
     else:
         return JsonResponse({
             'result': False,
@@ -291,9 +333,9 @@ def paper(request):
         })
 
 
-@is_teacher
+@login_exempt
+@csrf_exempt
 def manage_paper_question_contact(request):
-
     if request.method == "GET":
         """
         功能: 查询卷子对应的习题
@@ -308,8 +350,58 @@ def manage_paper_question_contact(request):
                         }
              }
         """
+
+        """
+        老师: 1. 老师预览卷子（卷子的状态是草稿）（题目基本信息）  ok
+             2. 老师将卷子存为草稿之后，再次给卷子加题（卷子的状态是草稿）（题目的基本信息） ok
+             
+             3. 老师批改卷子（identity是老师 && 卷子的截至时间已经到期）（题目的基本信息与学生的作答）  ok
+                （后端将所有的题目信息与所有学生的答题情况返回给前端，前端去处理老师按照题目给分还是按照学生取给分）
+            
+             4. 老师看查答题情况（????????????????????????????）            
+            
+        学生: 1. 答题时请求卷子（卷子状态是已发布）（题目的基本信息） ok
+             2. 看查答题结果（identity是学生 && 卷子的截至时间已经到期 && 卷子的状态是已批改）（题目的基本信息与题目的正误与分数）ok
+        """
+
+        """
+        1. 返回卷子的基本信息（不用查StudentAnswer表）
+            1.1 老师看查卷子（卷子状态草稿）
+            1.2 老师将卷子存为草稿之后，再次给卷子加题（卷子的状态是草稿）
+            1.3 学生答题时请求卷子（卷子的状态是已发布）
+        
+        上：卷子的截至时间没到
+        下：卷子的截至时间到了
+        
+        2. 返回卷子的基本信息 + 答案 + 作答 + 客观题的正误
+            2.1 老师批改卷子（卷子的截至时间到期）
+            
+        3. 题目的基本信息 + 题目的正误 + 总分
+            3.1 学生看查答题结果（卷子的状态是已批改）（卷子的截至时间到期）
+        """
+        """
+        测试：
+            老师：
+                DRAFT               返回卷子信息 + 答案  ok   可以修改
+                RELEASE             
+                        截至时间未过  返回卷子信息 + 答案  ok   不可以修改
+                        截至时间过了  返回卷子信息 + 答案 + 学生作答情况 ok 老师批改
+                        
+                        
+                MARKED              返回卷子信息 + 答案 + 学生作答 no  当老师在批改完成时，1预览卷子 2点击批改返回批改完成（数据传输的多）
+                
+                
+            学生：
+                DRAFT               ok   这样解决（学生端不展示）
+                RELEASE
+                        截至时间未过  返回卷子信息  ok  学生答题
+                        截至时间过了  返回信息“卷子未批改完成” ok （学生看不到卷子（相当于收卷））
+                MARKED              返回卷子的信息 + 答案 + 得分 ok
+        """
         body = json.loads(request.body)
         paper_id = body.get('paper_id')
+        # identity = request.user.identity
+        identity = Member.Identity.STUDENT  # 测试
 
         if paper_id is None:
             return JsonResponse({
@@ -319,15 +411,40 @@ def manage_paper_question_contact(request):
                 'data': {}
             })
 
+        # 数据库操作
         try:
-            order = json.loads(Paper.objects.get(id=paper_id).question_order)
+            paper = Paper.objects.get(id=paper_id)
+            if identity == Member.Identity.STUDENT and paper.status == Paper.Status.DRAFT:
+                return JsonResponse({'result': False, 'code': 403, 'message': '没有权限看查', 'dat': {}})
+
+            order = json.loads(paper.question_order)
             custom_type_ids = order.keys()
+            student_answer = None
+
             questions = {pq['id']: pq for pq in PaperQuestionContact.objects.filter(paper_id=paper_id).values()}
 
             # 初始化传输题目的格式
             question_data = {
                 'titles': {i.id: i.custom_type_name for i in CustomType.objects.filter(id__in=custom_type_ids)},
                 'questions': {i: [] for i in custom_type_ids}}
+
+            # 分情况判断是否需要查询StudentAnswer表
+            if paper.status != Paper.Status.DRAFT and paper.end_time < timezone.now():
+                student_answer = {}
+                query_param = {'PQContact_id__in': questions.keys()}
+                if identity == Member.Identity.STUDENT:
+                    # query_param['student_id'] = request.user.id # 测试
+                    query_param['student_id'] = 1
+                if identity == Member.Identity.TEACHER and body.get('student_id'):
+                    query_param['student_id'] = body.get('student_id')
+                for sa in StudentAnswer.objects.filter(**query_param).values():
+                    if paper.status != Paper.Status.MARKED:
+                        sa.pop('score')
+                    if sa['PQContact_id'] in student_answer.keys():
+                        student_answer[sa['PQContact_id']].append(sa)
+                    else:
+                        student_answer[sa['PQContact_id']] = [sa]
+
         except Exception as e:
             logger.exception(e)
             return JsonResponse({
@@ -337,13 +454,15 @@ def manage_paper_question_contact(request):
                 'date': {}
             })
 
-        # 在题目表中获得对应id对应的大题名称 (id:name)
-        # 将题目信息中的custom_type_id变为custom_type_name
+        # 构造给前端传输的数据格式
         for title_id, question_ids in order.items():
             for q_id in question_ids:
                 q = questions[q_id]
-                q.pop('answer')
-                q.pop('explain')
+                if identity == Member.Identity.STUDENT and not student_answer:
+                    q.pop('answer')
+                    q.pop('explain')
+                if student_answer:
+                    q['student_answer'] = student_answer[q_id]
                 question_data['questions'][title_id].append(q)
 
         return JsonResponse(
@@ -355,6 +474,14 @@ def manage_paper_question_contact(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
+
+    if request.user.identity != Member.Identity.TEACHER:
+        return JsonResponse({
+            'result': False,
+            'code': 403,
+            'message': '您没有操作权限！',
+            'data': {}
+        })
 
     if request.method == 'POST':
         """
@@ -404,7 +531,7 @@ def manage_paper_question_contact(request):
             sum = 0
             order_json = {}
             for title in title_info:
-                order_json[title[0]] = score_list[sum:sum+title[1]]
+                order_json[title[0]] = score_list[sum:sum + title[1]]
                 sum += title[1]
 
             Paper.objects.filter(id=paper_id).update(question_order=json.dumps(order_json))
@@ -490,3 +617,66 @@ def synchronous_paper(request):
                 {"result": False, "message": "更新失败", "code": 412, "data": []},
                 json_dumps_params={"ensure_ascii": False},
             )
+
+
+def save_answer(request):
+    """
+    功能: 保存学生的答案
+    输入: 题目与卷子关联id与学生的答案
+    返回: 保存成功或失败
+    """
+
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        # student_id = request.user.id
+        student_id = 3  #测试
+        answer_info = body.get('answer_info')
+
+        if not answer_info:
+            return JsonResponse({
+                'result': False,
+                'code': 400,
+                'message': '请求参数不完整',
+                'data': {}
+            })
+
+        # 将数据存入数据库
+        create_list = []
+        for pq_id, answer in answer_info.items():
+            create_list.append(StudentAnswer(
+                student_id=student_id,
+                PQContact_id=pq_id,
+                answer=answer
+            ))
+        try:
+            StudentAnswer.objects.bulk_create(create_list)
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse({
+                'result': False,
+                'code': 500,
+                'message': '提交失败',
+                'data': {}
+            })
+        # 起一个celery任务去判断客观题的正误
+        judge_objective.delay(list(answer_info.keys()), student_id)
+
+        return JsonResponse({
+            'result': True,
+            'code': 200,
+            'message': '提交成功',
+            'data': {}
+        })
+    else:
+        return JsonResponse({
+            'result': False,
+            'code': 405,
+            'message': '请求方法错误',
+            'data': {}
+        })
+
+
+
+
+
+
