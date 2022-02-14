@@ -2,14 +2,13 @@ import json
 import logging
 
 from MySQLdb import DatabaseError
-from celery.task import task
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 
 from .models import CustomType, Member, Paper, PaperQuestionContact, Question, StudentAnswer
 from .views import is_teacher
-from .celerey_task import judge_objective
+from .celery_task.judge_objective import judge_objective
 
 logger = logging.getLogger("root")
 
