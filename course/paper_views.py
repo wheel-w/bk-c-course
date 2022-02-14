@@ -636,3 +636,37 @@ def save_answer(request):
             'message': '请求方法错误',
             'data': {}
         })
+
+
+# 老师手动批阅卷子，保存学生的分数
+def teacher_correct_paper(request):
+    if request.method == "POST":
+        req = json.loads(request.body)  # 需要传StudentAnswer表的id和学生的分数
+        student_score_list = req.get("student_answer_list")
+        update_score_list = []
+        for student_score in student_score_list:
+            update_score_list.append(StudentAnswer(**student_score))
+        try:
+            StudentAnswer.objects.bulk_update(update_score_list, ["score"])  # 批量保存分数
+            return JsonResponse(
+                {"result": True, "message": "卷子批改成功", "code": 200, "data": []}
+            )
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "卷子批改失败",
+                    "code": 412,
+                    "data": [],
+                }
+            )
+    else:
+        return JsonResponse(
+            {
+                "result": False,
+                "message": "请求方法错误",
+                "code": 400,
+                "data": [],
+            }
+        )
