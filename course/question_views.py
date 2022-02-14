@@ -16,7 +16,11 @@ logger = logging.getLogger("root")
 # 出题操作权限装饰器
 def set_question_rights(fun):
     def inner(request, *args, **kwargs):
-        course_id = request.GET.get("course_id")
+        if request.method == "DELETE":
+            course_id = request.GET.get("course_id")
+        else:
+            req = json.loads(request.body)
+            course_id = req.get("course_id")
         user_info = "{}({})".format(request.user.class_number, request.user.name)
         try:
             course = Course.objects.get(id=course_id)
@@ -68,45 +72,63 @@ def get_chapter_list(request):
 # 章节的批量增删改
 @set_question_rights
 def operate_chapter(request):
-    req = json.loads(request.body)
-    course_id = req.get("course_id")
-    # 获取数据库存在的课程章节
-    existing_chapter_dict = Chapter.objects.in_bulk(course_id=course_id)
-    new_chapter_list = []  # 新增章节列表
-    update_chapter_list = []  # 更新操作的章节列表
-    update_chapter_id_list = []  # 更新操作的章节id
-    # 获取前端传入的当前章节列表
-    current_chapter_list = req.get("chapter_list")
-    for current_chapter in current_chapter_list:
-        if "id" in current_chapter:
-            update_chapter_id_list.append(current_chapter["id"])
-            update_chapter_list.append(Chapter(**current_chapter))
-        else:
-            new_chapter_list.append(Chapter(**current_chapter))
-    del_id_list = list(
-        set(existing_chapter_dict.keys()) - set(update_chapter_id_list)
-    )  # 删除章节id列表
-    try:
-        with transaction.atomic():
-            Chapter.objects.filter(id__in=del_id_list).delete()  # 批量删除
-            Chapter.objects.bulk_update(update_chapter_list, ["chapter_name"])  # 批量更新
-            Chapter.objects.bulk_create(new_chapter_list)  # 批量创建数据
-        return JsonResponse(
-            {
-                "result": True,
-                "message": "操作成功",
-                "code": 200,
-                "data": [],
-            },
-            json_dumps_params={"ensure_ascii": False},
+    if request.method == "POST":
+        req = json.loads(request.body)
+        course_id = request.GET.get("course_id")
+        # 获取数据库存在的课程章节
+        existing_chapter_dict = Chapter.objects.filter(course_id=course_id).values_list(
+            "id", flat=True
         )
-    except DatabaseError as e:
-        logger.exception(e)
+        new_chapter_list = []  # 新增章节列表
+        update_chapter_list = []  # 更新操作的章节列表
+        update_chapter_id_list = []  # 更新操作的章节id
+        # 获取前端传入的当前章节列表
+        current_chapter_list = req.get("chapter_list")
+        for current_chapter in current_chapter_list:
+            if "id" in current_chapter:
+                update_chapter_id_list.append(current_chapter["id"])
+                update_chapter_list.append(Chapter(**current_chapter))
+            else:
+                obj = Chapter(
+                    course_id=course_id, chapter_name=current_chapter["chapter_name"]
+                )
+                new_chapter_list.append(obj)
+        del_id_list = list(
+            set(existing_chapter_dict) - set(update_chapter_id_list)
+        )  # 删除章节id列表
+        try:
+            with transaction.atomic():
+                Chapter.objects.filter(id__in=del_id_list).delete()  # 批量删除
+                Chapter.objects.bulk_update(
+                    update_chapter_list, ["chapter_name"]
+                )  # 批量更新
+                Chapter.objects.bulk_create(new_chapter_list)  # 批量创建数据
+            return JsonResponse(
+                {
+                    "result": True,
+                    "message": "操作成功",
+                    "code": 200,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "操作失败！",
+                    "code": 412,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+    else:
         return JsonResponse(
             {
                 "result": False,
-                "message": "操作失败！",
-                "code": 412,
+                "message": "请求方法错误",
+                "code": 400,
                 "data": [],
             },
             json_dumps_params={"ensure_ascii": False},
@@ -224,7 +246,7 @@ def import_question_excel(request):
 
 
 # 出题模板下载
-def download_set_question_excel_template():
+def download_set_question_excel_template(request):
     file = open("static/files/setQuestionTemplate.xls", "rb")
     response = FileResponse(file)
     response["Content-Type"] = "application/octet-stream"
@@ -254,6 +276,7 @@ def get_question_list(request):
         for question in questions:
             question_list.append(
                 {
+                    "question_id": question.id,
                     "chapter_id": question.chapter_id,
                     "types": question.types,
                     "question": question.question,
@@ -326,7 +349,7 @@ def teacher_set_question(request):
             )
     # 删
     if request.method == "DELETE":
-        question_id_list = request.GET.get("question_id_list")  # 可以传递多个问题id
+        question_id_list = json.loads(request.GET.get("question_id_list"))  # 可以传递多个问题id
         try:
             Question.objects.filter(id__in=question_id_list).delete()
             return JsonResponse(

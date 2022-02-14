@@ -2,7 +2,7 @@
 
 from django.conf.urls import url
 
-from . import question_views, views, paper_views
+from . import paper_views, question_views, views
 
 urlpatterns = (
     url(r"^update_user_info/$", views.update_user_info, name="update_user_info"),
@@ -27,7 +27,6 @@ urlpatterns = (
     url(r"^import_question_excel/$", question_views.import_question_excel),  # 导入问题
     url(r"^teacher_set_question/$", question_views.teacher_set_question),  # 出题的增删改
     url(r"^get_question_list/$", question_views.get_question_list),  # 返回课程的题目列表
-
     url(r"^question_title/$", paper_views.question_title),
     url(r"^paper/$", paper_views.paper),
     url(r"^manage_paper_question_contact/$", paper_views.manage_paper_question_contact),
