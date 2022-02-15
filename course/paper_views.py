@@ -136,6 +136,8 @@ def paper(request):
                 query_param = {'teacher': str(Member.objects.get(id=request.user.id))}
             if request.user.identity == Member.Identity.STUDENT and not request.GET.get('course_id'):
                 return JsonResponse({'result': False, 'code': 403, 'message': '请求参数不完整', 'data': {}})
+            if request.user.identity == Member.Identity.STUDENT:
+                query_param = {'status__in': ['RELEASE', 'MARKED']}
             if request.GET.get('course_id'):
                 query_param['course_id'] = request.GET.get('course_id')
             if question_id:
