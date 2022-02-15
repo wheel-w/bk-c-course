@@ -128,7 +128,6 @@ def paper(request):
         输入：老师id或老师与课程id
         返回：对应卷子信息
         """
-        # body = json.loads(request.body)
         question_id = request.GET.get('question_id')
         query_param = {}
 
