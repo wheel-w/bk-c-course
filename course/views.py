@@ -8,10 +8,8 @@ from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
-from course.utils.verify_account import identify_user
-
 from course.models import Course, Member, UserCourseContact
-
+from course.utils.verify_account import identify_user
 
 # Create your views here.
 
@@ -55,7 +53,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                    identity.first()["identity"] == Member.Identity.TEACHER
+                identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -501,7 +499,7 @@ def search_course_student(request):
         page_size = request.GET.get("page_size", 10)
         paginator = Paginator(student_list, page_size)  # 分页器对象，10是每页展示的数据条数
         page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
-        page_info_list = paginator.get_page(page)  # 更新students为对应页码数据
+        page_info_list = list(paginator.get_page(page))  # 更新students为对应页码数据
         return JsonResponse(
             {
                 "result": True,
@@ -589,9 +587,11 @@ def verify_school_user(request):
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
                     "professional_class": user_info["user_class"],
-                    "gender": Member.Gender.MAN if user_info["user_sex"] == "男" else Member.Gender.WOMAN,
+                    "gender": Member.Gender.MAN
+                    if user_info["user_sex"] == "男"
+                    else Member.Gender.WOMAN,
                     "identity": Member.Identity.STUDENT,
-                    "college": user_info["user_college"]
+                    "college": user_info["user_college"],
                 }
                 if request.is_wechat():
                     kwargs["username"] = "{}X".format(user_info["user_name"])
