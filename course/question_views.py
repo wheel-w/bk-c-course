@@ -74,7 +74,7 @@ def get_chapter_list(request):
 def operate_chapter(request):
     if request.method == "POST":
         req = json.loads(request.body)
-        course_id = request.GET.get("course_id")
+        course_id = req.get("course_id")
         # 获取数据库存在的课程章节
         existing_chapter_dict = Chapter.objects.filter(course_id=course_id).values_list(
             "id", flat=True
