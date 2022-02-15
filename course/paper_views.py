@@ -2,6 +2,7 @@ import json
 import logging
 
 from MySQLdb import DatabaseError
+from django.contrib.auth import login
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
@@ -130,13 +131,13 @@ def paper(request):
         """
         question_id = request.GET.get('question_id')
         query_param = {}
-
+        identity = request.user.identity
         if not question_id:
-            if request.user.identity == Member.Identity.TEACHER:
+            if identity == Member.Identity.TEACHER:
                 query_param = {'teacher': str(Member.objects.get(id=request.user.id))}
-            if request.user.identity == Member.Identity.STUDENT and not request.GET.get('course_id'):
+            if identity == Member.Identity.STUDENT and not request.GET.get('course_id'):
                 return JsonResponse({'result': False, 'code': 403, 'message': '请求参数不完整', 'data': {}})
-            if request.user.identity == Member.Identity.STUDENT:
+            if identity == Member.Identity.STUDENT:
                 query_param = {'status__in': ['RELEASE', 'MARKED']}
             if request.GET.get('course_id'):
                 query_param['course_id'] = request.GET.get('course_id')
