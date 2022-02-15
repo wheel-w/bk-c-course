@@ -285,7 +285,11 @@ def import_student_excel(request):
     excel_files = request.FILES.get("excel_file")
     suffix = excel_files.name.split(".")[-1]
     course_id = request.POST.get("course_id")
-    if suffix in ["xls", "xlsx"]:
+    if suffix == "xls":
+        data = xlrd.open_workbook(
+            filename=None, file_contents=excel_files.read(), formatting_info=True
+        )
+    elif suffix == "xlsx":
         data = xlrd.open_workbook(filename=None, file_contents=excel_files.read())
     else:
         return JsonResponse(
