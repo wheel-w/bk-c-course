@@ -326,7 +326,7 @@ def import_student_excel(request):
             else:
                 for row in range(4, rows):
                     row_values = table.row_values(row)
-                    student_info["class_number"] = row_values[0]
+                    student_info["class_number"] = int(row_values[0])
                     student_info["professional_class"] = row_values[4]
                     student_info["name"] = row_values[2]
                     student_info_list.append(student_info.copy())
