@@ -301,83 +301,84 @@ def import_student_excel(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
-    table = data.sheets()
+    tables = data.sheets()
     student_class_number = set()
     student_info_list = []
     student_member_list = []
     student_contact_list = []
     student_info = {}
     row_sign = 0
-    rows = table.nrows
-    values_0 = table.row_values(0)
-    if rows != 1:
-        values_1 = table.row_values(1)
-        if not (values_0[0] == "教学班点名册" and values_1[0] == "学年"):
-            return JsonResponse(
-                {
-                    "result": False,
-                    "message": "文件格式错误,请检查文件内容是否符合模板规范",
-                    "code": 403,
-                    "data": [],
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
-        else:
-            for row in range(4, rows):
-                row_values = table.row_values(row)
-                student_info["class_number"] = row_values[0]
-                student_info["professional_class"] = row_values[4]
-                student_info["name"] = row_values[2]
-                student_info_list.append(student_info.copy())
-                student_class_number.add(row_values[0])
-            user_class_number = Member.objects.filter(
-                class_number__in=student_class_number
-            ).values_list("class_number", flat=True)
-            user_ids = UserCourseContact.objects.filter(
-                course_id=course_id
-            ).values_list("user_id", flat=True)
-            user_ids_list = list(user_ids)
-            user_class_number_list = list(user_class_number)
-            for student in student_info_list:
-                if student["class_number"] not in user_class_number_list:
-                    student_member_list.append(
-                        Member(
-                            username="{}X".format(student["class_number"]),
-                            class_number=student["class_number"],
-                            name=student["name"],
-                            professional_class=student["professional_class"],
+    for table in tables:
+        rows = table.nrows
+        values_0 = table.row_values(0)
+        if rows != 1:
+            values_1 = table.row_values(1)
+            if not (values_0[0] == "教学班点名册" and values_1[0] == "学年"):
+                return JsonResponse(
+                    {
+                        "result": False,
+                        "message": "文件格式错误,请检查文件内容是否符合模板规范",
+                        "code": 403,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
+                )
+            else:
+                for row in range(4, rows):
+                    row_values = table.row_values(row)
+                    student_info["class_number"] = row_values[0]
+                    student_info["professional_class"] = row_values[4]
+                    student_info["name"] = row_values[2]
+                    student_info_list.append(student_info.copy())
+                    student_class_number.add(row_values[0])
+                user_class_number = Member.objects.filter(
+                    class_number__in=student_class_number
+                ).values_list("class_number", flat=True)
+                user_ids = UserCourseContact.objects.filter(
+                    course_id=course_id
+                ).values_list("user_id", flat=True)
+                user_ids_list = list(user_ids)
+                user_class_number_list = list(user_class_number)
+                for student in student_info_list:
+                    if student["class_number"] not in user_class_number_list:
+                        student_member_list.append(
+                            Member(
+                                username="{}X".format(student["class_number"]),
+                                class_number=student["class_number"],
+                                name=student["name"],
+                                professional_class=student["professional_class"],
+                            )
                         )
-                    )
-            Member.objects.bulk_create(student_member_list)
-            objs = Member.objects.filter(
-                class_number__in=student_class_number
-            ).values_list("id", flat=True)
-            objs_list = list(objs)
-            for obj in objs_list:
-                if obj not in user_ids_list:
-                    student_contact_list.append(
-                        UserCourseContact(user_id=obj, course_id=course_id)
-                    )
-                    row_sign = row_sign + 1
-            UserCourseContact.objects.bulk_create(student_contact_list)
-            return JsonResponse(
-                {
-                    "result": True,
-                    "message": "导入成功,共导入{}行数据".format(row_sign),
-                    "code": 200,
-                    "data": [],
-                },
-                json_dumps_params={"ensure_ascii": False},
-            )
-    return JsonResponse(
-        {
-            "result": False,
-            "message": "请检查您的excel表中的数据是否齐全",
-            "code": 403,
-            "data": [],
-        },
-        json_dumps_params={"ensure_ascii": False},
-    )
+                Member.objects.bulk_create(student_member_list)
+                objs = Member.objects.filter(
+                    class_number__in=student_class_number
+                ).values_list("id", flat=True)
+                objs_list = list(objs)
+                for obj in objs_list:
+                    if obj not in user_ids_list:
+                        student_contact_list.append(
+                            UserCourseContact(user_id=obj, course_id=course_id)
+                        )
+                        row_sign = row_sign + 1
+                UserCourseContact.objects.bulk_create(student_contact_list)
+                return JsonResponse(
+                    {
+                        "result": True,
+                        "message": "导入成功,共导入{}行数据".format(row_sign),
+                        "code": 200,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
+                )
+        return JsonResponse(
+            {
+                "result": False,
+                "message": "请检查您的excel表中的数据是否齐全",
+                "code": 403,
+                "data": [],
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
 
 
 # 根具课程id为课程新加学生
