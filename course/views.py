@@ -8,9 +8,8 @@ from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
-from course.utils.verify_account import identify_user
-
 from course.models import Course, Member, UserCourseContact
+from course.utils.verify_account import identify_user
 
 
 # Create your views here.
@@ -286,7 +285,11 @@ def import_student_excel(request):
     excel_files = request.FILES.get("excel_file")
     suffix = excel_files.name.split(".")[-1]
     course_id = request.POST.get("course_id")
-    if suffix in ["xls", "xlsx"]:
+    if suffix == "xls":
+        data = xlrd.open_workbook(
+            filename=None, file_contents=excel_files.read(), formatting_info=True
+        )
+    elif suffix == "xlsx":
         data = xlrd.open_workbook(filename=None, file_contents=excel_files.read())
     else:
         return JsonResponse(
@@ -488,20 +491,20 @@ def search_course_student(request):
         user_ids_list = list(user_ids)
         user_objects = Member.objects.in_bulk(user_ids_list)
         for index, user_object in user_objects.items():
-            if user_object.identity == "STUDENT":
-                student_info["student"] = "{}({})".format(
-                    user_object.class_number, user_object.name
-                )
-                student_info["student_id"] = user_object.id
-                student_info["id"] = user_object.id
-                student_info["name"] = user_object.name
-                student_info["class_number"] = user_object.class_number
-                student_info["professional_class"] = user_object.professional_class
-                student_list.append(student_info.copy())
+            student_info["student"] = "{}({})".format(
+                user_object.class_number, user_object.name
+            )
+            student_info["student_id"] = user_object.id
+            student_info["id"] = user_object.id
+            student_info["name"] = user_object.name
+            student_info["class_number"] = user_object.class_number
+            student_info["professional_class"] = user_object.professional_class
+            student_info["identify"] = user_object.identity
+            student_list.append(student_info.copy())
         page_size = request.GET.get("page_size", 10)
         paginator = Paginator(student_list, page_size)  # 分页器对象，10是每页展示的数据条数
         page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
-        page_info_list = paginator.get_page(page)  # 更新students为对应页码数据
+        page_info_list = list(paginator.get_page(page))  # 更新students为对应页码数据
         return JsonResponse(
             {
                 "result": True,
@@ -589,9 +592,11 @@ def verify_school_user(request):
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
                     "professional_class": user_info["user_class"],
-                    "gender": Member.Gender.MAN if user_info["user_sex"] == "男" else Member.Gender.WOMAN,
+                    "gender": Member.Gender.MAN
+                    if user_info["user_sex"] == "男"
+                    else Member.Gender.WOMAN,
                     "identity": Member.Identity.STUDENT,
-                    "college": user_info["user_college"]
+                    "college": user_info["user_college"],
                 }
                 if request.is_wechat():
                     kwargs["username"] = "{}X".format(user_info["user_name"])
