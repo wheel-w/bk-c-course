@@ -75,51 +75,61 @@ def operate_chapter(request):
     if request.method == "POST":
         req = json.loads(request.body)
         course_id = req.get("course_id")
-    # 获取数据库存在的课程章节
-    existing_chapter_dict = Chapter.objects.filter(course_id=course_id).values_list(
-        "id", flat=True
-    )
-    new_chapter_list = []  # 新增章节列表
-    update_chapter_list = []  # 更新操作的章节列表
-    update_chapter_id_list = []  # 更新操作的章节id
-    # 获取前端传入的当前章节列表
-    current_chapter_list = req.get("chapter_list")
-    for current_chapter in current_chapter_list:
-        if current_chapter["id"]:
-            update_chapter_id_list.append(current_chapter["id"])
-            update_chapter_list.append(Chapter(**current_chapter))
-        else:
-            obj = Chapter(
-                course_id=course_id, chapter_name=current_chapter["chapter_name"]
-            )
-            new_chapter_list.append(obj)
-    del_id_list = list(
-        set(existing_chapter_dict) - set(update_chapter_id_list)
-    )  # 删除章节id列表
-    try:
-        with transaction.atomic():
-            Chapter.objects.filter(id__in=del_id_list).delete()  # 批量删除
-            Chapter.objects.bulk_update(update_chapter_list, ["chapter_name"])  # 批量更新
-            Chapter.objects.bulk_create(new_chapter_list)  # 批量创建数据
-        return JsonResponse(
-            {
-                "result": True,
-                "message": "操作成功",
-                "code": 200,
-                "data": [],
-            },
-            json_dumps_params={"ensure_ascii": False},
+        # 获取数据库存在的课程章节
+        existing_chapter_dict = Chapter.objects.filter(course_id=course_id).values_list(
+            "id", flat=True
         )
-    except DatabaseError as e:
-        logger.exception(e)
+        new_chapter_list = []  # 新增章节列表
+        update_chapter_list = []  # 更新操作的章节列表
+        update_chapter_id_list = []  # 更新操作的章节id
+        # 获取前端传入的当前章节列表
+        current_chapter_list = req.get("chapter_list")
+        for current_chapter in current_chapter_list:
+            if current_chapter["id"]:
+                update_chapter_id_list.append(current_chapter["id"])
+                update_chapter_list.append(Chapter(**current_chapter))
+            else:
+                obj = Chapter(
+                    course_id=course_id, chapter_name=current_chapter["chapter_name"]
+                )
+                new_chapter_list.append(obj)
+        del_id_list = list(
+            set(existing_chapter_dict) - set(update_chapter_id_list)
+        )  # 删除章节id列表
+        try:
+            with transaction.atomic():
+                Chapter.objects.filter(id__in=del_id_list).delete()  # 批量删除
+                Chapter.objects.bulk_update(
+                    update_chapter_list, ["chapter_name"]
+                )  # 批量更新
+                Chapter.objects.bulk_create(new_chapter_list)  # 批量创建数据
+            return JsonResponse(
+                {
+                    "result": True,
+                    "message": "操作成功",
+                    "code": 200,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "操作失败！",
+                    "code": 412,
+                    "data": [],
+                }
+            )
+    else:
         return JsonResponse(
             {
                 "result": False,
-                "message": "操作失败！",
-                "code": 412,
+                "message": "请求方法错误！",
+                "code": 400,
                 "data": [],
-            },
-            json_dumps_params={"ensure_ascii": False},
+            }
         )
 
 
