@@ -397,7 +397,7 @@
         }
     }
     .monitor-navigation-admin {
-        width: 170px #63656E;
+        width: 250px #63656E;
         display: -webkit-box;
         display: -ms-flexbox;
         display: flex;
@@ -413,16 +413,16 @@
         margin: 0;
         color: #63656E;
         .nav-item {
-            -webkit-box-flex: 0;
-            -ms-flex: 0 0 32px;
-            flex: 0 0 32px;
+            -webkit-box-flex: 0 0 30px ;
+            -ms-flex: 0 0 55px;
+            flex: 0 0 42px;
             display: -webkit-box;
             display: -ms-flexbox;
             display: flex;
             -webkit-box-align: center;
             -ms-flex-align: center;
             align-items: center;
-            padding: 0 16px;
+            padding: 0 30px;
             list-style: none;
             &:hover {
                 color: #3A84FF;
@@ -430,7 +430,7 @@
                 background-color: #F0F1F5;
             }
             .lang-icon {
-                font-size: 20px;
+                font-size: 40px;
                 margin-right: 6px;
             }
         }
