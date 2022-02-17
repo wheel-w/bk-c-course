@@ -12,7 +12,6 @@ urlpatterns = (
     url(r"^search_member_info/$", views.search_member_info),  # 搜寻对应身份的用户信息
     url(r"^import_student_excel/$", views.import_student_excel),  # 导入学生
     url(r"^add_course_student/$", views.add_course_student),  # 添加一个或者多个学生
-    url(r"^add_course_member/$", views.add_course_member),  # 添加列表中不存在的学生
     url(r"^download_student_excel_template/$", views.download_student_excel_template),
     url(r"^search_course_student/$", views.search_course_student),  # 寻找课程学生列表
     url(
