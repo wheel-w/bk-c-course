@@ -56,7 +56,7 @@ def get_chapter_list(request):
         chapters = Chapter.objects.filter(course_id=course_id)
         for chapter in chapters:
             chapter_list.append(
-                {"chapter_id": chapter.id, "chapter_name": chapter.chapter_name}
+                {"id": chapter.id, "chapter_name": chapter.chapter_name}
             )
         return JsonResponse(
             {
@@ -85,7 +85,7 @@ def operate_chapter(request):
         # 获取前端传入的当前章节列表
         current_chapter_list = req.get("chapter_list")
         for current_chapter in current_chapter_list:
-            if "id" in current_chapter:
+            if current_chapter["id"]:
                 update_chapter_id_list.append(current_chapter["id"])
                 update_chapter_list.append(Chapter(**current_chapter))
             else:
@@ -120,18 +120,16 @@ def operate_chapter(request):
                     "message": "操作失败！",
                     "code": 412,
                     "data": [],
-                },
-                json_dumps_params={"ensure_ascii": False},
+                }
             )
     else:
         return JsonResponse(
             {
                 "result": False,
-                "message": "请求方法错误",
+                "message": "请求方法错误！",
                 "code": 400,
                 "data": [],
-            },
-            json_dumps_params={"ensure_ascii": False},
+            }
         )
 
 

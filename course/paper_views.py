@@ -73,8 +73,7 @@ def question_title(request):
         输入: course_id
         返回: 该课程的题目信息
         """
-        body = json.loads(request.body)
-        course_id = body.get('course_id')
+        course_id = request.GET.get('course_id')
         if course_id is None:
             return JsonResponse({
                 'result': False,
@@ -129,23 +128,24 @@ def paper(request):
         输入：老师id或老师与课程id
         返回：对应卷子信息
         """
-        body = json.loads(request.body)
+        question_id = request.GET.get('question_id')
         query_param = {}
-
-        if not body.get('question_id'):
-            if request.user.identity == Member.Identity.TEACHER:
+        identity = request.user.identity
+        if not question_id:
+            if identity == Member.Identity.TEACHER:
                 query_param = {'teacher': str(Member.objects.get(id=request.user.id))}
-            if request.user.identity == Member.Identity.STUDENT and 'course_id' not in body.keys():
+            if identity == Member.Identity.STUDENT and not request.GET.get('course_id'):
                 return JsonResponse({'result': False, 'code': 403, 'message': '请求参数不完整', 'data': {}})
-            if 'course_id' in body.keys():
-                query_param['course_id'] = body.get('course_id')
-            if 'question_id' in body.keys():
-                question_id = body.get('question_id')
+            if identity == Member.Identity.STUDENT:
+                query_param = {'status__in': ['RELEASE', 'MARKED']}
+            if request.GET.get('course_id'):
+                query_param['course_id'] = request.GET.get('course_id')
+            if question_id:
                 query_param['id__in'] = [pq.paper_id for pq in
                                          PaperQuestionContact.objects.filter(question_id=question_id)]
         else:
             query_param['id__in'] = [pq.paper_id for pq in
-                                     PaperQuestionContact.objects.filter(question_id=body.get('question_id'))]
+                                     PaperQuestionContact.objects.filter(question_id=question_id)]
 
         try:
 
@@ -334,12 +334,14 @@ def manage_paper_question_contact(request):
                         }
              }
         """
-        body = json.loads(request.body)
-        paper_id = body.get('paper_id')
+        paper_id = request.GET.get('paper_id')
         identity = request.user.identity
+        flag = None
 
-        if paper_id is None or (identity == Member.Identity.TEACHER and body.get('flag') is None):
+        if paper_id is None or (identity == Member.Identity.TEACHER and request.GET.get('flag') is None):
             return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
+        elif identity == Member.Identity.TEACHER:
+            flag = int(request.GET.get('flag'))
 
         try:
             paper = Paper.objects.get(id=paper_id)
@@ -358,7 +360,7 @@ def manage_paper_question_contact(request):
 
             # 分情况判断是否需要查询StudentAnswer表
             # 当老师请求此接口, flag==1，表示老师批改卷子；flag==0，表示老师预览卷子或继续出题
-            if (identity == Member.Identity.TEACHER and body.get('flag') == 1) or identity == Member.Identity.STUDENT:
+            if (identity == Member.Identity.TEACHER and flag == 1) or identity == Member.Identity.STUDENT:
                 if identity == Member.Identity.TEACHER and \
                         (paper.end_time > timezone.now() or paper.status == Paper.Status.DRAFT):
                     return JsonResponse({'result': False, 'code': 403, 'message': '无法批改', 'data': {}})
@@ -367,8 +369,8 @@ def manage_paper_question_contact(request):
                     query_param = {'PQContact_id__in': questions.keys()}
                     if identity == Member.Identity.STUDENT:
                         query_param['student_id'] = request.user.id
-                    if identity == Member.Identity.TEACHER and body.get('student_id'):
-                        query_param['student_id'] = body.get('student_id')
+                    if identity == Member.Identity.TEACHER and request.GET.get('student_id'):
+                        query_param['student_id'] = request.GET.get('student_id')
                     for sa in StudentAnswer.objects.filter(**query_param).values():
                         if paper.status != Paper.Status.MARKED:
                             sa.pop('score')
