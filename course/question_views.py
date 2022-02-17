@@ -272,12 +272,19 @@ def get_question_list(request):
                 )
             questions = Question.objects.filter(course_id=course_id)
         for question in questions:
+            if question.types == "COMPLETION":
+                if question.question.find("()") > 0:
+                    question_title = question.question.replace("()", "_______")
+                else:
+                    question_title = question.question.replace("（）", "_______")
+            else:
+                question_title = question.question
             question_list.append(
                 {
                     "question_id": question.id,
                     "chapter_id": question.chapter_id,
                     "types": question.types,
-                    "question": question.question,
+                    "question": question_title,
                     "option_A": question.option_A,
                     "option_B": question.option_B,
                     "option_C": question.option_C,
