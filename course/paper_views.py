@@ -344,25 +344,16 @@ def paper(request):
 def manage_paper_question_contact(request):
     if request.method == "GET":
         """
-        重构
-            老师 identity==TEACHER:
-                1. 预览卷子 1 2 3 4         paper_id                         
-                    1.1 四个状态看查有题目的卷子  ok
-                    1.2 四个状态看查没题目的卷子  ok
-
-                2. 批改     paper_id student   
-
-                2. 看查某个学生的答题情况 4    paper_id            student_id  ok                
-                    四个状态 
-
-                拿有无student判断是预览卷子还是批改
-
-            学生 identity==STUDENT:
-                1. 答题                    paper_id       
-                    1.1 未作答           
-                    1.2 保存              
-                    1.3 提交          
-                2. 看查批改结果与总分         paper_id                                      
+        功能: 返回卷子的详细信息，***会根据不同身份的人与请求参数的不同以及卷子所处状态的不同，返回不同的数据***
+        输入: 老师:
+                1. 预览卷子或继续出题      paper_id                      卷子所有状态
+                2. 批改卷子              paper_id   student_id         卷子的截至时间到期
+                3. 看查学生的答题情况      paper_id   student_id         卷子已批改完成
+             学生:
+                1. 答题                 paper_id                      卷子发布且处于答题时间
+                2. 看查考试结果           paper_id                      卷子已批改完成
+                3. 看查答题情况           paper_id                      卷子截至时间到但是未批改完成
+        返回: 卷子信息或者作答情况与总分(根据卷子的状态决定)
         """
         identity = request.user.identity
         paper_id = request.GET.get('paper_id')
