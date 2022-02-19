@@ -618,21 +618,22 @@ def save_answer(request):
         answer_info, paper_id, save_or_submit = [body.get(param) for param in request_params]
         if not (answer_info and paper_id and save_or_submit):
             return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
-
         # 构造新数据
-        create_list = []
-        for pq_id, answer in answer_info.items():
-            create_list.append(StudentAnswer(
-                student_id=student_id,
-                PQContact_id=pq_id,
-                answer=answer,
-                score=0
-            ))
+        create_list, PQContact_ids = [], []
+        for student_answer in answer_info:
+            for pq_id, answer in student_answer.items():
+                PQContact_ids.append(pq_id)
+                create_list.append(StudentAnswer(
+                    student_id=student_id,
+                    PQContact_id=pq_id,
+                    answer=answer,
+                    score=0
+                ))
         # 数据库操作
         try:
             with transaction.atomic():
                 # 删除上一个次提交答案字段
-                StudentAnswer.objects.filter(student_id=student_id, PQContact_id__in=list(answer_info.keys())).delete()
+                StudentAnswer.objects.filter(student_id=student_id, PQContact_id__in=PQContact_ids).delete()
                 # 保存本次的字段
                 StudentAnswer.objects.bulk_create(create_list)
                 # 更改学生对于这份卷子的状态
@@ -649,7 +650,7 @@ def save_answer(request):
             })
 
         # 起一个celery任务去判断客观题的正误
-        judge_objective.delay(list(answer_info.keys()), student_id)
+        judge_objective.delay(PQContact_ids, student_id)
         return JsonResponse({
             'result': True,
             'code': 200,
