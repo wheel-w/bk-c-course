@@ -176,5 +176,24 @@ class PaperQuestionContact(models.Model):
 class StudentAnswer(models.Model):
     student_id = models.IntegerField('学生id')
     PQContact_id = models.IntegerField('卷子与题目关联表单的id')
-    answer = models.TextField('学生的作答')
+    answer = models.TextField('学生的作答', blank=True, null=True)
     score = models.FloatField('学生这道题的得分', blank=True, null=True)
+
+
+class StudentPaperContact(models.Model):
+    class Status:
+        NOT_ANSWER = 'NOT_ANSWER'
+        SAVED = 'SAVED'
+        SUBMITTED = 'SUBMITTED'
+
+    STATUS = [
+        (Status.NOT_ANSWER, '未答题'),
+        (Status.SAVED, '已保存'),
+        (Status.SUBMITTED, '已提交')
+    ]
+
+    course_id = models.IntegerField('课程id')
+    paper_id = models.IntegerField('卷子id')
+    student_id = models.TextField('学生id')
+    status = models.CharField('状态', max_length=10, choices=STATUS)
+    score = models.FloatField('总分', blank=True, null=True)
