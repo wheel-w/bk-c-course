@@ -626,7 +626,7 @@ def save_answer(request):
             create_list.append(StudentAnswer(
                 student_id=student_id,
                 PQContact_id=info['question_id'],
-                answer=info['stu_answer'],
+                answer=info['stu_answers'],
                 score=0
             ))
         # 数据库操作
