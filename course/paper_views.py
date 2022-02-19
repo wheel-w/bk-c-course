@@ -706,7 +706,6 @@ def teacher_correct_paper(request):
         )
 
 
-@is_teacher
 def check_students_score(request):
     """
     线上测试接口
