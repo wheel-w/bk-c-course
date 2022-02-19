@@ -704,3 +704,19 @@ def teacher_correct_paper(request):
                 "data": [],
             }
         )
+
+
+@is_teacher
+def check_students_score(request):
+    """
+    线上测试接口
+    """
+    if request.method == 'GET':
+        paper_id = request.GET.get('paper_id')
+
+        try:
+            student_score = StudentPaperContact.objects.filter(paper_id=paper_id).values()
+            return JsonResponse({'result': True, 'code': 200, 'message': '查询成功', 'data': list(student_score)})
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse({'result': False, 'code': 500, 'message': '查询失败', 'data': {}})
