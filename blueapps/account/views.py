@@ -63,6 +63,7 @@ def get_user_info(request):
                     "name": member.name,
                     "college": member.college,
                     "professional_class": member.professional_class,
+                    "classroom": member.classroom,
                     "gender": member.gender,
                     "identity": member.identity if member.identity else Member.Identity.NOT_CERTIFIED,
                     "phone_number": member.phone_number,

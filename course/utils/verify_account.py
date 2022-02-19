@@ -6,8 +6,10 @@ from lxml import etree
 
 
 def base64_api(img):
-    name = os.environ.get('BKAPP_CODE_API_USERNAME')
-    password = os.environ.get('BKAPP_CODE_API_PASSWORD')
+    # name = os.environ.get('BKAPP_CODE_API_USERNAME')
+    # password = os.environ.get('BKAPP_CODE_API_PASSWORD')
+    name = "gbl"
+    password = "gbl1225"
     base64_data = base64.b64encode(img)
     b64 = base64_data.decode()
     data = {"username": name, "password": password, "image": b64}

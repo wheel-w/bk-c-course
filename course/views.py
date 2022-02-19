@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from blueapps.core.exceptions import DatabaseError
 from course.models import Course, Member, UserCourseContact
@@ -599,7 +600,7 @@ def get_course_list(request):
             json_dumps_params={"ensure_ascii": False},
         )
 
-
+@csrf_exempt
 def verify_school_user(request):
     """
     功能：通过学分制的账号密码, 进行验证, 并绑定用户
@@ -634,7 +635,8 @@ def verify_school_user(request):
                 kwargs = {
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
-                    "professional_class": user_info["user_class"],
+                    "professional_class": user_info["user_major"],
+                    "classroom": user_info["user_class"],
                     "gender": Member.Gender.MAN
                     if user_info["user_sex"] == "男"
                     else Member.Gender.WOMAN,
