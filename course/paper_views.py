@@ -616,10 +616,11 @@ def save_answer(request):
         student_id = request.user.id
         request_params = ['answer_info', 'paper_id', 'save_or_submit']
         answer_info, paper_id, save_or_submit = [body.get(param) for param in request_params]
-        if not (answer_info and paper_id and save_or_submit):
+        if not (answer_info and paper_id and save_or_submit not in [1, 2]):
             return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
+        PQContact_ids = []
         # 构造新数据
-        create_list, PQContact_ids = [], []
+        create_list = []
         for student_answer in answer_info:
             for pq_id, answer in student_answer.items():
                 PQContact_ids.append(pq_id)
