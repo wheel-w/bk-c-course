@@ -621,15 +621,14 @@ def save_answer(request):
         PQContact_ids = []
         # 构造新数据
         create_list = []
-        for student_answer in answer_info:
-            for pq_id, answer in student_answer.items():
-                PQContact_ids.append(pq_id)
-                create_list.append(StudentAnswer(
-                    student_id=student_id,
-                    PQContact_id=pq_id,
-                    answer=answer,
-                    score=0
-                ))
+        for info in answer_info:
+            PQContact_ids.append(info['question_id'])
+            create_list.append(StudentAnswer(
+                student_id=student_id,
+                PQContact_id=info['question_id'],
+                answer=info['stu_answer'],
+                score=0
+            ))
         # 数据库操作
         try:
             with transaction.atomic():
