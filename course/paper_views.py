@@ -390,13 +390,12 @@ def manage_paper_question_contact(request):
                     return JsonResponse({'result': False, 'code': 403, 'message': '答题时间未到', 'data': {}})
                 query_param = {'student_id': request.user.id}
 
-            # 初始化传输题目的格式
+            # 获取小题题目与大题题目信息
             order = json.loads(paper.question_order)
             custom_type_ids = order.keys()
             questions = {pq['id']: pq for pq in PaperQuestionContact.objects.filter(paper_id=paper_id).values()}
-            return_data = {
-                'titles': {i.id: i.custom_type_name for i in CustomType.objects.filter(id__in=custom_type_ids)},
-                'questions': {i: [] for i in custom_type_ids}}
+            custom_types = {custom_type.id: custom_type.custom_type_name for custom_type in
+                            CustomType.objects.filter(id__in=custom_type_ids)}
 
             # 查询StudentAnswer表
             if query_param:
@@ -410,7 +409,9 @@ def manage_paper_question_contact(request):
             return JsonResponse({'result': False, 'code': 500, 'message': '查询失败(请检查日志)', 'date': {}})
 
         # 构造传输格式
+        return_data = {}
         for title_id, question_ids in order.items():
+            questions_list = []
             for question_id in question_ids:
                 question = questions[question_id]
                 if identity == Member.Identity.STUDENT and paper.status == Paper.Status.RELEASE \
@@ -426,7 +427,8 @@ def manage_paper_question_contact(request):
                             (identity == Member.Identity.STUDENT and paper.status == Paper.Status.MARKED):
                         question['student_score'] = student_answer[question_id][
                             1] if question_id in student_answer.keys() else 0
-                return_data['questions'][title_id].append(question)
+                questions_list.append(question)
+            return_data[custom_types[int(title_id)]] = questions_list
         if paper.status == Paper.Status.MARKED and SPContact:
             return_data['total_score'] = SPContact['score']
 
