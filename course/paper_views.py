@@ -344,16 +344,14 @@ def paper(request):
 def manage_paper_question_contact(request):
     if request.method == "GET":
         """
-        功能: 返回卷子的详细信息，***会根据不同身份的人与请求参数的不同以及卷子所处状态的不同，返回不同的数据***
+        功能: 返回卷子的详细信息，会根据不同身份的人与请求参数的不同以及卷子所处状态的不同，返回不同的数据
         输入: 老师:
-                1. 预览卷子或继续出题      paper_id                      卷子所有状态
-                2. 批改卷子              paper_id   student_id         卷子的截至时间到期
-                3. 看查学生的答题情况      paper_id   student_id         卷子已批改完成
+                1. 预览卷子或继续出题      paper_id
+                2. 批改卷子              paper_id   student_id
+                3. 看查学生的答题情况      paper_id   student_id
              学生:
-                1. 答题                 paper_id                      卷子发布且处于答题时间
-                2. 看查考试结果           paper_id                      卷子已批改完成
-                3. 看查答题情况           paper_id                      卷子截至时间到但是未批改完成
-        返回: 卷子信息或者作答情况与总分(根据卷子的状态决定)
+                1. 答题                 paper_id
+                2. 看查考试结果           paper_id
         """
         identity = request.user.identity
         paper_id = request.GET.get('paper_id')
@@ -390,13 +388,12 @@ def manage_paper_question_contact(request):
                     return JsonResponse({'result': False, 'code': 403, 'message': '答题时间未到', 'data': {}})
                 query_param = {'student_id': request.user.id}
 
-            # 初始化传输题目的格式
+            # 获取小题题目与大题题目信息
             order = json.loads(paper.question_order)
             custom_type_ids = order.keys()
             questions = {pq['id']: pq for pq in PaperQuestionContact.objects.filter(paper_id=paper_id).values()}
-            return_data = {
-                'titles': {i.id: i.custom_type_name for i in CustomType.objects.filter(id__in=custom_type_ids)},
-                'questions': {i: [] for i in custom_type_ids}}
+            custom_types = {custom_type.id: custom_type.custom_type_name for custom_type in
+                            CustomType.objects.filter(id__in=custom_type_ids)}
 
             # 查询StudentAnswer表
             if query_param:
@@ -410,7 +407,9 @@ def manage_paper_question_contact(request):
             return JsonResponse({'result': False, 'code': 500, 'message': '查询失败(请检查日志)', 'date': {}})
 
         # 构造传输格式
+        return_data = {}
         for title_id, question_ids in order.items():
+            questions_list = []
             for question_id in question_ids:
                 question = questions[question_id]
                 if identity == Member.Identity.STUDENT and paper.status == Paper.Status.RELEASE \
@@ -426,7 +425,8 @@ def manage_paper_question_contact(request):
                             (identity == Member.Identity.STUDENT and paper.status == Paper.Status.MARKED):
                         question['student_score'] = student_answer[question_id][
                             1] if question_id in student_answer.keys() else 0
-                return_data['questions'][title_id].append(question)
+                questions_list.append(question)
+            return_data[custom_types[int(title_id)]] = questions_list
         if paper.status == Paper.Status.MARKED and SPContact:
             return_data['total_score'] = SPContact['score']
 
