@@ -176,10 +176,8 @@
                 this.$refs.Question.clearError()
             },
             handleMouseSelect () {
-                console.log(111)
                 const text = window.getSelection().toString()
                 const start = window.getSelection().anchorOffset
-                // const end = window.getSelection().focusOffset
                 if (text && text.indexOf('_') < 0) {
                     this.answer.push({
                         text: text,
@@ -194,9 +192,6 @@
                     })
                     const question = this.Question.question.split('')
                     question.splice(start, text.length, '_______')
-                    // for (let i = start; i < end; i++) {
-                    //     question[i] = '_'
-                    // }
                     this.Question.question = question.join('')
                 }
             },
@@ -209,9 +204,6 @@
                         element.end = element.end + tag.length - 7
                     }
                 })
-                // for (let i = tag.start; i < tag.end; i++) {
-                //     question[i] = text[i - tag.start]
-                // }
                 this.Question.question = question.join('') // 对删除的填空的内容进行恢复
                 this.answer.splice(this.answer.indexOf(tag), 1) // 删除填空
             },

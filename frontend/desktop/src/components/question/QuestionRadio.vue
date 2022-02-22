@@ -163,7 +163,6 @@
                 }
             },
             checkData () {
-                console.log(this.Question)
                 this.$refs.Question.validate().then(validator => {
                     if (this.editable) {
                         this.$emit('updateQuestion', this.Question)

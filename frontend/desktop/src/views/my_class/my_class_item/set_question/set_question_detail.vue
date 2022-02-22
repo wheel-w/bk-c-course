@@ -205,7 +205,6 @@
                             value: item.id
                         })
                     })
-                    console.log(this.chapterFilters)
                     this.curChapterId = null
                     this.getQuestionList()
                 })
@@ -228,7 +227,6 @@
                 this.$http.get('/course/get_question_list/', { params: { course_id: this.courseId, chapter_id: this.curChapterId } }).then(res => {
                     this.questionList = res.data
                     this.componentKey = this.componentKey + 1
-                    console.log(this.questionList)
                 })
             },
             async setQuestion (method, item) {
@@ -392,7 +390,6 @@
             updateChapter (item, saved) {
                 if (saved) {
                     this.operateChapter(item)
-                    // this.chapters = JSON.parse(JSON.stringify(item))
                 } else {
                     this.componentKey1 = this.componentKey1 + 1
                 }
@@ -430,7 +427,6 @@
             handlePageLimitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
-                console.log(this.showQuestionList)
             }
         }
     }

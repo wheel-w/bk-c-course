@@ -35,7 +35,6 @@
                             @row-dblclick="handleRowDbclickChapter">
                             <template slot-scope="props">
                                 <p v-if="!rowEditable(props.row.id)">{{props.row.chapter_name}}</p>
-                                <!-- <bk-tag theme="info" v-if="!rowEditable(props.row.id)">{{props.row.chapter_name}}</bk-tag> -->
                                 <bk-input
                                     ref="myinput"
                                     class="input"
@@ -151,10 +150,6 @@
             handleHidden () {
                 this.editable = false
                 this.$emit('updateChapter', this.chapterList, this.saved)
-                // if (!this.saved) {
-                //     this.chapters = JSON.parse(JSON.stringify(this.chapterList))
-                // }
-                // this.componentKey = this.componentKey + 1
             },
             handleShown () {
             },
