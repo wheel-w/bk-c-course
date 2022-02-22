@@ -25,7 +25,7 @@
                     :key="index"
                     style="height:400px;">
                     <keep-alive :key="componentKey2">
-                        <component :is="active" :chapterid="curChapterId" @createQuestion="createQuestion"></component>
+                        <component :is="active" :chapterid="curChapterId" @createQuestion="createQuestion" @importQuestionExcel="getQuestionList()"></component>
                     </keep-alive>
                 </bk-tab-panel>
             </bk-tab>

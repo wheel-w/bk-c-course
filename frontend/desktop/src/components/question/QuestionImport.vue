@@ -66,6 +66,7 @@
                         this.config.theme = 'success'
                         this.config.message = res.message
                         this.$bkMessage(this.config)
+                        this.$emit('importQuestionExcel')
                     })
                 } else {
                     this.config.theme = 'error'
