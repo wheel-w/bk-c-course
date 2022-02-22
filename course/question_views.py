@@ -147,16 +147,15 @@ TYPES_DICT = {
 def import_question_excel(request):
     excel_files = request.FILES.get("excel_file")
     suffix = excel_files.name.split(".")[-1]
-    req = json.loads(request.body)
-    course_id = req.get("course_id")
-    chapter_id = req.get("chapter_id")
-    if suffix in ["xls", "xlsx"]:
+    course_id = request.POST.get("course_id")
+    chapter_id = request.POST.get("chapter_id")
+    if suffix == "xls":
         data = xlrd.open_workbook(filename=None, file_contents=excel_files.read())
     else:
         return JsonResponse(
             {
                 "result": False,
-                "message": "导入文件错误，请检查导入文件是否为excel格式",
+                "message": "导入文件错误，请检查导入文件是否为excel后缀名（.xls）格式",
                 "code": 406,
                 "data": [],
             },
@@ -165,7 +164,6 @@ def import_question_excel(request):
     table = data.sheet_by_index(0)
     question_info = {}
     question_info_list = []
-    question_title = set()
     question_list = []
     row_sign = 0
     rows = table.nrows
@@ -193,9 +191,8 @@ def import_question_excel(request):
             question_info["answer"] = row_values[2]
             question_info["explain"] = row_values[8]
             question_info_list.append(question_info.copy())
-            question_title.add(row_values[1])
             row_sign = row_sign + 1
-        chapter_object = Chapter.objects.filter(course_id=course_id)
+        chapter_object = Chapter.objects.filter(id=chapter_id, course_id=course_id)
         if not chapter_object:
             return JsonResponse(
                 {
@@ -207,21 +204,24 @@ def import_question_excel(request):
                 json_dumps_params={"ensure_ascii": False},
             )
         for content in question_info_list:
-            question_list.append(
-                Question(
-                    course_id=course_id,
-                    chapter_id=chapter_id,
-                    types=content["types"],
-                    question=content["question"],
-                    option_A=content["option_A"],
-                    option_B=content["option_B"],
-                    option_C=content["option_C"],
-                    option_D=content["option_D"],
-                    option_E=content["option_E"],
-                    answer=content["answer"],
-                    explain=content["explain"],
+            if content["types"] == "COMPLETION" and ("()" not in content["question"] and "（）" not in content["question"]):
+                pass
+            else:
+                question_list.append(
+                    Question(
+                        course_id=course_id,
+                        chapter_id=chapter_id,
+                        types=content["types"],
+                        question=content["question"],
+                        option_A=content["option_A"],
+                        option_B=content["option_B"],
+                        option_C=content["option_C"],
+                        option_D=content["option_D"],
+                        option_E=content["option_E"],
+                        answer=content["answer"],
+                        explain=content["explain"],
+                    )
                 )
-            )
         Question.objects.bulk_create(question_list)
         return JsonResponse(
             {
@@ -272,12 +272,19 @@ def get_question_list(request):
                 )
             questions = Question.objects.filter(course_id=course_id)
         for question in questions:
+            if question.types == "COMPLETION":
+                if question.question.find("()") > 0:
+                    question_title = question.question.replace("()", "_______")
+                else:
+                    question_title = question.question.replace("（）", "_______")
+            else:
+                question_title = question.question
             question_list.append(
                 {
                     "question_id": question.id,
                     "chapter_id": question.chapter_id,
                     "types": question.types,
-                    "question": question.question,
+                    "question": question_title,
                     "option_A": question.option_A,
                     "option_B": question.option_B,
                     "option_C": question.option_C,
