@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from blueapps.core.exceptions import DatabaseError
 from course.models import Course, Member, UserCourseContact
@@ -284,7 +285,7 @@ def search_member_info(request):
 def import_student_excel(request):
     excel_files = request.FILES.get("excel_file")
     suffix = excel_files.name.split(".")[-1]
-    course_id = request.POST.get("course_id")
+    course_id = request.POST.get("course_id", '1')
     if suffix == "xls":
         data = xlrd.open_workbook(
             filename=None, file_contents=excel_files.read(), formatting_info=True
@@ -306,6 +307,7 @@ def import_student_excel(request):
     student_contact_list = []
     student_info = {}
     row_sign = 0
+    row_err = 0
     rows = table.nrows
     values_0 = table.row_values(0)
     if rows != 1:
@@ -321,13 +323,38 @@ def import_student_excel(request):
                 json_dumps_params={"ensure_ascii": False},
             )
         else:
-            for row in range(4, rows):
-                row_values = table.row_values(row)
-                student_info["class_number"] = int(row_values[0])
-                student_info["professional_class"] = row_values[4]
-                student_info["name"] = row_values[2]
-                student_info_list.append(student_info.copy())
-                student_class_number.add(row_values[0])
+            values_4 = table.row_values(4)
+            if values_4[0] == "" or values_4[2] == "" or values_4[4] == "":
+                return JsonResponse(
+                    {
+                        "result": False,
+                        "message": "请检查您的excel表中的数据是否齐全",
+                        "code": 403,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
+                )
+            try:
+                for row in range(4, rows):
+                    row_err = row
+                    row_values = table.row_values(row)
+                    if not (row_values[0] == "" and row_values[2] == "" and row_values[4] == ""):
+                        student_info["class_number"] = int(row_values[0])
+                        student_info["professional_class"] = row_values[4]
+                        student_info["name"] = row_values[2]
+                        student_info_list.append(student_info.copy())
+                        student_class_number.add(int(row_values[0]))
+            except SyntaxError as e:
+                logger.exception(e)
+                return JsonResponse(
+                    {
+                        "result": False,
+                        "message": "导入失败，请检查第{}行的学号是否输入非数字字符".format(row_err),
+                        "code": 412,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
+                )
             user_class_number = Member.objects.filter(
                 class_number__in=student_class_number
             ).values_list("class_number", flat=True)
@@ -337,7 +364,7 @@ def import_student_excel(request):
             user_ids_list = list(user_ids)
             user_class_number_list = list(user_class_number)
             for student in student_info_list:
-                if student["class_number"] not in user_class_number_list:
+                if str(student['class_number']) not in user_class_number_list:
                     student_member_list.append(
                         Member(
                             username="{}X".format(student["class_number"]),
@@ -424,6 +451,7 @@ def add_course_student(request):
 
 
 # 根据学号新增用户
+@csrf_exempt
 def add_course_member(request):
     req = json.loads(request.body)
     course_id = req.get("course_id")
@@ -439,11 +467,11 @@ def add_course_member(request):
         member_info["name"] = member_object.name
         member_info["identify"] = member_object.identity
         member_info["professional_class"] = member_object.professional_class
-        member_class_number_list.append(member_info.copy())
+        member_class_number_list.append(member_info["class_number"])
         member_list.append(member_info.copy())
     if member_class_number in member_class_number_list:
-        user_id = Member.objects.filter(class_number=member_class_number).values("id")
-        UserCourseContact.objects.update_or_create(course_id=course_id, user_id=user_id)
+        user = Member.objects.get(class_number=member_class_number)
+        UserCourseContact.objects.update_or_create(course_id=course_id, user_id=user.id)
         return JsonResponse(
             {
                 "result": True,
@@ -482,7 +510,7 @@ def download_student_excel_template(request):
 def delete_student_course_contact(request):
     if request.method == "DELETE":
         course_id = request.GET.get("course_id")
-        student_id = request.GET.get("student_id")  # 传递学生id列表
+        student_id = json.loads(request.GET.get("student_id")) # 传递学生id列表
         try:
             UserCourseContact.objects.filter(
                 user_id__in=student_id, course_id=course_id
