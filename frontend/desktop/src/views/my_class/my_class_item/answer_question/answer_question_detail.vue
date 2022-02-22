@@ -1,5 +1,6 @@
 <template>
     <div class="wrapper" v-if="$route.query.isAccomplish">
+        <bk-divider><h3>试卷标题</h3></bk-divider>
         <h3>一、单选题</h3>
         <bk-card class="radio-common" :title="`${index + 1}.${item.name}`" v-for="(item,index) in questionList" :key="index" :border="false">
             <bk-radio-group class="radio-common" v-model="item.selectValue">
@@ -17,6 +18,9 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                你的得分：2
+            </div>
         </bk-card>
 
         <h3>二、多选题</h3>
@@ -36,6 +40,9 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                你的得分：4
+            </div>
         </bk-card>
 
         <h3>三、填空题</h3>
@@ -49,6 +56,9 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                你的得分：2
+            </div>
         </bk-card>
 
         <h3>四、判断题</h3>
@@ -68,6 +78,9 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                你的得分：2
+            </div>
         </bk-card>
 
         <h3>五、简答题</h3>
@@ -81,8 +94,10 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                你的得分：20
+            </div>
         </bk-card>
-
     </div>
     <div class="wrapper" v-else>
         <h2>试卷信息</h2>
@@ -99,15 +114,18 @@
                 </bk-radio>
             </bk-radio-group>
             <bk-divider></bk-divider>
-            <p style="margin-top: 10px">
+            <div style="margin-top: 10px">
                 你的选择：<span>a</span>
-            </p>
-            <p style="margin-top: 10px">
+            </div>
+            <div style="margin-top: 10px">
                 正确答案为：<span>c</span>
-            </p>
-            <p style="margin-top: 10px">
+            </div>
+            <div style="margin-top: 10px">
                 解析：<span>test</span>
-            </p>
+            </div>
+            <div style="margin-top: 10px">
+                得分：<bk-input style="width: 150px" :clearable="true" placeholder="请输入得分"></bk-input>
+            </div>
         </bk-card>
 
         <h3>二、多选题</h3>
@@ -127,6 +145,9 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                得分：<bk-input style="width: 150px" :clearable="true" placeholder="请输入得分"></bk-input>
+            </div>
         </bk-card>
 
         <h3>三、填空题</h3>
@@ -140,6 +161,9 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                得分：<bk-input style="width: 150px" :clearable="true" placeholder="请输入得分"></bk-input>
+            </div>
         </bk-card>
 
         <h3>四、判断题</h3>
@@ -159,6 +183,9 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                得分：<bk-input style="width: 150px" :clearable="true" placeholder="请输入得分"></bk-input>
+            </div>
         </bk-card>
 
         <h3>五、简答题</h3>
@@ -172,7 +199,13 @@
             <p style="margin-top: 10px">
                 解析：<span>test</span>
             </p>
+            <div style="margin-top: 10px">
+                得分：<bk-input style="width: 150px" :clearable="true" placeholder="请输入得分"></bk-input>
+            </div>
         </bk-card>
+
+        <bk-button style="width: 60px" :theme="'primary'" type="submit">提交</bk-button>
+
     </div>
 </template>
 
@@ -522,6 +555,16 @@
                         standardAnswer: '标准答案'
                     }
                 ]
+            }
+        },
+        mounted () {
+            this.getQuestionList()
+        },
+        methods: {
+            async getQuestionList () {
+                this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: this.$route.query.id, flag: 1 } }).then(res => {
+                    console.log(res)
+                })
             }
         }
     }

@@ -37,21 +37,21 @@
                 <bk-table-column type="index" label="序号" width="100"></bk-table-column>
                 <bk-table-column label="习题名称" width="200">
                     <template slot-scope="props">
-                        <bk-button v-if="new Date().getTime() < Date.parse(props.row.begin_time)" theme="primary" text disabled>{{ props.row.name }}</bk-button>
-                        <bk-button v-else-if="new Date().getTime() > Date.parse(props.row.end_time) || props.row.status === '已完成'" theme="primary" text @click="toAnalyze(props.row.id, true)">{{ props.row.name }}</bk-button>
-                        <bk-button v-else theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.name }}</bk-button>
+                        <bk-button v-if="new Date().getTime() < Date.parse(props.row.start_time)" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
+                        <bk-button v-else-if="new Date().getTime() > Date.parse(props.row.end_time) || props.row.status === '已完成'" theme="primary" text @click="toAnalyze(props.row.id, true)">{{ props.row.paper_name }}</bk-button>
+                        <bk-button v-else theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="开始时间" prop="begin_time" width="200"></bk-table-column>
+                <bk-table-column label="开始时间" prop="start_time" width="200"></bk-table-column>
                 <bk-table-column label="截止时间" prop="end_time" width="200"></bk-table-column>
                 <bk-table-column label="我的分数" prop="score" width="150">
                     <template slot-scope="props">
-                        {{ props.row.status === '未完成' ? '----' : props.row.score }}
+                        {{ props.row.status === 'MARKED' ? props.row.score : '----' }}
                     </template>
                 </bk-table-column>
                 <bk-table-column label="习题状态" width="200">
                     <template slot-scope="props">
-                        <bk-tag :theme="props.row.status === '未完成' ? 'danger' : 'info'" radius="10px" type="filled">{{ props.row.status }}</bk-tag>
+                        <bk-tag :theme="props.row.status === 'MARKED' ? 'info' : 'danger'" radius="10px" type="filled">{{ props.row.status === 'MARKED' ? '已完成' : '未完成' }}</bk-tag>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="操作">
@@ -112,92 +112,7 @@
                     ]
                 },
                 searchText: '',
-                exerciseList: [
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2022-02-11 18:28:24',
-                        end_time: '2022-02-12 22:28:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题二',
-                        status: '未完成',
-                        begin_time: '2022-02-12 18:28:24',
-                        end_time: '2022-02-12 22:28:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题三',
-                        status: '未完成',
-                        begin_time: '2022-02-11 18:28:24',
-                        end_time: '2022-02-11 18:30:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题一',
-                        status: '未完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 0
-                    },
-                    {
-                        name: '习题二',
-                        status: '已完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 100
-                    },
-                    {
-                        name: '习题三',
-                        status: '已完成',
-                        begin_time: '2018-05-25 15:02:24',
-                        end_time: '2018-05-25 15:02:24',
-                        score: 100
-                    }
-                ],
+                exerciseList: [],
                 currentExerciseList: [],
                 pagination: {
                     current: 1,
@@ -207,6 +122,11 @@
             }
         },
         watch: {
+            // 监听当前课程id的变化
+            '$store.state.currentCourseId' () {
+                // 发送网络请求更新课程信息
+                this.getExerciseList()
+            },
             'type.typeValue' (newValue) {
                 const date = new Date().getTime()
                 console.log(date)
@@ -217,8 +137,7 @@
             }
         },
         mounted () {
-            this.pagination.count = this.exerciseList.length
-            this.updateCurrentExerciseList()
+            this.getExerciseList()
         },
         methods: {
             // 监听答题事件
@@ -227,7 +146,8 @@
                     name: 'answer_question_detail',
                     query: {
                         id,
-                        isAccomplish
+                        isAccomplish,
+                        plan: 'private'
                     }
                 })
             },
@@ -266,6 +186,21 @@
                 for (let i = (this.pagination.current - 1) * this.pagination.limit; i < interceptLength; i++) {
                     this.currentExerciseList.push(this.exerciseList[i])
                 }
+                console.log(this.currentExerciseList)
+            },
+            // 获取练习题
+            async getExerciseList () {
+                this.$http.get('/course/paper/', { params: { course_id: this.$store.state.currentCourseId } }).then(res => {
+                    this.exerciseList = res.data
+                    this.pagination.count = this.exerciseList.length
+                    this.updateCurrentExerciseList()
+                })
+                // this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: 3, flag: 0 } }).then(res => {
+                //     console.log(res)
+                // })
+                // this.$http.get('/course/check_students_score/', { params: { paper_id: 1 } }).then(res => {
+                //     console.log(res)
+                // })
             }
         }
     }
