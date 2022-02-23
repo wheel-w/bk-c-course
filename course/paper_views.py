@@ -620,7 +620,6 @@ def save_answer(request):
                 student_id=student_id,
                 PQContact_id=info['question_id'],
                 answer=info['stu_answers'],
-                score=0
             ))
         # 数据库操作
         try:
