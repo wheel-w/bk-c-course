@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import models
 from django_mysql.models import JSONField
 
@@ -177,7 +179,7 @@ class StudentAnswer(models.Model):
     student_id = models.IntegerField('学生id')
     PQContact_id = models.IntegerField('卷子与题目关联表单的id')
     answer = models.TextField('学生的作答', blank=True, null=True)
-    score = models.FloatField('学生这道题的得分', blank=True, null=True)
+    score = models.FloatField('学生这道题的得分', blank=True, null=True, default=0)
 
 
 class StudentPaperContact(models.Model):
@@ -196,4 +198,5 @@ class StudentPaperContact(models.Model):
     paper_id = models.IntegerField('卷子id')
     student_id = models.TextField('学生id')
     status = models.CharField('状态', max_length=10, choices=STATUS)
-    score = models.FloatField('总分', blank=True, null=True)
+    score = models.FloatField('总分', blank=True, null=True, default=0)
+    cumulative_time = models.DurationField('答题累计时间', default=timedelta(seconds=0))
