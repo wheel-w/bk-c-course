@@ -199,4 +199,4 @@ class StudentPaperContact(models.Model):
     student_id = models.TextField('学生id')
     status = models.CharField('状态', max_length=10, choices=STATUS)
     score = models.FloatField('总分', blank=True, null=True)
-    cumulative_time = models.DurationField(default=timedelta(seconds=0))
+    cumulative_time = models.DurationField('答题累计时间', default=timedelta(seconds=0))
