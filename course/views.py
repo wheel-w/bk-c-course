@@ -285,7 +285,7 @@ def search_member_info(request):
 def import_student_excel(request):
     excel_files = request.FILES.get("excel_file")
     suffix = excel_files.name.split(".")[-1]
-    course_id = request.POST.get("course_id", '1')
+    course_id = request.POST.get("course_id")
     if suffix == "xls":
         data = xlrd.open_workbook(
             filename=None, file_contents=excel_files.read(), formatting_info=True
@@ -451,7 +451,6 @@ def add_course_student(request):
 
 
 # 根据学号新增用户
-@csrf_exempt
 def add_course_member(request):
     req = json.loads(request.body)
     course_id = req.get("course_id")
@@ -510,7 +509,7 @@ def download_student_excel_template(request):
 def delete_student_course_contact(request):
     if request.method == "DELETE":
         course_id = request.GET.get("course_id")
-        student_id = json.loads(request.GET.get("student_id")) # 传递学生id列表
+        student_id = json.loads(request.GET.get("student_id"))  # 传递学生id列表
         try:
             UserCourseContact.objects.filter(
                 user_id__in=student_id, course_id=course_id
