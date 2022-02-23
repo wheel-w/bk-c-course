@@ -6,7 +6,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 
 from blueapps.core.exceptions import DatabaseError
 from course.models import Course, Member, UserCourseContact
