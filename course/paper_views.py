@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import timedelta
 
 from MySQLdb import DatabaseError
 from django.db import transaction
@@ -416,8 +417,9 @@ def manage_paper_question_contact(request):
                 question = questions[question_id]
                 if identity == Member.Identity.STUDENT and paper.status == Paper.Status.RELEASE \
                         and paper.end_time > timezone.now():
-                    question.pop('answer')
-                    question.pop('explain')
+                    # 为了防止一份卷子有id相同的两个题
+                    question.pop('answer') if 'answer' in question.keys() else None
+                    question.pop('explain') if 'explain' in question.keys() else None
                 if query_param:
                     question['student_answer_id'] = student_answer[question_id][
                         2] if question_id in student_answer.keys() else None
@@ -431,6 +433,8 @@ def manage_paper_question_contact(request):
             return_data[custom_types[int(title_id)]] = questions_list
         if paper.status == Paper.Status.MARKED and SPContact:
             return_data['total_score'] = SPContact['score']
+        else:
+            return_data['cumulative_time'] = int(SPContact['cumulative_time'].total_seconds())
 
         return JsonResponse(
             {
@@ -616,9 +620,9 @@ def save_answer(request):
         if request.user.identity != Member.Identity.STUDENT:
             return JsonResponse({'result': False, 'code': 400, 'message': '权限错误', 'data': {}})
         student_id = request.user.id
-        request_params = ['answer_info', 'paper_id', 'save_or_submit']
-        answer_info, paper_id, save_or_submit = [body.get(param) for param in request_params]
-        if not (answer_info and paper_id and save_or_submit in [0, 1]):
+        request_params = ['answer_info', 'paper_id', 'save_or_submit', 'cumulative_time']
+        answer_info, paper_id, save_or_submit, cumulative_time = [body.get(param) for param in request_params]
+        if not (answer_info and paper_id and cumulative_time and save_or_submit in [0, 1]):
             return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
         PQContact_ids = []
         # 构造新数据
@@ -640,7 +644,8 @@ def save_answer(request):
                 StudentAnswer.objects.bulk_create(create_list)
                 # 更改学生对于这份卷子的状态
                 StudentPaperContact.objects.filter(paper_id=paper_id, student_id=request.user.id).update(
-                    status=StudentPaperContact.Status.SAVED if save_or_submit else StudentPaperContact.Status.SUBMITTED
+                    status=StudentPaperContact.Status.SAVED if save_or_submit else StudentPaperContact.Status.SUBMITTED,
+                    cumulative_time=timedelta(seconds=cumulative_time)
                 )
         except DatabaseError as e:
             logger.exception(e)
