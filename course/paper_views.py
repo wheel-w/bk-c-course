@@ -206,19 +206,6 @@ def paper(request):
 
         try:
             paper = Paper.objects.create(**paper_info)
-
-            # 给选课的学生分配卷子，记录学生是否答过题
-            create_list = []
-            for student in UserCourseContact.objects.filter(course_id=paper_info['course_id']).values('user_id'):
-                create_list.append(
-                    StudentPaperContact(
-                        course_id=paper_info['course_id'],
-                        paper_id=paper.id,
-                        student_id=student['user_id'],
-                        status=StudentPaperContact.Status.NOT_ANSWER
-                    )
-                )
-            StudentPaperContact.objects.bulk_create(create_list)
         except DatabaseError as e:
             logger.exception(e)
             return JsonResponse({
@@ -637,13 +624,19 @@ def save_answer(request):
             ))
         # 数据库操作
         try:
+            # 获得卷子对应的course_id
+            course_id = Paper.objects.get(id=paper_id).course_id
+
             with transaction.atomic():
                 # 删除上一个次提交答案字段
                 StudentAnswer.objects.filter(student_id=student_id, PQContact_id__in=PQContact_ids).delete()
                 # 保存本次的字段
                 StudentAnswer.objects.bulk_create(create_list)
-                # 更改学生对于这份卷子的状态
-                StudentPaperContact.objects.filter(paper_id=paper_id, student_id=request.user.id).update(
+                # 更改学生对于这份卷子的状态，如果有答题记录就更新，如果没有则创建
+                StudentPaperContact.objects.update_or_create(
+                    course_id=course_id,
+                    paper_id=paper_id,
+                    student_id=request.user.id,
                     status=StudentPaperContact.Status.SAVED if save_or_submit else StudentPaperContact.Status.SUBMITTED,
                     cumulative_time=timedelta(seconds=cumulative_time)
                 )
