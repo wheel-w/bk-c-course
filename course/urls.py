@@ -34,4 +34,7 @@ urlpatterns = (
     url(r"^save_answer/$", paper_views.save_answer),
     url(r"^teacher_correct_paper/$", paper_views.teacher_correct_paper),
     url(r"^check_students_score/$", paper_views.check_students_score),
+    url(r"^mark_or_check_paper/$", paper_views.mark_or_check_paper),
+    url(r"^answer_or_check_paper/$", paper_views.answer_or_check_paper),
+    url(r"^get_paper_status/$", paper_views.get_paper_status),
 )
