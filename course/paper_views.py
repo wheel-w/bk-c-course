@@ -337,8 +337,6 @@ def manage_paper_question_contact(request):
         输入: 卷子id
         返回: 卷子信息
         """
-
-        # 老师预览卷子
         paper_id = request.GET.get('paper_id')
         if not paper_id:
             return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
@@ -544,6 +542,11 @@ def mark_or_check_paper(request):
 
 
 def answer_or_check_paper(request):
+    """
+    功能: 学生答题或看查批改情况请求卷子内容信息
+    输入: 卷子id
+    返回: 卷子信息
+    """
     if request.method == 'GET':
         paper_id = request.GET.get('paper_id')
         student_id = request.user.id
