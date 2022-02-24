@@ -11,7 +11,6 @@ from blueapps.core.exceptions import DatabaseError
 from course.models import Course, Member, UserCourseContact
 from course.utils.verify_account import identify_user
 
-
 # Create your views here.
 
 
@@ -54,7 +53,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                    identity.first()["identity"] == Member.Identity.TEACHER
+                identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -122,8 +121,9 @@ def manage_course(request):
             )
     # 删
     if request.method == "DELETE":
-        course_id = request.GET.get("course_id")
-        if not course_id:
+        course_ids = json.loads(request.GET.get("course_id"))
+        user_info = "{}({})".format(request.user.class_number, request.user.name)
+        if not course_ids:
             return JsonResponse(
                 {
                     "result": False,
@@ -133,34 +133,33 @@ def manage_course(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
+        del_courses = Course.objects.filter(id__in=course_ids)
+        for del_course in del_courses:
+            if not (
+                del_course.create_people == user_info or del_course.teacher == user_info
+            ):
+                return JsonResponse(
+                    {
+                        "result": False,
+                        "message": "删除失败，权限不够",
+                        "code": 403,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
+                )
         try:
             with transaction.atomic():
-                user_info = "{}({})".format(
-                    request.user.class_number, request.user.name
+                Course.objects.filter(id__in=course_ids).delete()
+                UserCourseContact.objects.filter(course_id__in=course_ids).delete()
+                return JsonResponse(
+                    {
+                        "result": True,
+                        "message": "删除成功",
+                        "code": 200,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
                 )
-                course = Course.objects.get(id=course_id)
-                if course.create_people == user_info or course.teacher == user_info:
-                    course.delete()
-                    UserCourseContact.objects.filter(course_id=course_id).delete()
-                    return JsonResponse(
-                        {
-                            "result": True,
-                            "message": "删除成功",
-                            "code": 200,
-                            "data": [],
-                        },
-                        json_dumps_params={"ensure_ascii": False},
-                    )
-                else:
-                    return JsonResponse(
-                        {
-                            "result": False,
-                            "message": "删除失败，权限不够",
-                            "code": 403,
-                            "data": [],
-                        },
-                        json_dumps_params={"ensure_ascii": False},
-                    )
         except ObjectDoesNotExist as e:
             logger.exception(e)
             return JsonResponse(
@@ -177,6 +176,8 @@ def manage_course(request):
     if request.method == "PUT":
         req = json.loads(request.body)
         course_id = req.pop("id", "")
+        manage_student = req.pop("manage_student")  # 学生管理员
+        manage_student_str = ",".join(manage_student)
         if not course_id:
             return JsonResponse(
                 {
@@ -191,6 +192,7 @@ def manage_course(request):
             user_info = "{}({})".format(request.user.class_number, request.user.name)
             course = Course.objects.get(id=course_id)
             if course.create_people == user_info or course.teacher == user_info:
+                course.manage_student = manage_student_str
                 for k, v in req.items():
                     setattr(course, k, v)
                 course.save()
@@ -337,7 +339,11 @@ def import_student_excel(request):
                 for row in range(4, rows):
                     row_err = row
                     row_values = table.row_values(row)
-                    if not (row_values[0] == "" and row_values[2] == "" and row_values[4] == ""):
+                    if not (
+                        row_values[0] == ""
+                        and row_values[2] == ""
+                        and row_values[4] == ""
+                    ):
                         student_info["class_number"] = int(row_values[0])
                         student_info["professional_class"] = row_values[4]
                         student_info["name"] = row_values[2]
@@ -363,7 +369,7 @@ def import_student_excel(request):
             user_ids_list = list(user_ids)
             user_class_number_list = list(user_class_number)
             for student in student_info_list:
-                if str(student['class_number']) not in user_class_number_list:
+                if str(student["class_number"]) not in user_class_number_list:
                     student_member_list.append(
                         Member(
                             username="{}X".format(student["class_number"]),
@@ -480,9 +486,13 @@ def add_course_member(request):
             json_dumps_params={"ensure_ascii": False},
         )
     else:
-        user = Member.objects.create(username="{}X".format(member_class_number), class_number=member_class_number,
-                                     name=member_name,
-                                     professional_class=member_professional_class, identity="NOT_CERTIFIED")
+        user = Member.objects.create(
+            username="{}X".format(member_class_number),
+            class_number=member_class_number,
+            name=member_name,
+            professional_class=member_professional_class,
+            identity="NOT_CERTIFIED",
+        )
         UserCourseContact.objects.create(course_id=course_id, user_id=user.id)
     return JsonResponse(
         {
