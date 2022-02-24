@@ -362,15 +362,17 @@ def manage_paper_question_contact(request):
                                                               and paper.end_time > timezone.now()):
                         return JsonResponse({'result': False, 'code': 403, 'message': '卷子在状态不允许批改或看查答题情况', 'data': {}})
                     if paper.status == Paper.Status.MARKED:
-                        SPContact = list(StudentPaperContact.objects.filter(paper_id=paper_id,
-                                                                            student_id=request.GET.get(
-                                                                                'student_id')).values('score'))[0]
+                        SPContact_info = StudentPaperContact.objects.filter(paper_id=paper_id, student_id=request.GET.get('student_id'))
+                        if SPContact_info:
+                            SPContact = list(SPContact_info.values('score', 'cumulative_time'))[0]
+
             else:
                 if paper.status == Paper.Status.DRAFT:
                     return JsonResponse({'result': False, 'code': 403, 'message': '没有权限看查', 'data': {}})
-                SPContact = list(StudentPaperContact.objects.filter(paper_id=paper_id,
-                                                                    student_id=request.user.id).values('status',
-                                                                                                       'score'))[0]
+                SPContact_info = StudentPaperContact.objects.filter(paper_id=paper_id,
+                                                                    student_id=request.user.id)
+                if SPContact_info:
+                    SPContact = list(SPContact_info.values('score', 'cumulative_time', 'status'))[0]
                 if SPContact['status'] == 'SUBMITTED' and (
                         paper.status == Paper.Status.RELEASE and paper.end_time > timezone.now()):
                     return JsonResponse({'result': False, 'code': 403, 'message': '你已经提交', 'data': {}})
@@ -419,9 +421,10 @@ def manage_paper_question_contact(request):
                 questions_list.append(question)
             return_data[custom_types[int(title_id)]] = questions_list
         if paper.status == Paper.Status.MARKED and SPContact:
-            return_data['total_score'] = SPContact['score']
-        else:
-            return_data['cumulative_time'] = int(SPContact['cumulative_time'].total_seconds())
+            return_data['total_score'] = SPContact['score'] if SPContact else 0
+        # 老师预览卷子的时候，不需要看查累计时间
+        if not (identity == Member.Identity.TEACHER and not request.GET.get('student_id')):
+            return_data['cumulative_time'] = int(SPContact['cumulative_time'].total_seconds()) if SPContact else 0
 
         return JsonResponse(
             {
