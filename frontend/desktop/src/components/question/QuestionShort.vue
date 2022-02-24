@@ -7,6 +7,7 @@
                     <bk-input
                         type="textarea"
                         :autosize="{ minRows: 4, maxRows: 4 }"
+                        :readonly="readonly"
                         placeholder="请输入题目内容"
                         v-model="Question.question"
                         style="width:84%;">
@@ -19,6 +20,7 @@
                     <bk-input
                         type="textarea"
                         :autosize="{ minRows: 4, maxRows: 4 }"
+                        :readonly="readonly"
                         placeholder="请输入正确答案内容"
                         v-model="Question.answer"
                         style="width:84%;">
@@ -34,12 +36,13 @@
                     off-text="解析"
                     @change="handleSwitcherChange">
                 </bk-switcher>
-                <bk-button class="reset" theme="primary" @click="reset">重置</bk-button>
-                <bk-button class="upload" theme="primary" @click="checkData">上传</bk-button>
+                <bk-button v-if="!readonly" class="reset" theme="primary" @click="reset">重置</bk-button>
+                <bk-button v-if="!readonly" class="upload" theme="primary" @click="checkData">上传</bk-button>
                 <bk-form-item :required="true" :rules="rules.explain" :property="'explain'" v-if="explainOpen" error-display-type="normal">
                     <bk-input
                         type="textarea"
                         :autosize="{ minRows: 2, maxRows: 2 }"
+                        :readonly="readonly"
                         placeholder="请输入答案解析内容"
                         v-model="Question.explain"
                         v-if="explainOpen"
@@ -64,6 +67,10 @@
                 }
             },
             editable: {
+                type: Boolean,
+                default: false
+            },
+            readonly: {
                 type: Boolean,
                 default: false
             }
@@ -110,11 +117,14 @@
             }
         },
         created () {
+            if (this.Question.explain) {
+                this.explainOpen = true
+            }
         },
         methods: {
             handleSwitcherChange (status) {
-                if (!status) {
-                    this.Question.analysis = null
+                if (!status && !this.readonly) {
+                    this.Question.explain = null
                 }
             },
             checkData () {

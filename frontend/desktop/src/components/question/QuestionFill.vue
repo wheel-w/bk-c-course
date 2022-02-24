@@ -8,6 +8,7 @@
                         <bk-input
                             type="textarea"
                             :autosize="{ minRows: 4, maxRows: 4 }"
+                            :readonly="readonly"
                             placeholder="请输入题目内容"
                             v-model="Question.question"
                             style="width:84%;"
@@ -17,9 +18,9 @@
                         </bk-input>
                     </bk-form-item>
                 </div>
-                <p>用鼠标选中下列文本的内容进行挖空:</p>
+                <p v-if="!readonly">用鼠标选中下列文本的内容进行挖空:</p>
                 <bk-form-item :required="true" :rules="rules.answer" :property="'answer'" error-display-type="normal">
-                    <div class="hollow">
+                    <div class="hollow" v-if="!readonly">
                         <label @mouseup="handleMouseSelect" style="display: block;">{{Question.question}}</label>
                     </div>
                 </bk-form-item>
@@ -30,7 +31,7 @@
                     theme="info"
                     :key="tag"
                     v-for="(tag,index) in answer"
-                    closable
+                    :closable="!readonly"
                     :disable-transitions="false"
                     @close="handleClose(tag)"
                     style="display:inline-block;">
@@ -46,8 +47,8 @@
                     off-text="解析"
                     @change="handleSwitcherChange">
                 </bk-switcher>
-                <bk-button class="reset" theme="primary" @click="reset">重置</bk-button>
-                <bk-button class="upload" theme="primary" @click="checkData">上传</bk-button>
+                <bk-button v-if="!readonly" class="reset" theme="primary" @click="reset">重置</bk-button>
+                <bk-button v-if="!readonly" class="upload" theme="primary" @click="checkData">上传</bk-button>
                 <bk-form-item :required="true" :rules="rules.explain" :property="'explain'" v-if="explainOpen" error-display-type="normal">
                     <bk-input
                         type="textarea"
@@ -76,6 +77,10 @@
                 }
             },
             editable: {
+                type: Boolean,
+                default: false
+            },
+            readonly: {
                 type: Boolean,
                 default: false
             }
@@ -119,11 +124,11 @@
         computed: {
         },
         created () {
-            if (this.editable) {
+            if (this.editable || this.readonly) {
                 this.exchange()
-                if (this.Question.explain) {
-                    this.explainOpen = true
-                }
+            }
+            if (this.Question.explain) {
+                this.explainOpen = true
             }
         },
         methods: {
@@ -215,8 +220,8 @@
                 })
             },
             handleSwitcherChange (status) {
-                if (!status) {
-                    this.Question.analysis = null
+                if (!status && !this.readonly) {
+                    this.Question.explain = null
                 }
             },
             handleInputChange (value, event) {

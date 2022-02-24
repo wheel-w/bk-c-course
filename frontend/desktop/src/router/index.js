@@ -23,7 +23,6 @@ const MyJoinClassDetail = () => import('@/views/my_class/my_class_item/my_join_c
 const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
 const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
-const SetQuestionDetail = () => import('@/views/my_class/my_class_item/set_question/set_question_detail')
 
 const routes = [
     {
@@ -77,11 +76,6 @@ const routes = [
                         path: 'set_question_index',
                         name: 'set_question_index',
                         component: SetQuestionIndex
-                    },
-                    {
-                        path: 'set_question_detail',
-                        name: 'set_question_detail',
-                        component: SetQuestionDetail
                     }
                 ]
             }
