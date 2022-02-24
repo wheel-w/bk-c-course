@@ -329,56 +329,21 @@ def paper(request):
         })
 
 
+@is_teacher
 def manage_paper_question_contact(request):
     if request.method == "GET":
         """
-        功能: 返回卷子的详细信息，***会根据不同身份的人与请求参数的不同以及卷子所处状态的不同，返回不同的数据***
-        输入: 老师:
-                1. 预览卷子或继续出题      paper_id                      卷子所有状态
-                2. 批改卷子              paper_id   student_id         卷子的截至时间到期
-                3. 看查学生的答题情况      paper_id   student_id         卷子已批改完成
-             学生:
-                1. 答题                 paper_id                      卷子发布且处于答题时间
-                2. 看查考试结果           paper_id                      卷子已批改完成
-                3. 看查答题情况           paper_id                      卷子截至时间到但是未批改完成
-        返回: 卷子信息或者作答情况与总分(根据卷子的状态决定)
+        功能: 老师预览卷子
+        输入: 卷子id
+        返回: 卷子信息
         """
-        identity = request.user.identity
-        paper_id = request.GET.get('paper_id')
-        query_param, SPContact = None, None
 
+        # 老师预览卷子
+        paper_id = request.GET.get('paper_id')
         if not paper_id:
             return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
-
         try:
             paper = Paper.objects.get(id=paper_id)
-            if not paper.question_order:
-                return JsonResponse({'result': False, 'code': 400, 'message': '卷子中还没有题目', 'data': {}})
-
-            if identity == Member.Identity.TEACHER:
-                if request.GET.get('student_id'):
-                    query_param = {'student_id': request.GET.get('student_id')}
-                    if paper.status == Paper.Status.DRAFT or (paper.status == Paper.Status.RELEASE
-                                                              and paper.end_time > timezone.now()):
-                        return JsonResponse({'result': False, 'code': 403, 'message': '卷子在状态不允许批改或看查答题情况', 'data': {}})
-                    if paper.status == Paper.Status.MARKED:
-                        SPContact_info = StudentPaperContact.objects.filter(paper_id=paper_id, student_id=request.GET.get('student_id'))
-                        if SPContact_info:
-                            SPContact = list(SPContact_info.values('score', 'cumulative_time'))[0]
-
-            else:
-                if paper.status == Paper.Status.DRAFT:
-                    return JsonResponse({'result': False, 'code': 403, 'message': '没有权限看查', 'data': {}})
-                SPContact_info = StudentPaperContact.objects.filter(paper_id=paper_id,
-                                                                    student_id=request.user.id)
-                if SPContact_info:
-                    SPContact = list(SPContact_info.values('score', 'cumulative_time', 'status'))[0]
-                if SPContact['status'] == 'SUBMITTED' and (
-                        paper.status == Paper.Status.RELEASE and paper.end_time > timezone.now()):
-                    return JsonResponse({'result': False, 'code': 403, 'message': '你已经提交', 'data': {}})
-                if paper.start_time > timezone.now():
-                    return JsonResponse({'result': False, 'code': 403, 'message': '答题时间未到', 'data': {}})
-                query_param = {'student_id': request.user.id}
 
             # 获取小题题目与大题题目信息
             order = json.loads(paper.question_order)
@@ -386,45 +351,21 @@ def manage_paper_question_contact(request):
             questions = {pq['id']: pq for pq in PaperQuestionContact.objects.filter(paper_id=paper_id).values()}
             custom_types = {custom_type.id: custom_type.custom_type_name for custom_type in
                             CustomType.objects.filter(id__in=custom_type_ids)}
-
-            # 查询StudentAnswer表
-            if query_param:
-                student_answer = {}
-                query_param['PQContact_id__in'] = questions.keys()
-                for sa in StudentAnswer.objects.filter(**query_param).values():
-                    student_answer[sa['PQContact_id']] = (sa['answer'], sa['score'], sa['id'])
-
-        except Exception as e:
+        except DatabaseError as e:
             logger.exception(e)
-            return JsonResponse({'result': False, 'code': 500, 'message': '查询失败(请检查日志)', 'date': {}})
-
+            return JsonResponse({
+                'result': False,
+                'code': 500,
+                'message': '查询失败',
+                'data': {}
+            })
         # 构造传输格式
         return_data = {}
         for title_id, question_ids in order.items():
             questions_list = []
             for question_id in question_ids:
-                question = questions[question_id]
-                if identity == Member.Identity.STUDENT and paper.status == Paper.Status.RELEASE \
-                        and paper.end_time > timezone.now():
-                    # 为了防止一份卷子有id相同的两个题
-                    question.pop('answer') if 'answer' in question.keys() else None
-                    question.pop('explain') if 'explain' in question.keys() else None
-                if query_param:
-                    question['student_answer_id'] = student_answer[question_id][
-                        2] if question_id in student_answer.keys() else None
-                    question['student_answer'] = student_answer[question_id][
-                        0] if question_id in student_answer.keys() else None
-                    if (identity == Member.Identity.TEACHER and query_param) or \
-                            (identity == Member.Identity.STUDENT and paper.status == Paper.Status.MARKED):
-                        question['student_score'] = student_answer[question_id][
-                            1] if question_id in student_answer.keys() else 0
-                questions_list.append(question)
+                questions_list.append(questions[question_id])
             return_data[custom_types[int(title_id)]] = questions_list
-        if paper.status == Paper.Status.MARKED and SPContact:
-            return_data['total_score'] = SPContact['score'] if SPContact else 0
-        # 老师预览卷子的时候，不需要看查累计时间
-        if not (identity == Member.Identity.TEACHER and not request.GET.get('student_id')):
-            return_data['cumulative_time'] = int(SPContact['cumulative_time'].total_seconds()) if SPContact else 0
 
         return JsonResponse(
             {
@@ -432,18 +373,8 @@ def manage_paper_question_contact(request):
                 "message": "查询成功",
                 "code": 201,
                 "data": return_data
-            },
-            json_dumps_params={"ensure_ascii": False},
+            }
         )
-
-    # 以下的方法只可以以老师的身份请求
-    if request.user.identity != Member.Identity.TEACHER:
-        return JsonResponse({
-            'result': False,
-            'code': 403,
-            'message': '您没有操作权限！',
-            'data': {}
-        })
 
     if request.method == 'POST':
         """
@@ -544,6 +475,185 @@ def manage_paper_question_contact(request):
             'data': {}
         })
 
+@is_teacher
+def mark_or_check_paper(request):
+    """
+    功能: 老师批改卷子或看查学生答题情况的请求试卷内容
+    输入: 卷子id与学生id
+    返回: 题目信息, 学生的答案, 每道题的分数, 总分
+    """
+    if request.method == 'GET':
+        paper_id = request.GET.get('paper_id')
+        student_id = request.GET.get('student_id')
+        if not (paper_id and student_id):
+            return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
+
+        try:
+            paper = Paper.objects.get(id=paper_id)
+
+            # 获取小题题目与大题题目信息
+            order = json.loads(paper.question_order)
+            custom_type_ids = order.keys()
+            questions = {pq['id']: pq for pq in PaperQuestionContact.objects.filter(paper_id=paper_id).values()}
+            custom_types = {custom_type.id: custom_type.custom_type_name for custom_type in
+                            CustomType.objects.filter(id__in=custom_type_ids)}
+
+            # 查询StudentAnswer表
+            student_answer = {}
+            PQContact_ids = questions.keys()
+            for sa in StudentAnswer.objects.filter(PQContact_id__in=PQContact_ids).values():
+                student_answer[sa['PQContact_id']] = (sa['answer'], sa['score'], sa['id'])
+            # 查询StudentPaperContact表
+            SPContact = StudentPaperContact.objects.filter(paper_id=paper_id, student_id=student_id)
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse({
+                'result': False,
+                'code': 500,
+                'message': '查询失败(请检查日志)',
+                'data': {}
+            })
+
+        # 构造传输格式
+        return_data = {}
+        for title_id, question_ids in order.items():
+            questions_list = []
+            for question_id in question_ids:
+                question = questions[question_id]
+                question['student_answer'] = student_answer[question_id][0]
+                question['student_score'] = student_answer[question_id][1]
+                question['student_answer_id'] = student_answer[question_id][2]
+                questions_list.append(question)
+            return_data[custom_types[int(title_id)]] = questions_list
+        return_data['total_score'] = SPContact.get().score if SPContact else 0
+
+        return JsonResponse({
+            'result': True,
+            'code': 200,
+            'message': '查询成功',
+            'data': return_data
+        })
+
+    else:
+        return JsonResponse({
+            'result': False,
+            'code': 405,
+            'message': '请求方法错误',
+            'data': {}
+        })
+
+
+def answer_or_check_paper(request):
+    if request.method == 'GET':
+        paper_id = request.GET.get('paper_id')
+        student_id = request.user.id
+        if not paper_id:
+            return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
+        try:
+            SPContact = StudentPaperContact.objects.filter(paper_id=paper_id, student_id=student_id)
+            if SPContact and SPContact.get().status == StudentPaperContact.Status.SUBMITTED:
+                return JsonResponse({'result': False, 'code': 400, 'message': '你已经提交', 'data': {}})
+            paper = Paper.objects.get(id=paper_id)
+            if paper.status == Paper.Status.DRAFT:
+                return JsonResponse({'result': False, 'code': 400, 'message': '没有权限查看', 'data': {}})
+            # 获取小题题目与大题题目信息
+            order = json.loads(paper.question_order)
+            custom_type_ids = order.keys()
+            questions = {pq['id']: pq for pq in PaperQuestionContact.objects.filter(paper_id=paper_id).values()}
+            custom_types = {custom_type.id: custom_type.custom_type_name for custom_type in
+                            CustomType.objects.filter(id__in=custom_type_ids)}
+
+            # 查询StudentAnswer表
+            student_answer = {}
+            PQContact_ids = questions.keys()
+            for sa in StudentAnswer.objects.filter(PQContact_id__in=PQContact_ids).values():
+                student_answer[sa['PQContact_id']] = (sa['answer'], sa['score'], sa['id'])
+
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse({
+                'result': False,
+                'code': 500,
+                'message': '查询失败(请检查日志)',
+                'data': {}
+            })
+
+        # 构造传输格式
+        return_data = {}
+        for title_id, question_ids in order.items():
+            questions_list = []
+            for question_id in question_ids:
+                question = questions[question_id]
+                if paper.status == Paper.Status.RELEASE and paper.end_time > timezone.now():
+                    # 为了防止一份卷子有id相同的两个题
+                    question.pop('answer') if 'answer' in question.keys() else None
+                    question.pop('explain') if 'explain' in question.keys() else None
+                question['student_answer_id'] = student_answer[question_id][
+                    2] if question_id in student_answer.keys() else None
+                question['student_answer'] = student_answer[question_id][
+                    0] if question_id in student_answer.keys() else None
+                if paper.status == Paper.Status.MARKED:
+                    question['student_score'] = student_answer[question_id][
+                    1] if question_id in student_answer.keys() else None
+                questions_list.append(question)
+            return_data[custom_types[int(title_id)]] = questions_list
+        if paper.status == Paper.Status.MARKED:
+            return_data['total_score'] = SPContact.get().score if SPContact else 0
+
+        return JsonResponse({
+            'result': True,
+            'code': 200,
+            'message': '查询成功',
+            'data': return_data
+        })
+
+    else:
+        return JsonResponse({
+            'result': False,
+            'code': 405,
+            'message': '请求方法错误',
+            'data': {}
+        })
+
+
+def get_paper_status(request):
+    """
+    功能: 查询卷子的状态
+    输入: 卷子的id
+    返回: 卷子的所属状态与截至时间
+    """
+    if request.method == 'GET':
+        paper_id = request.GET.get('paper_id')
+        if not paper_id:
+            return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
+        try:
+            paper = Paper.objects.get(id=paper_id)
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse({
+                'result': False,
+                'message': '卷子状态查询失败(请检查日志)',
+                'code': 500,
+                'data': {}
+            })
+
+        return JsonResponse({
+            'result': True,
+            'code': 200,
+            'message': '查询成功',
+            'data': {
+                'paper_id': paper_id,
+                'paper_status': paper.status,
+                'paper_end_time': paper.end_time
+            }
+        })
+    else:
+        return JsonResponse({
+            'result': False,
+            'code': 405,
+            'message': '请求方法错误'
+        })
+
 
 @is_teacher
 def synchronous_paper(request):
@@ -604,16 +714,14 @@ def save_answer(request):
     注释: 前端将所有题目与卷子的关联id都要传入，学生没有作答的题目答案为None
     返回: 保存成功或失败
     """
-
     if request.method == 'POST':
         body = json.loads(request.body)
-        if request.user.identity != Member.Identity.STUDENT:
-            return JsonResponse({'result': False, 'code': 400, 'message': '权限错误', 'data': {}})
         student_id = request.user.id
         request_params = ['answer_info', 'paper_id', 'save_or_submit', 'cumulative_time']
         answer_info, paper_id, save_or_submit, cumulative_time = [body.get(param) for param in request_params]
         if not (answer_info and paper_id and cumulative_time and save_or_submit in [0, 1]):
             return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
+
         PQContact_ids = []
         # 构造新数据
         create_list = []
@@ -623,6 +731,7 @@ def save_answer(request):
                 student_id=student_id,
                 PQContact_id=info['question_id'],
                 answer=info['stu_answers'],
+                score=0
             ))
         # 数据库操作
         try:
@@ -635,13 +744,20 @@ def save_answer(request):
                 # 保存本次的字段
                 StudentAnswer.objects.bulk_create(create_list)
                 # 更改学生对于这份卷子的状态，如果有答题记录就更新，如果没有则创建
-                StudentPaperContact.objects.update_or_create(
-                    course_id=course_id,
-                    paper_id=paper_id,
-                    student_id=request.user.id,
-                    status=StudentPaperContact.Status.SAVED if save_or_submit else StudentPaperContact.Status.SUBMITTED,
-                    cumulative_time=timedelta(seconds=cumulative_time)
-                )
+                SPContact = StudentPaperContact.objects.filter(course_id=course_id, paper_id=paper_id, student_id=student_id)
+                if SPContact:
+                    SPContact.update(
+                        status=StudentPaperContact.Status.SAVED if save_or_submit else StudentPaperContact.Status.SUBMITTED,
+                        cumulative_time=timedelta(seconds=cumulative_time)
+                    )
+                else:
+                    StudentPaperContact.objects.create(
+                        course_id=course_id,
+                        paper_id=paper_id,
+                        student_id=student_id,
+                        status=StudentPaperContact.Status.SAVED if save_or_submit else StudentPaperContact.Status.SUBMITTED,
+                        cumulative_time=timedelta(seconds=cumulative_time)
+                    )
         except DatabaseError as e:
             logger.exception(e)
             return JsonResponse({
