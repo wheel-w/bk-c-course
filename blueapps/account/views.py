@@ -18,6 +18,8 @@ from django.shortcuts import render
 
 from blueapps.account.decorators import login_exempt
 
+from course.models import Member
+
 
 @login_exempt
 def login_success(request):
@@ -62,11 +64,12 @@ def get_user_info(request):
                     "college": member.college,
                     "professional_class": member.professional_class,
                     "gender": member.gender,
-                    "identity": member.identity,
+                    "identity": member.identity if member.identity else Member.Identity.NOT_CERTIFIED,
                     "phone_number": member.phone_number,
                     "email_number": member.email_number,
                     "qq_number": member.qq_number,
                     "wechat_number": member.wechat_number,
+                    "state": member.state if hasattr(member, "state") else ""
                 },
                 "message": "获取用户信息成功",
             },

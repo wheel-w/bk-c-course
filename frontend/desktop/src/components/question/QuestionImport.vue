@@ -37,7 +37,6 @@
                 window.open('http://dev.paas-edu.bktencent.com:8000/course/download_set_question_excel_template/')
             },
             testSuccess (file, fileList) {
-                console.log(file, fileList, 'success')
             },
             testProgress (e, file, fileList) {
                 this.update(e)
@@ -67,6 +66,7 @@
                         this.config.theme = 'success'
                         this.config.message = res.message
                         this.$bkMessage(this.config)
+                        this.$emit('importQuestionExcel')
                     })
                 } else {
                     this.config.theme = 'error'

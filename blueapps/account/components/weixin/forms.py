@@ -15,7 +15,10 @@ from django import forms
 
 
 class WeixinAuthenticationForm(forms.Form):
-
     # code 格式： ...
     code = forms.CharField()
+
+
+class WeixinCustomLoginStateForm(forms.Form):
+    # code 格式： ...
     state = forms.CharField()

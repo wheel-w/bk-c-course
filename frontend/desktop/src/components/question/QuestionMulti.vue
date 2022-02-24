@@ -6,6 +6,7 @@
                 <bk-form-item :required="true" :rules="rules.question" :property="'question'" error-display-type="normal">
                     <bk-input
                         type="textarea"
+                        :readonly="readonly"
                         :autosize="{ minRows: 2, maxRows: 2 }"
                         placeholder="请输入题目内容"
                         v-model="Question.question"
@@ -18,8 +19,8 @@
                     <bk-checkbox-group v-model="Question.answer">
                         <div class="option">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_A'" :icon-offset="50" error-display-type="tooltips">
-                                <bk-checkbox name="A" value="A" style="border-style:">
-                                    <bk-input v-model="Question.option_A" placeholder="请输入选项A内容" size="large" style="width:400px;">
+                                <bk-checkbox name="A" value="A" :disabled="readonly">
+                                    <bk-input v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" style="width:400px;">
                                         <template slot="prepend">
                                             <div class="group-text">A</div>
                                         </template>
@@ -29,8 +30,8 @@
                         </div>
                         <div class="option">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_B'" :icon-offset="50" error-display-type="tooltips">
-                                <bk-checkbox name="B" value="B">
-                                    <bk-input v-model="Question.option_B" placeholder="请输入选项B内容" size="large" style="width:400px;">
+                                <bk-checkbox name="B" value="B" :disabled="readonly">
+                                    <bk-input v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" style="width:400px;">
                                         <template slot="prepend">
                                             <div class="group-text">B</div>
                                         </template>
@@ -40,8 +41,8 @@
                         </div>
                         <div class="option">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_C'" :icon-offset="50" error-display-type="tooltips">
-                                <bk-checkbox name="C" value="C">
-                                    <bk-input v-model="Question.option_C" placeholder="请输入选项C内容" size="large" style="width:400px;">
+                                <bk-checkbox name="C" value="C" :disabled="readonly">
+                                    <bk-input v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" style="width:400px;">
                                         <template slot="prepend">
                                             <div class="group-text">C</div>
                                         </template>
@@ -51,8 +52,8 @@
                         </div>
                         <div class="option">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_D'" :icon-offset="50" error-display-type="tooltips">
-                                <bk-checkbox name="D" value="D">
-                                    <bk-input v-model="Question.option_D" placeholder="请输入选项D内容" size="large" style="width:400px;">
+                                <bk-checkbox name="D" value="D" :disabled="readonly">
+                                    <bk-input v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" style="width:400px;">
                                         <template slot="prepend">
                                             <div class="group-text">D</div>
                                         </template>
@@ -62,8 +63,8 @@
                         </div>
                         <div class="option">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_E'" :icon-offset="50" error-display-type="tooltips">
-                                <bk-checkbox name="E" value="E">
-                                    <bk-input v-model="Question.option_E" placeholder="请输入选项E内容" size="large" style="width:400px;">
+                                <bk-checkbox name="E" value="E" :disabled="readonly">
+                                    <bk-input v-model="Question.option_E" :readonly="readonly" placeholder="请输入选项E内容" size="large" style="width:400px;">
                                         <template slot="prepend">
                                             <div class="group-text">E</div>
                                         </template>
@@ -87,12 +88,13 @@
                     off-text="解析"
                     @change="handleSwitcherChange">
                 </bk-switcher>
-                <bk-button class="reset" theme="primary" @click="reset">重置</bk-button>
-                <bk-button class="upload" theme="primary" @click="checkData">上传</bk-button>
+                <bk-button v-if="!readonly" class="reset" theme="primary" @click="reset">重置</bk-button>
+                <bk-button v-if="!readonly" class="upload" theme="primary" @click="checkData">上传</bk-button>
                 <bk-form-item :required="true" :rules="rules.explain" :property="'explain'" v-if="explainOpen" error-display-type="normal">
                     <bk-input
                         type="textarea"
                         :autosize="{ minRows: 2, maxRows: 2 }"
+                        :readonly="readonly"
                         placeholder="请输入答案解析内容"
                         v-model="Question.explain"
                         v-if="explainOpen"
@@ -122,6 +124,10 @@
                 }
             },
             editable: {
+                type: Boolean,
+                default: false
+            },
+            readonly: {
                 type: Boolean,
                 default: false
             }
@@ -172,15 +178,15 @@
         created () {
             if (this.editable) {
                 this.Question.answer = this.Question.answer.split('')
-                if (this.Question.explain) {
-                    this.explainOpen = true
-                }
+            }
+            if (this.Question.explain) {
+                this.explainOpen = true
             }
         },
         methods: {
             handleSwitcherChange (status) {
-                if (!status) {
-                    this.Question.analysis = null
+                if (!status && !this.readonly) {
+                    this.Question.explain = null
                 }
             },
             checkData () {

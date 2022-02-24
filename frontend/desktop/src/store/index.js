@@ -21,7 +21,9 @@ const store = new Vuex.Store({
     state: {
         mainContentLoading: false,
         // 系统当前登录用户
-        user: {}
+        user: {},
+        // 当前的课程id
+        currentCourseId: 1
     },
     // 公共 getters
     getters: {
@@ -48,6 +50,12 @@ const store = new Vuex.Store({
          */
         updateUser (state, user) {
             state.user = Object.assign({}, user)
+        },
+        /**
+         *更新当前的课程id
+         * */
+        updateCourseId (state, id) {
+            state.currentCourseId = id
         }
     },
     actions: {

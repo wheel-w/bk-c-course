@@ -6,6 +6,7 @@
                 <bk-form-item :required="true" :rules="rules.question" :property="'question'" error-display-type="normal">
                     <bk-input
                         type="textarea"
+                        :readonly="readonly"
                         :autosize="{ minRows: 2, maxRows: 2 }"
                         placeholder="请输入题目内容"
                         v-model="Question.question"
@@ -18,8 +19,8 @@
                     <bk-radio-group v-model="Question.answer">
                         <div class="optionAC">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_A'" :icon-offset="50" error-display-type="tooltips">
-                                <bk-radio name="A" value="A">
-                                    <bk-input ref="optionA" v-model="Question.option_A" placeholder="请输入选项A内容" size="large" style="width:400px;">
+                                <bk-radio name="A" value="A" :disabled="readonly">
+                                    <bk-input ref="optionA" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" style="width:400px;">
                                         <template slot="prepend">
                                             <div class="group-text">A</div>
                                         </template>
@@ -29,8 +30,8 @@
                         </div>
                         <div class="optionBD">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_B'" :icon-offset="50">
-                                <bk-radio name="B" value="B">
-                                    <bk-input ref="optionB" v-model="Question.option_B" placeholder="请输入选项B内容" size="large" style="width:400px;" @enter="nextOption('C')">
+                                <bk-radio name="B" value="B" :disabled="readonly">
+                                    <bk-input ref="optionB" v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" style="width:400px;" @enter="nextOption('C')">
                                         <template slot="prepend">
                                             <div class="group-text">B</div>
                                         </template>
@@ -40,8 +41,8 @@
                         </div>
                         <div class="optionAC">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_C'" :icon-offset="50">
-                                <bk-radio name="C" value="C">
-                                    <bk-input ref="optionC" v-model="Question.option_C" placeholder="请输入选项C内容" size="large" style="width:400px;" @enter="nextOption('D')">
+                                <bk-radio name="C" value="C" :disabled="readonly">
+                                    <bk-input ref="optionC" v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" style="width:400px;" @enter="nextOption('D')">
                                         <template slot="prepend">
                                             <div class="group-text">C</div>
                                         </template>
@@ -51,8 +52,8 @@
                         </div>
                         <div class="optionBD">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_D'" :icon-offset="50">
-                                <bk-radio name="D" value="D">
-                                    <bk-input ref="optionD" v-model="Question.option_D" placeholder="请输入选项D内容" size="large" style="width:400px;" @enter="nextOption('A')">
+                                <bk-radio name="D" value="D" :disabled="readonly">
+                                    <bk-input ref="optionD" v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" style="width:400px;" @enter="nextOption('A')">
                                         <template slot="prepend">
                                             <div class="group-text">D</div>
                                         </template>
@@ -75,8 +76,8 @@
                     off-text="解析"
                     @change="handleSwitcherChange">
                 </bk-switcher>
-                <bk-button class="reset" theme="primary" @click="reset">重置</bk-button>
-                <bk-button class="upload" theme="primary" @click="checkData">上传</bk-button>
+                <bk-button v-if="!readonly" class="reset" theme="primary" @click="reset">重置</bk-button>
+                <bk-button v-if="!readonly" class="upload" theme="primary" @click="checkData">上传</bk-button>
                 <bk-form-item :required="true" :rules="rules.explain" :property="'explain'" v-if="explainOpen" error-display-type="normal">
                     <bk-input
                         type="textarea"
@@ -111,6 +112,10 @@
                 }
             },
             editable: {
+                type: Boolean,
+                default: false
+            },
+            readonly: {
                 type: Boolean,
                 default: false
             }
@@ -156,14 +161,18 @@
                 }
             }
         },
+        created () {
+            if (this.Question.explain) {
+                this.explainOpen = true
+            }
+        },
         methods: {
             handleSwitcherChange (status) {
-                if (!status) {
-                    this.Question.analysis = null
+                if (!status && !this.readonly) {
+                    this.Question.explain = null
                 }
             },
             checkData () {
-                console.log(this.Question)
                 this.$refs.Question.validate().then(validator => {
                     if (this.editable) {
                         this.$emit('updateQuestion', this.Question)

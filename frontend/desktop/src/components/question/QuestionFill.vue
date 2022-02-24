@@ -8,6 +8,7 @@
                         <bk-input
                             type="textarea"
                             :autosize="{ minRows: 4, maxRows: 4 }"
+                            :readonly="readonly"
                             placeholder="请输入题目内容"
                             v-model="Question.question"
                             style="width:84%;"
@@ -17,9 +18,9 @@
                         </bk-input>
                     </bk-form-item>
                 </div>
-                <p>用鼠标选中下列文本的内容进行挖空:</p>
+                <p v-if="!readonly">用鼠标选中下列文本的内容进行挖空:</p>
                 <bk-form-item :required="true" :rules="rules.answer" :property="'answer'" error-display-type="normal">
-                    <div class="hollow">
+                    <div class="hollow" v-if="!readonly">
                         <label @mouseup="handleMouseSelect" style="display: block;">{{Question.question}}</label>
                     </div>
                 </bk-form-item>
@@ -30,7 +31,7 @@
                     theme="info"
                     :key="tag"
                     v-for="(tag,index) in answer"
-                    closable
+                    :closable="!readonly"
                     :disable-transitions="false"
                     @close="handleClose(tag)"
                     style="display:inline-block;">
@@ -46,8 +47,8 @@
                     off-text="解析"
                     @change="handleSwitcherChange">
                 </bk-switcher>
-                <bk-button class="reset" theme="primary" @click="reset">重置</bk-button>
-                <bk-button class="upload" theme="primary" @click="checkData">上传</bk-button>
+                <bk-button v-if="!readonly" class="reset" theme="primary" @click="reset">重置</bk-button>
+                <bk-button v-if="!readonly" class="upload" theme="primary" @click="checkData">上传</bk-button>
                 <bk-form-item :required="true" :rules="rules.explain" :property="'explain'" v-if="explainOpen" error-display-type="normal">
                     <bk-input
                         type="textarea"
@@ -76,6 +77,10 @@
                 }
             },
             editable: {
+                type: Boolean,
+                default: false
+            },
+            readonly: {
                 type: Boolean,
                 default: false
             }
@@ -119,11 +124,11 @@
         computed: {
         },
         created () {
-            if (this.editable) {
+            if (this.editable || this.readonly) {
                 this.exchange()
-                if (this.Question.explain) {
-                    this.explainOpen = true
-                }
+            }
+            if (this.Question.explain) {
+                this.explainOpen = true
             }
         },
         methods: {
@@ -176,10 +181,8 @@
                 this.$refs.Question.clearError()
             },
             handleMouseSelect () {
-                console.log(111)
                 const text = window.getSelection().toString()
                 const start = window.getSelection().anchorOffset
-                // const end = window.getSelection().focusOffset
                 if (text && text.indexOf('_') < 0) {
                     this.answer.push({
                         text: text,
@@ -194,9 +197,6 @@
                     })
                     const question = this.Question.question.split('')
                     question.splice(start, text.length, '_______')
-                    // for (let i = start; i < end; i++) {
-                    //     question[i] = '_'
-                    // }
                     this.Question.question = question.join('')
                 }
             },
@@ -209,9 +209,6 @@
                         element.end = element.end + tag.length - 7
                     }
                 })
-                // for (let i = tag.start; i < tag.end; i++) {
-                //     question[i] = text[i - tag.start]
-                // }
                 this.Question.question = question.join('') // 对删除的填空的内容进行恢复
                 this.answer.splice(this.answer.indexOf(tag), 1) // 删除填空
             },
@@ -223,8 +220,8 @@
                 })
             },
             handleSwitcherChange (status) {
-                if (!status) {
-                    this.Question.analysis = null
+                if (!status && !this.readonly) {
+                    this.Question.explain = null
                 }
             },
             handleInputChange (value, event) {

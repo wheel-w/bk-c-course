@@ -12,6 +12,7 @@ eventlet==0.26.1
 django-celery-beat==2.0.0
 django-celery-results==1.2.1
 django-cors-headers==3.5.0
+django_mysql==3.3.0
 
 # jwt
 pyCryptodome==3.9.7
@@ -28,3 +29,4 @@ gunicorn==19.6.0
 
 Cython==0.29.23
 lxml==4.7.1
+xlrd==2.0.1
