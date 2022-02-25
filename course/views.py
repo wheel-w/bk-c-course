@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
 
+
 from blueapps.core.exceptions import DatabaseError
 from course.models import Course, Member, UserCourseContact
 from course.utils.verify_account import identify_user
@@ -670,7 +671,8 @@ def verify_school_user(request):
                 kwargs = {
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
-                    "professional_class": user_info["user_class"],
+                    "professional_class": user_info["user_major"],
+                    "classroom": user_info["user_class"],
                     "gender": Member.Gender.MAN
                     if user_info["user_sex"] == "男"
                     else Member.Gender.WOMAN,
