@@ -23,6 +23,8 @@ const MyJoinClassDetail = () => import('@/views/my_class/my_class_item/my_join_c
 const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
 const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
+const Mycourse = () => import('@/views/my_class/my_class_item/class_manage/my_course.vue')
+const Coursenumber = () => import('@/views/my_class/my_class_item/class_manage/course_number.vue')
 
 const routes = [
     {
@@ -61,6 +63,16 @@ const routes = [
                         path: 'my_join_class_detail',
                         name: 'my_join_class_detail',
                         component: MyJoinClassDetail
+                    },
+                    {
+                        path: 'my_course',
+                        name: 'my_course',
+                        component: Mycourse
+                    },
+                    {
+                        path: 'course_number',
+                        name: 'course_number',
+                        component: Coursenumber
                     },
                     {
                         path: 'answer_question_index',

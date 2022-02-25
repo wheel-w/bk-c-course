@@ -97,10 +97,18 @@
                             group: true
                         },
                         {
-                            id: 'my_join_class',
-                            name: '课程管理',
+                            id: 'mycourse',
+                            name: '我的课程',
                             icon: 'icon-tree-module-shape',
-                            pathName: 'my_join_class',
+                            pathName: 'my_course',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'classnumber',
+                            name: '成员管理',
+                            icon: 'icon-tree-module-shape',
+                            pathName: 'course_number',
                             children: [],
                             group: true
                         },

@@ -7,7 +7,6 @@ from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
 
-
 from blueapps.core.exceptions import DatabaseError
 from course.models import Course, Member, UserCourseContact
 from course.utils.verify_account import identify_user
@@ -120,10 +119,12 @@ def manage_course(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
-    # 删
+# 删
     if request.method == "DELETE":
         course_ids = json.loads(request.GET.get("course_id"))
-        user_info = "{}({})".format(request.user.class_number, request.user.name)
+        user_info = "{}({})".format(
+            request.user.class_number, request.user.name
+        )
         if not course_ids:
             return JsonResponse(
                 {
@@ -136,9 +137,7 @@ def manage_course(request):
             )
         del_courses = Course.objects.filter(id__in=course_ids)
         for del_course in del_courses:
-            if not (
-                del_course.create_people == user_info or del_course.teacher == user_info
-            ):
+            if not (del_course.create_people == user_info or del_course.teacher == user_info):
                 return JsonResponse(
                     {
                         "result": False,
@@ -514,8 +513,18 @@ def download_student_excel_template(request):
     response["Content-Disposition"] = 'attachment;filename="studentTemplate.xls"'
     return response
 
+def download_student_excel_template_url(request):
+    return JsonResponse(
+        {
+            "result": True,
+            "message": "跳转成功",
+            "url": "http://dev.paas-edu.bktencent.com:8000/course/download_student_excel_template/",
+            "code": 200,
+            "data": [],
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )
 
-# 删除学生（删除对应学生与课程关系）
 def delete_student_course_contact(request):
     if request.method == "DELETE":
         course_id = request.GET.get("course_id")
@@ -671,8 +680,7 @@ def verify_school_user(request):
                 kwargs = {
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
-                    "professional_class": user_info["user_major"],
-                    "classroom": user_info["user_class"],
+                    "professional_class": user_info["user_class"],
                     "gender": Member.Gender.MAN
                     if user_info["user_sex"] == "男"
                     else Member.Gender.WOMAN,
