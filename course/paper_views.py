@@ -524,7 +524,6 @@ def mark_or_check_paper(request):
                 questions_list.append(question)
             return_data[custom_types[int(title_id)]] = questions_list
         return_data['total_score'] = SPContact.get().score if SPContact else 0
-        return_data['cumulative_time'] = int(SPContact.get().cumulative_time.total_seconds()) if SPContact else 0
 
         return JsonResponse({
             'result': True,
@@ -603,7 +602,7 @@ def answer_or_check_paper(request):
             return_data[custom_types[int(title_id)]] = questions_list
         if paper.status == Paper.Status.MARKED:
             return_data['total_score'] = SPContact.get().score if SPContact else 0
-
+        return_data['cumulative_time'] = int(SPContact.get().cumulative_time.total_seconds()) if SPContact else 0
         return JsonResponse({
             'result': True,
             'code': 200,
