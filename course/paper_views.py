@@ -344,6 +344,8 @@ def manage_paper_question_contact(request):
             paper = Paper.objects.get(id=paper_id)
 
             # 获取小题题目与大题题目信息
+            if not paper.question_order or paper.question_order == '{}':
+                return JsonResponse({'result': False, 'code': 400, 'message': '卷子没有题目', 'data': {}})
             order = json.loads(paper.question_order)
             custom_type_ids = order.keys()
             questions = {pq['id']: pq for pq in PaperQuestionContact.objects.filter(paper_id=paper_id).values()}
