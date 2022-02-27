@@ -296,7 +296,7 @@ def paper(request):
             })
         try:
             paper = Paper.objects.filter(id=paper_id)
-            if update_info.get('status') == Paper.Status.RELEASE and not paper.get().question_order:
+            if update_info.get('status') == Paper.Status.RELEASE and (not paper.get().question_order or paper.get().question_order == '{}'):
                 return JsonResponse({
                     'result': False,
                     'code': 400,
