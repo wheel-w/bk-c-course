@@ -1,15 +1,15 @@
 import json
 import logging
 
-from django.core import serializers
+import xlrd
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
-
-from .models import Course, Member, UserCourseContact
-
+from course.models import Course, Member, UserCourseContact
+from course.utils.verify_account import identify_user
 
 # Create your views here.
 
@@ -53,7 +53,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                    identity.first()["identity"] == Member.Identity.TEACHER
+                identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -75,8 +75,12 @@ def manage_course(request):
         req = json.loads(request.body)
         course_name = req.get("course_name")  # 想创建的课程名称
         teacher = req.get("teacher")
+        teacher_id = req.get("teacher_id")
         course_introduction = req.get("course_introduction")  # 课程简介
         manage_student = req.get("manage_student")  # 学生管理员
+        manage_student_str = ",".join(manage_student)
+        manage_student_ids = req.get("manage_student_ids")
+        manage_student_list = []
         try:
             news_course_info = Course.objects.create(
                 course_name=course_name,
@@ -85,11 +89,21 @@ def manage_course(request):
                 create_people="{}({})".format(
                     request.user.class_number, request.user.name
                 ),
-                manage_student=manage_student,
+                manage_student=manage_student_str,
             )  # 将得到的数据加到course表
             UserCourseContact.objects.create(
                 user_id=request.user.id, course_id=news_course_info.id
             )
+            UserCourseContact.objects.create(
+                user_id=teacher_id, course_id=news_course_info.id
+            )
+            for manage_student_id in manage_student_ids:
+                manage_student_list.append(
+                    UserCourseContact(
+                        user_id=manage_student_id, course_id=news_course_info.id
+                    )
+                )
+            UserCourseContact.objects.bulk_create(manage_student_list)
             return JsonResponse(
                 {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -105,11 +119,13 @@ def manage_course(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
-
-    # 删
+# 删
     if request.method == "DELETE":
-        course_id = request.GET.get("course_id")
-        if not course_id:
+        course_ids = json.loads(request.GET.get("course_id"))
+        user_info = "{}({})".format(
+            request.user.class_number, request.user.name
+        )
+        if not course_ids:
             return JsonResponse(
                 {
                     "result": False,
@@ -119,34 +135,31 @@ def manage_course(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
+        del_courses = Course.objects.filter(id__in=course_ids)
+        for del_course in del_courses:
+            if not (del_course.create_people == user_info or del_course.teacher == user_info):
+                return JsonResponse(
+                    {
+                        "result": False,
+                        "message": "删除失败，权限不够",
+                        "code": 403,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
+                )
         try:
             with transaction.atomic():
-                user_info = "{}({})".format(
-                    request.user.class_number, request.user.name
+                Course.objects.filter(id__in=course_ids).delete()
+                UserCourseContact.objects.filter(course_id__in=course_ids).delete()
+                return JsonResponse(
+                    {
+                        "result": True,
+                        "message": "删除成功",
+                        "code": 200,
+                        "data": [],
+                    },
+                    json_dumps_params={"ensure_ascii": False},
                 )
-                course = Course.objects.get(id=course_id)
-                if course.create_people == user_info or course.teacher == user_info:
-                    course.delete()
-                    UserCourseContact.objects.filter(course_id=course_id).delete()
-                    return JsonResponse(
-                        {
-                            "result": True,
-                            "message": "删除成功",
-                            "code": 200,
-                            "data": [],
-                        },
-                        json_dumps_params={"ensure_ascii": False},
-                    )
-                else:
-                    return JsonResponse(
-                        {
-                            "result": False,
-                            "message": "删除失败，权限不够",
-                            "code": 403,
-                            "data": [],
-                        },
-                        json_dumps_params={"ensure_ascii": False},
-                    )
         except ObjectDoesNotExist as e:
             logger.exception(e)
             return JsonResponse(
@@ -163,6 +176,8 @@ def manage_course(request):
     if request.method == "PUT":
         req = json.loads(request.body)
         course_id = req.pop("id", "")
+        manage_student = req.pop("manage_student")  # 学生管理员
+        manage_student_str = ",".join(manage_student)
         if not course_id:
             return JsonResponse(
                 {
@@ -177,6 +192,7 @@ def manage_course(request):
             user_info = "{}({})".format(request.user.class_number, request.user.name)
             course = Course.objects.get(id=course_id)
             if course.create_people == user_info or course.teacher == user_info:
+                course.manage_student = manage_student_str
                 for k, v in req.items():
                     setattr(course, k, v)
                 course.save()
@@ -210,17 +226,29 @@ def manage_course(request):
 # 查课程列表
 def search_courses_by_userid(request):
     if request.method == "GET":
+        courses_list = []
         course_ids = UserCourseContact.objects.filter(
             user_id=request.user.id
         ).values_list("course_id", flat=True)
-        course = Course.objects.in_bulk(course_ids).values()
-        courses = serializers.serialize("python", course, ensure_ascii=False)
+        courses = Course.objects.filter(id__in=course_ids)
+        for course in courses:
+            manage_student = course.manage_student.split(",")
+            courses_list.append(
+                {
+                    "course_id": course.id,
+                    "course_name": course.course_name,
+                    "course_introduction": course.course_introduction,
+                    "teacher": course.teacher,
+                    "create_people": course.create_people,
+                    "manage_student": manage_student,
+                }
+            )
         return JsonResponse(
             {
                 "result": True,
                 "message": "查询成功",
                 "code": 200,
-                "data": courses,
+                "data": courses_list,
             },
             json_dumps_params={"ensure_ascii": False},
         )
@@ -234,7 +262,9 @@ def search_member_info(request):
         members = Member.objects.filter(identity=member_identify)
         for member in members:
             member_info["member_id"] = member.id  # 返回用户id
-            member_info["member_display_name"] = "{0}({1})".format(member.class_number, member.name)  # 返回工号（姓名）
+            member_info["member_display_name"] = "{}({})".format(
+                member.class_number, member.name
+            )  # 返回工号（姓名）
             member_info["professional_class"] = member.professional_class  # 用户专业
             member_info["class_number"] = member.class_number  # 用户学号
             member_info["college"] = member.college  # 用户学院
@@ -257,86 +287,127 @@ def import_student_excel(request):
     excel_files = request.FILES.get("excel_file")
     suffix = excel_files.name.split(".")[-1]
     course_id = request.POST.get("course_id")
-    if suffix in ["xls", "xlsx"]:
-        data = xlrd.open_workbook(filename=None, file_contents=excel_files.read())
+    if suffix == "xls":
+        data = xlrd.open_workbook(
+            filename=None, file_contents=excel_files.read(), formatting_info=True
+        )
     else:
         return JsonResponse(
             {
                 "result": False,
-                "message": "导入文件错误，请检查导入文件是否为excel格式",
+                "message": "导入文件错误，请检查导入文件是否为excel后缀名为（.xls）格式",
                 "code": 406,
                 "data": [],
             },
             json_dumps_params={"ensure_ascii": False},
         )
-    tables = data.sheets()
+    table = data.sheet_by_index(0)
     student_class_number = set()
     student_info_list = []
     student_member_list = []
     student_contact_list = []
     student_info = {}
     row_sign = 0
-    for table in tables:
-        rows = table.nrows
-        values_0 = table.row_values(0)
-        if rows != 1:
-            values_1 = table.row_values(1)
-            if not (values_0[0] == "教学班点名册" and values_1[0] == "学年"):
+    row_err = 0
+    rows = table.nrows
+    values_0 = table.row_values(0)
+    if rows != 1:
+        values_1 = table.row_values(1)
+        if not (values_0[0] == "教学班点名册" and values_1[0] == "学年"):
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "文件格式错误,请检查文件内容是否符合模板规范",
+                    "code": 403,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+        else:
+            values_4 = table.row_values(4)
+            if values_4[0] == "" or values_4[2] == "" or values_4[4] == "":
                 return JsonResponse(
                     {
                         "result": False,
-                        "message": "文件格式错误,请检查文件内容是否符合模板规范",
+                        "message": "请检查您的excel表中的数据是否齐全",
                         "code": 403,
                         "data": [],
                     },
                     json_dumps_params={"ensure_ascii": False},
                 )
-            else:
+            try:
                 for row in range(4, rows):
+                    row_err = row
                     row_values = table.row_values(row)
-                    student_info["class_number"] = row_values[0]
-                    student_info["professional_class"] = row_values[4]
-                    student_info["name"] = row_values[2]
-                    student_info_list.append(student_info.copy())
-                    student_class_number.add(row_values[0])
-                user_class_number = Member.objects.filter(class_number__in=student_class_number).values_list(
-                    "class_number", flat=True)
-                user_ids = UserCourseContact.objects.filter(course_id=course_id).values_list("user_id", flat=True)
-                user_ids_list = list(user_ids)
-                user_class_number_list = list(user_class_number)
-                for student in student_info_list:
-                    if student["class_number"] not in user_class_number_list:
-                        student_member_list.append(Member(username="{}X".format(student["class_number"]),
-                                                          class_number=student["class_number"],
-                                                          name=student["name"],
-                                                          professional_class=student["professional_class"]))
-                Member.objects.bulk_create(student_member_list)
-                objs = Member.objects.filter(class_number__in=student_class_number).values_list(
-                    "id", flat=True)
-                objs_list = list(objs)
-                for obj in objs_list:
-                    if obj not in user_ids_list:
-                        student_contact_list.append(UserCourseContact(user_id=obj, course_id=course_id))
-                        row_sign = row_sign + 1
-                UserCourseContact.objects.bulk_create(student_contact_list)
+                    if not (
+                        row_values[0] == ""
+                        and row_values[2] == ""
+                        and row_values[4] == ""
+                    ):
+                        student_info["class_number"] = int(row_values[0])
+                        student_info["professional_class"] = row_values[4]
+                        student_info["name"] = row_values[2]
+                        student_info_list.append(student_info.copy())
+                        student_class_number.add(int(row_values[0]))
+            except SyntaxError as e:
+                logger.exception(e)
                 return JsonResponse(
                     {
-                        "result": True,
-                        "message": "导入成功,共导入{0}行数据".format(row_sign),
-                        "code": 200,
+                        "result": False,
+                        "message": "导入失败，请检查第{}行的学号是否输入非数字字符".format(row_err),
+                        "code": 412,
                         "data": [],
                     },
                     json_dumps_params={"ensure_ascii": False},
                 )
-        return JsonResponse(
-            {
-                "result": False,
-                "message": "请检查您的excel表中的数据是否齐全",
-                "code": 403,
-                "data": [],
-            },
-            json_dumps_params={"ensure_ascii": False},
-        )
+            user_class_number = Member.objects.filter(
+                class_number__in=student_class_number
+            ).values_list("class_number", flat=True)
+            user_ids = UserCourseContact.objects.filter(
+                course_id=course_id
+            ).values_list("user_id", flat=True)
+            user_ids_list = list(user_ids)
+            user_class_number_list = list(user_class_number)
+            for student in student_info_list:
+                if str(student["class_number"]) not in user_class_number_list:
+                    student_member_list.append(
+                        Member(
+                            username="{}X".format(student["class_number"]),
+                            class_number=student["class_number"],
+                            name=student["name"],
+                            professional_class=student["professional_class"],
+                        )
+                    )
+            Member.objects.bulk_create(student_member_list)
+            objs = Member.objects.filter(
+                class_number__in=student_class_number
+            ).values_list("id", flat=True)
+            objs_list = list(objs)
+            for obj in objs_list:
+                if obj not in user_ids_list:
+                    student_contact_list.append(
+                        UserCourseContact(user_id=obj, course_id=course_id)
+                    )
+                    row_sign = row_sign + 1
+            UserCourseContact.objects.bulk_create(student_contact_list)
+            return JsonResponse(
+                {
+                    "result": True,
+                    "message": "导入成功,共导入{}行数据".format(row_sign),
+                    "code": 200,
+                    "data": [],
+                },
+                json_dumps_params={"ensure_ascii": False},
+            )
+    return JsonResponse(
+        {
+            "result": False,
+            "message": "请检查您的excel表中的数据是否齐全",
+            "code": 403,
+            "data": [],
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )
 
 
 # 根具课程id为课程新加学生
@@ -355,7 +426,9 @@ def add_course_student(request):
             },
             json_dumps_params={"ensure_ascii": False},
         )
-    user_ids = UserCourseContact.objects.filter(course_id=course_id).values_list("user_id", flat=True)
+    user_ids = UserCourseContact.objects.filter(course_id=course_id).values_list(
+        "user_id", flat=True
+    )
     user_ids_list = list(user_ids)
     for student in student_id_list:
         if student not in user_ids_list:
@@ -382,22 +455,84 @@ def add_course_student(request):
     )
 
 
+# 根据学号新增用户
+def add_course_member(request):
+    req = json.loads(request.body)
+    course_id = req.get("course_id")
+    member_class_number = req.get("class_number")
+    member_name = req.get("name")
+    member_professional_class = req.get("professional_class")
+    member_list = []
+    member_class_number_list = []
+    member_info = {}
+    member_objects = Member.objects.all()
+    for member_object in member_objects:
+        member_info["class_number"] = member_object.class_number
+        member_info["name"] = member_object.name
+        member_info["identify"] = member_object.identity
+        member_info["professional_class"] = member_object.professional_class
+        member_class_number_list.append(member_info["class_number"])
+        member_list.append(member_info.copy())
+    if member_class_number in member_class_number_list:
+        user = Member.objects.get(class_number=member_class_number)
+        UserCourseContact.objects.update_or_create(course_id=course_id, user_id=user.id)
+        return JsonResponse(
+            {
+                "result": True,
+                "message": "增加成功,该系统存在该学号用户，已经为您添加",
+                "code": 200,
+                "data": [],
+            },
+            json_dumps_params={"ensure_ascii": False},
+        )
+    else:
+        user = Member.objects.create(
+            username="{}X".format(member_class_number),
+            class_number=member_class_number,
+            name=member_name,
+            professional_class=member_professional_class,
+            identity="NOT_CERTIFIED",
+        )
+        UserCourseContact.objects.create(course_id=course_id, user_id=user.id)
+    return JsonResponse(
+        {
+            "result": True,
+            "message": "增加成功，该系统不存在该学号用户，已经为您添加",
+            "code": 200,
+            "data": [],
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )
+
+
 # 下载学生点名册模板
 def download_student_excel_template(request):
-    file = open('static/files/studentTemplate.xls', 'rb')
+    file = open("static/files/studentTemplate.xls", "rb")
     response = FileResponse(file)
-    response['Content-Type'] = 'application/octet-stream'
-    response['Content-Disposition'] = 'attachment;filename="studentTemplate.xls"'
+    response["Content-Type"] = "application/octet-stream"
+    response["Content-Disposition"] = 'attachment;filename="studentTemplate.xls"'
     return response
 
+def download_student_excel_template_url(request):
+    return JsonResponse(
+        {
+            "result": True,
+            "message": "跳转成功",
+            "url": "http://dev.paas-edu.bktencent.com:8000/course/download_student_excel_template/",
+            "code": 200,
+            "data": [],
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )
 
-# 删除学生（删除对应学生与课程关系）
 def delete_student_course_contact(request):
     if request.method == "DELETE":
         course_id = request.GET.get("course_id")
-        student_id = request.GET.get("student_id")  # 传递学生id列表
+        student_id = json.loads(request.GET.get("student_id"))  # 传递学生id列表
         try:
-            UserCourseContact.objects.filter(user_id__in=student_id, course_id=course_id).delete()
+            UserCourseContact.objects.filter(
+                user_id__in=student_id, course_id=course_id
+            ).delete()
             return JsonResponse(
                 {"result": True, "message": "删除成功", "code": 200, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -433,21 +568,32 @@ def search_course_student(request):
         user_ids = UserCourseContact.objects.filter(course_id=course_id).values_list(
             "user_id", flat=True
         )
+        if not user_ids:
+            return JsonResponse(
+                {
+                    "result": False,
+                    "message": "该课程暂无学生",
+                    "code": 406,
+                    "data": [],
+                },
+            )
         user_ids_list = list(user_ids)
         user_objects = Member.objects.in_bulk(user_ids_list)
-        for user_object in user_objects:
-            if user_object.identity == "STUDENT":
-                student_info["student"] = ("{0}({1})".format(user_object.class_number, user_object.name))
-                student_info["student_id"] = user_object.id
-                student_info["id"] = user_object.id
-                student_info["name"] = user_object.name
-                student_info["class_number"] = user_object.class_number
-                student_info["professional_class"] = user_object.professional_class
-                student_list.append(student_info.copy())
+        for index, user_object in user_objects.items():
+            student_info["student"] = "{}({})".format(
+                user_object.class_number, user_object.name
+            )
+            student_info["student_id"] = user_object.id
+            student_info["id"] = user_object.id
+            student_info["name"] = user_object.name
+            student_info["class_number"] = user_object.class_number
+            student_info["professional_class"] = user_object.professional_class
+            student_info["identify"] = user_object.identity
+            student_list.append(student_info.copy())
         page_size = request.GET.get("page_size", 10)
         paginator = Paginator(student_list, page_size)  # 分页器对象，10是每页展示的数据条数
         page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
-        page_info_list = paginator.get_page(page)  # 更新students为对应页码数据
+        page_info_list = list(paginator.get_page(page))  # 更新students为对应页码数据
         return JsonResponse(
             {
                 "result": True,
@@ -455,7 +601,7 @@ def search_course_student(request):
                 "code": 200,
                 "data": page_info_list,  # 当前页数据
                 "page": int(page),  # 这是是返回当前页码给前端
-                "page_range": list(paginator.page_range),  # 这个参数是告诉前端一共有多少页
+                "count": len(student_list),
             },
             json_dumps_params={"ensure_ascii": False},
         )
@@ -475,11 +621,20 @@ def search_course_student(request):
 def get_course_list(request):
     if request.method == "GET":
         course_list = []
-        courses = UserCourseContact.objects.filter(user_id=request.user.id)
+        course_ids = UserCourseContact.objects.filter(
+            user_id=request.user.id
+        ).values_list("course_id", flat=True)
+        course_ids_list = list(course_ids)
+        courses = Course.objects.filter(id__in=course_ids_list)
         for course in courses:
-            course_list.append({"course_id": course.id,
-                                "course_name": "({}){}({})".format(course.id, course.course_name, course.teacher)
-                                })
+            course_list.append(
+                {
+                    "course_id": course.id,
+                    "course_name": "({}){}({})".format(
+                        course.id, course.course_name, course.teacher
+                    ),
+                }
+            )
         return JsonResponse(
             {
                 "result": True,
@@ -498,43 +653,58 @@ def verify_school_user(request):
     返回：认证成功： result: True; data: user_id
          认证失败： result: False; data: []; message：错误信息
     """
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-            result, user_info, message = identify_user(username=username, password=password)
-            if result:
-                user = Member.objects.filter(class_nnumber=username)
-                user_id = user.values()[0].get('id')
-                user.update(
-                    class_number=user_info['user_name'],
-                    name=user_info['user_real_name'],
-                    professional_class=user_info['user_class'],
-                    gender=Member.Gender.MAN if user_info['user_sex'] == '男' else Member.Gender.WOMAN,
-                    identity=Member.Identity.STUDENT,
-                    college=user_info['user_college']
-                )
-                data = {
-                    'result': True,
-                    'message': message,
-                    'code': 201,
-                    'data': {
-                        'user_id': user_id,
+            body = json.loads(request.body)
+            username = body.get("username")
+            password = body.get("password")
+
+            if username == "test_teacher":
+                member = Member.objects.get(username=request.user.username)
+                member.identity = "TEACHER"
+                member.save()
+                return JsonResponse(
+                    {
+                        "result": True,
+                        "code": 201,
+                        "message": "mock老师认证成功",
+                        "data": {"user_id": member.id},
                     }
+                )
+
+            result, user_info, message = identify_user(
+                username=username, password=password
+            )
+            if result:
+                user, _ = Member.objects.get_or_create(class_number=username)
+                kwargs = {
+                    "class_number": user_info["user_name"],
+                    "name": user_info["user_real_name"],
+                    "professional_class": user_info["user_class"],
+                    "gender": Member.Gender.MAN
+                    if user_info["user_sex"] == "男"
+                    else Member.Gender.WOMAN,
+                    "identity": Member.Identity.STUDENT,
+                    "college": user_info["user_college"],
+                }
+                if request.is_wechat():
+                    kwargs["username"] = "{}X".format(user_info["user_name"])
+                    kwargs["openid"] = request.user.openid
+
+                for attr_name, attr_value in kwargs.items():
+                    setattr(user, attr_name, attr_value)
+
+                user.save()
+                data = {
+                    "result": True,
+                    "message": message,
+                    "code": 201,
+                    "data": {},
                 }
                 return JsonResponse(data)
             else:
-                data = {
-                    'result': result,
-                    'message': message,
-                    'data': []
-                }
+                data = {"result": False, "message": message, "data": []}
                 return JsonResponse(data)
         except Exception as e:
-            data = {
-                'result': False,
-                'message': e,
-                'code': 500,  # 后端出错
-                'data': []
-            }
+            data = {"result": False, "message": e, "code": 500, "data": []}  # 后端出错
             return JsonResponse(data)
