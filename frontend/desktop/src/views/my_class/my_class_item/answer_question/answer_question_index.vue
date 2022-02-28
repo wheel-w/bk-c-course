@@ -2,7 +2,7 @@
     <div class="wrapper">
         我是答题首页（展示当前课程所有的试题）
         <bk-button theme="primary" @click="startAnswer.primary.visible = true">
-            开始答题！
+            开始答题
         </bk-button>
         <bk-dialog v-model="startAnswer.primary.visible" :confirm-fn="toDetail"
             theme="primary"
@@ -12,7 +12,7 @@
             是否确认开始答题？
         </bk-dialog>
         <bk-button theme="primary" @click="viewQrCode.primary.visible = true">
-            查看答题二维码
+            点击查看答题二维码
         </bk-button>
         <bk-dialog v-model="viewQrCode.primary.visible"
             theme="primary"

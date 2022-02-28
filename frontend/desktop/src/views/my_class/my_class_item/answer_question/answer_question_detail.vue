@@ -244,7 +244,6 @@
                 })
                 console.log('answer_info', this.answer_info)
                 this.$http.post('course/save_answer/', { paper_id: this.paper_id, answer_info: this.answer_info, save_or_submit: 0 }).then(res => {
-
                 })
             },
             toAnswerQuestionIndex () {
