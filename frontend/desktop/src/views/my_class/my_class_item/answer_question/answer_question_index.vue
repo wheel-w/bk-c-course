@@ -15,13 +15,12 @@
 </template>
 
 <script>
-    import { bkButton, bkDialog, bkTag } from 'bk-magic-vue'
+    import { bkButton, bkDialog } from 'bk-magic-vue'
     export default {
         name: 'answer_question_index',
         components: {
             bkButton,
-            bkDialog,
-            bkTag
+            bkDialog
         },
         data () {
             return {
