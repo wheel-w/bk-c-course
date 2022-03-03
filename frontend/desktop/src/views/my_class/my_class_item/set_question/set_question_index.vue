@@ -23,7 +23,7 @@
                     v-for="(panel, index) in panels"
                     v-bind="panel"
                     :key="index"
-                    style="height:400px;">
+                    style="height:400px;padding-left:;">
                     <keep-alive :key="componentKey2">
                         <component :is="active" :chapterid="curChapterId" @createQuestion="createQuestion" @importQuestionExcel="getQuestionList()"></component>
                     </keep-alive>
@@ -432,32 +432,32 @@
     }
 </script>
 <style lang="postcss" scoped>
-.create_question {
-    height: 560px;
-    width: 100%;
-    overflow: scroll;
-}
-.create_question::-webkit-scrollbar {
-    display: none;
-}
-.create_question::-webkit-scrollbar {
-  /*滚动条整体样式*/
-  width : 5px;  /*高宽分别对应横竖滚动条的尺寸*/
-  height: 1px;
-  }
-.create_question::-webkit-scrollbar-thumb {
-/*滚动条里面小方块*/
-border-radius: 10px;
-box-shadow   : inset 0 0 5px rgb(255, 255, 255);
-background   : #868686;
-}
-.create_question::-webkit-scrollbar-track {
-/*滚动条里面轨道*/
-box-shadow   : inset 0 0 5px rgba(0, 0, 0, 0.2);
-border-radius: 10px;
-background   : #ededed;
-}
-.questions {
-    margin-bottom: 20px;
-}
+    .create_question {
+        height: 100%;
+        width: 100%;
+        overflow: scroll;
+    }
+    .create_question::-webkit-scrollbar {
+        display: none;
+    }
+    .create_question::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width : 5px;  /*高宽分别对应横竖滚动条的尺寸*/
+    height: 1px;
+    }
+    .create_question::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 10px;
+    box-shadow   : inset 0 0 5px rgb(255, 255, 255);
+    background   : #868686;
+    }
+    .create_question::-webkit-scrollbar-track {
+    /*滚动条里面轨道*/
+    box-shadow   : inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    background   : #ededed;
+    }
+    .questions {
+        margin-bottom: 20px;
+    }
 </style>
