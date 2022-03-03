@@ -21,6 +21,8 @@
                 </bk-button>
             </div>
             <div class="header-right">
+                <bk-button v-if="$store.state.user.identity === 'TEACHER'" @click="$store.state.user.identity = 'STUDENT'">切换为学生</bk-button>
+                <bk-button v-else @click="$store.state.user.identity = 'TEACHER'">切换为老师</bk-button>
                 <bk-search-select placeholder="请输入要查询的习题名称" style="width: 200px" v-model="searchText"
                     @key-enter="toSearch"
                     @search="toSearch">
@@ -37,28 +39,44 @@
                 <bk-table-column type="index" label="序号" width="100"></bk-table-column>
                 <bk-table-column label="习题名称" width="200">
                     <template slot-scope="props">
-                        <bk-button v-if="new Date().getTime() < Date.parse(props.row.start_time)" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
-                        <bk-button v-else-if="new Date().getTime() > Date.parse(props.row.end_time) || props.row.status === '已完成'" theme="primary" text @click="toAnalyze(props.row.id, true)">{{ props.row.paper_name }}</bk-button>
-                        <bk-button v-else theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>
+                        <div v-if="$store.state.user.identity === 'STUDENT'">
+                            <bk-button v-if="new Date().getTime() < Date.parse(props.row.start_time)" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-if="new Date().getTime() >= Date.parse(props.row.start_time) && new Date().getTime() <= Date.parse(props.row.end_time)" theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-if="new Date().getTime() > Date.parse(props.row.end_time) && props.row.status !== 'MARKED'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-if="props.row.status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)">{{ props.row.paper_name }}</bk-button>
+                        </div>
+                        <div v-if="$store.state.user.identity === 'TEACHER'">
+                            <bk-button text>{{ props.row.paper_name }}</bk-button>
+                        </div>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="开始时间" prop="start_time" width="200"></bk-table-column>
                 <bk-table-column label="截止时间" prop="end_time" width="200"></bk-table-column>
                 <bk-table-column label="我的分数" prop="score" width="150">
                     <template slot-scope="props">
-                        {{ props.row.status === 'MARKED' ? props.row.score : '----' }}
+                        {{ props.row.status === 'MARKED' ? props.row.score : '———' }}
                     </template>
                 </bk-table-column>
                 <bk-table-column label="习题状态" width="200">
                     <template slot-scope="props">
-                        <bk-tag :theme="props.row.status === 'MARKED' ? 'info' : 'danger'" radius="10px" type="filled">{{ props.row.status === 'MARKED' ? '已完成' : '未完成' }}</bk-tag>
+                        <bk-tag v-if="new Date().getTime() < Date.parse(props.row.start_time)" theme="danger" radius="10px" type="filled">未开始</bk-tag>
+                        <bk-tag v-if="new Date().getTime() >= Date.parse(props.row.start_time) && new Date().getTime() <= Date.parse(props.row.end_time)" theme="success" radius="10px" type="filled">进行中</bk-tag>
+                        <bk-tag v-if="new Date().getTime() > Date.parse(props.row.end_time) && props.row.status !== 'MARKED'" theme="warning" radius="10px" type="filled">待批改</bk-tag>
+                        <bk-tag v-if="props.row.status === 'MARKED'" theme="info" radius="10px" type="filled">已完成</bk-tag>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="操作">
                     <template slot-scope="props">
-                        <bk-button v-if="new Date().getTime() < Date.parse(props.row.begin_time)" theme="primary" text disabled>暂未开始</bk-button>
-                        <bk-button v-else-if="new Date().getTime() > Date.parse(props.row.end_time) || props.row.status === '已完成'" theme="primary" text @click="toAnalyze(props.row.id, true)">查看解析</bk-button>
-                        <bk-button v-else theme="primary" text @click="toAnswer(props.row.id, false)">开始答题</bk-button>
+                        <div v-if="$store.state.user.identity === 'STUDENT'">
+                            <bk-button v-if="new Date().getTime() < Date.parse(props.row.start_time)" theme="primary" text disabled>暂未开始</bk-button>
+                            <bk-button v-if="new Date().getTime() >= Date.parse(props.row.start_time) && new Date().getTime() <= Date.parse(props.row.end_time)" theme="primary" text @click="toAnswer(props.row.id, false)">开始答题</bk-button>
+                            <bk-button v-if="new Date().getTime() > Date.parse(props.row.end_time) && props.row.status !== 'MARKED'" theme="primary" text disabled>待批改</bk-button>
+                            <bk-button v-if="props.row.status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)">查看解析</bk-button>
+                        </div>
+                        <div v-if="$store.state.user.identity === 'TEACHER'">
+                            <bk-button v-if="new Date().getTime() > Date.parse(props.row.end_time)" theme="primary" text @click="toCorrect">批改试卷</bk-button>
+                            <bk-button v-else theme="primary" text disabled>暂无试卷</bk-button>
+                        </div>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -111,9 +129,13 @@
                         }
                     ]
                 },
+                // 搜索语句
                 searchText: '',
+                // 总习题列表
                 exerciseList: [],
+                // 当前页习题列表
                 currentExerciseList: [],
+                // 分页器配置项
                 pagination: {
                     current: 1,
                     count: 0,
@@ -128,8 +150,6 @@
                 this.getExerciseList()
             },
             'type.typeValue' (newValue) {
-                const date = new Date().getTime()
-                console.log(date)
                 console.log(newValue)
             },
             'chapter.chapterValue' (newValue) {
@@ -137,27 +157,40 @@
             }
         },
         mounted () {
+            console.log(this.$store.state.user)
             this.getExerciseList()
         },
         methods: {
-            // 监听答题事件
+            // 跳转答题页面
             toAnswer (id, isAccomplish) {
                 this.$router.push({
                     name: 'answer_question_detail',
                     query: {
+                        plan: 'private',
                         id,
-                        isAccomplish,
-                        plan: 'private'
+                        isAccomplish
                     }
+
                 })
             },
-            // 监听试卷分析事件
+            // 跳转试卷分析页面
             toAnalyze (id, isAccomplish) {
                 this.$router.push({
                     name: 'answer_question_detail',
                     query: {
+                        plan: 'private',
                         id,
                         isAccomplish
+                    }
+                })
+            },
+            // 跳转至试卷批改页面
+            toCorrect (id) {
+                this.$router.push({
+                    name: 'correct_paper',
+                    query: {
+                        plan: 'private',
+                        id
                     }
                 })
             },
@@ -195,12 +228,6 @@
                     this.pagination.count = this.exerciseList.length
                     this.updateCurrentExerciseList()
                 })
-                // this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: 3, flag: 0 } }).then(res => {
-                //     console.log(res)
-                // })
-                // this.$http.get('/course/check_students_score/', { params: { paper_id: 1 } }).then(res => {
-                //     console.log(res)
-                // })
             }
         }
     }
@@ -211,16 +238,15 @@
     margin-top: 20px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 .header-left {
-    width: 450px;
+    flex: 0.4;
     display: flex;
     align-items: center;
     justify-content: space-around;
 }
 .header-right {
-    margin-left: 40%;
-    width: 350px;
     display: flex;
     align-items: center;
     justify-content: space-around;

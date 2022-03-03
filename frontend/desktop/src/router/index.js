@@ -24,6 +24,7 @@ const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_
 const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
 const SetQuestionDetail = () => import('@/views/my_class/my_class_item/set_question/set_question_detail')
+const CorrectPaper = () => import('@/views/my_class/correct_paper')
 
 const routes = [
     {
@@ -53,6 +54,11 @@ const routes = [
                 name: 'my_class',
                 component: MyClass,
                 children: [
+                    {
+                        path: 'correct_paper',
+                        name: 'correct_paper',
+                        component: CorrectPaper
+                    },
                     {
                         path: 'my_join_class',
                         name: 'my_join_class',
