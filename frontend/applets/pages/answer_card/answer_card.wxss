@@ -24,7 +24,8 @@
   border-width: 2rpx;
   border-style: solid;
   border-radius: 42rpx;
-  background-color:green;
+  /* background-color:green; */
+  background-color:blue;
   color: #ffffff;
   margin: 25rpx;
   font-size: 28rpx;

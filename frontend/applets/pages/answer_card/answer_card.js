@@ -49,9 +49,23 @@ Page({
     let pages = getCurrentPages();
     let prevPage = pages[pages.length - 2];
     let questions = app.globalData.questions
+    let stu = app.globalData.stu
+    if(stu!=undefined){
+      if(stu[e.currentTarget.dataset.index]!=undefined){
+        prevPage.setData({
+          inputValue: stu[e.currentTarget.dataset.index].stu_answers,
+        })
+      }
+      else{
+        prevPage.setData({
+          inputValue: '',
+        })
+      }
+    }
     prevPage.setData({
       subject: questions[e.currentTarget.dataset.index],
-      current: e.currentTarget.dataset.index+1
+      current: e.currentTarget.dataset.index+1,
+      swi: e.currentTarget.dataset.index,
     })
     wx.navigateBack({
       delta: 1,

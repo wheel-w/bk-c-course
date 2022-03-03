@@ -1,11 +1,11 @@
 {
   "pages": [
-
     "pages/home/home",
+    "pages/register/register",
     "pages/answer_questions/answer_questions",
-    "pages/answer_card/answer_card",
+    "pages/answer_card/answer_card"
 
-    "pages/register/register"
+
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -13,21 +13,7 @@
     "navigationBarTitleText": "答题小程序",
     "navigationBarTextStyle": "black"
   },
-  "tabBar":{
-    "color": "black",
-    "selectedColor":"#1afa29",
-    "list":[{
-      "pagePath":"pages/home/home",
-      "text":"主页",
-      "iconPath": "icons/主页1.png",
-      "selectedIconPath": "icons/主页2.png"
-    },{
-      "pagePath":"pages/home/home",
-      "text":"扫描",
-      "iconPath": "icons/扫描.png",
-      "selectedIconPath": "icons/扫描2.png"
-    }]
-  },
+
 
   "style": "v2",
   "sitemapLocation": "sitemap.json",

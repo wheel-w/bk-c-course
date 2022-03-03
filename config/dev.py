@@ -49,9 +49,9 @@ DEBUG = True
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": APP_CODE,  # noqa
+        "NAME": "xautproject",  # noqa
         "USER": "root",
-        "PASSWORD": "",
+        "PASSWORD": "czj00.123",
         "HOST": "localhost",
         "PORT": "3306",
     },

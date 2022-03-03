@@ -1,85 +1,68 @@
+const app=getApp()
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-    scanCode:'扫码',
-
+    // scanCode:'扫码',
+    name:'',
     cardCur: 0,
     swiperList: [{
       id: 0,
       type: 'image',
-      src: "/images/bg.jpg"
+      src: "/images/landscape1.png"
       // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big84000.jpg'
     }, {
       id: 1,
       type: 'image',
-      src: "/images/bg.jpg"
+      src: "/images/landscape2.png"
         // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big84001.jpg',
     }, {
       id: 2,
       type: 'image',
-      src: "/images/bg.jpg"
+      src: "/images/landscape3.png"
       // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big39000.jpg'
     }, {
       id: 3,
       type: 'image',
-      src: "/images/bg.jpg"
+      src: "/images/landscape4.png"
       // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg'
-    }, {
-      id: 4,
-      type: 'image',
-      src: "/images/bg.jpg"
-      // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big25011.jpg'
-    }, {
-      id: 5,
-      type: 'image',
-      src: "/images/bg.jpg"
-      // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big21016.jpg'
-    }, {
-      id: 6,
-      type: 'image',
-      src: "/images/bg.jpg"
-      // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big99008.jpg'
+    // }, {
+    //   id: 4,
+    //   type: 'image',
+    //   src: "/images/bg.jpg"
+    //   // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big25011.jpg'
+    // }, {
+    //   id: 5,
+    //   type: 'image',
+    //   src: "/images/bg.jpg"
+    //   // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big21016.jpg'
+    // }, {
+    //   id: 6,
+    //   type: 'image',
+    //   src: "/images/bg.jpg"
+    //   // url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big99008.jpg'
+    // }],
     }],
   },
   onTabItemTap(item) {
-    // console.log(item.index)
-    // console.log(item.pagePath)
-    // console.log(item.text)
     if(item.index==1)
     this.scanCodeEvent()
   },
-  /**
-   * 生命周期函数--监听页面加载
-   */
   onLoad: function (options) {
     this.towerSwiper('swiperList');
+    this.setData({
+      name: wx.getStorageSync('name')
+    })
     // 初始化towerSwiper 传已有的数组名即可
   },
-  scanCodeEvent: function(){
-    var that = this;
+  scanCode() {
     wx.scanCode({
-      onlyFromCamera: false,// 只允许从相机扫码
-      success(res){
-        console.log(res.result)
-        console.log("扫码成功："+JSON.stringify(res))
-        wx.setStorageSync('url',res.result)
-        //获取二维码中的参数
-        //let result = JSON.parse(res.result)
-        //console.log(result)
+      success(res) {
+        app.globalData.paper_id = res.result
         wx.navigateTo({
           url: '/pages/answer_questions/answer_questions',
-        })
-        // 扫码成功后  在此处理接下来的逻辑
-        that.setData({
-          scanCode: res.result
         })
       }
     })
   },
-
   DotStyle(e) {
     this.setData({
       DotStyle: e.detail.value

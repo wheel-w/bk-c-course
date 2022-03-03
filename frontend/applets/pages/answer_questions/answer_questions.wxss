@@ -9,7 +9,7 @@
 
 .dis {
   width: 100%;
-  font-size: 30rpx;
+  font-size: 25rpx;
   color: #009FE5;
   box-sizing: border-box;
 }
@@ -35,13 +35,14 @@
 .radio{
   width: 95%;
   padding: 20rpx;
-
+  font-size: 20rpx;
 }
 
 .tit{
   padding: 20rpx;
   padding-bottom: 0rpx;
   padding-top: 0rpx;
+  font-size: 25rpx;
 }
 
 radio-group .wx-radio-input.wx-radio-input-checked{
@@ -49,7 +50,17 @@ radio-group .wx-radio-input.wx-radio-input-checked{
   background:#366fdb !important;
 }
 
+checkbox-group .wx-checkbox-input.wx-checkbox-input-checked{
+  border: 1rpx solid #366fdb !important;
+  background:#366fdb !important;
+}
+
+checkbox .wx-checkbox-input{
+  border-radius: 50%;/* 圆角 */
+}
+
 .input{
   width: 100%;
   padding: 20rpx;
 }
+
