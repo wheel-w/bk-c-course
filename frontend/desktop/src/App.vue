@@ -191,11 +191,9 @@
         }
     }
 </script>
-
 <style lang="postcss">
     @import './css/reset.css';
     @import './css/app.css';
-
     .monitor-navigation-header {
         -webkit-box-flex: 1;
         -ms-flex: 1;
@@ -337,7 +335,10 @@
         border-radius: 2px;
         border: 1px solid rgba(220,222,229,1);
         .main-content {
-            min-height: 600px;
+            height: 100%;
+            .wrapper {
+                height: 100%;
+            }
         }
     }
     .monitor-navigation-footer {
