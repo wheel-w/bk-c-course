@@ -10,7 +10,7 @@
                         :autosize="{ minRows: 2, maxRows: 2 }"
                         placeholder="请输入题目内容"
                         v-model="Question.question"
-                        style="width:84%;">
+                        style="width:100%;">
                     </bk-input>
                 </bk-form-item>
             </div>
@@ -85,7 +85,7 @@
                         placeholder="请输入答案解析内容"
                         v-model="Question.explain"
                         v-if="explainOpen"
-                        style="width:84%;display:block;margin-top:10px">
+                        style="width:100%;display:block;margin-top:10px">
                     </bk-input>
                 </bk-form-item>
             </div>
@@ -213,6 +213,7 @@
 </script>
 <style lang="postcss" scoped>
 .question {
+    width: 84%;
     height: 110px;
     padding-left: 1%;
     p {
@@ -221,28 +222,55 @@
 }
 .options {
     height: 140px;
-    margin-left: 1%;
+    width: 84%;
     margin-top: 10px;
+    padding-left: 1%;
     .optionAC {
-        width: 40%;
-        margin-right: 7%;
+        border-radius: 5px;
+        /* border-style: solid; */
+        /* width: 45%; */
+        margin-right: 10%;
         margin-bottom: 10px;
         display: inline-block;
+        label.bk-form-radio {
+            width: 100%;
+        }
+        .bk-form-radio {
+            .bk-form-text {
+                width: 90%;
+            }
+            .bk-radio-text {
+                width: 90%;
+            }
+        }
     }
     .optionBD {
-        width: 40%;
+        width: 45%;
         margin-bottom: 10px;
         display: inline-block;
+        label.bk-form-radio {
+            width: 100%;
+        }
+        .bk-form-radio {
+            .bk-form-text {
+                width: 90%;
+            }
+        }
     }
 }
 .rightAnswer {
     margin-left: 1%;
 }
 .analysis {
+    width: 84%;
     height: 125px;
     margin-left: 1%;
+    .upload {
+        float: right;
+    }
     .reset {
-        margin-left: 66.6%;
+        margin-left: 10px;
+        float: right;
     }
 }
 </style>

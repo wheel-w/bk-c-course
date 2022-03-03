@@ -23,7 +23,7 @@
                     v-for="(panel, index) in panels"
                     v-bind="panel"
                     :key="index"
-                    style="height:400px;">
+                    style="height:400px;padding-left:;">
                     <keep-alive :key="componentKey2">
                         <component :is="active" :chapterid="curChapterId" @createQuestion="createQuestion" @importQuestionExcel="getQuestionList()"></component>
                     </keep-alive>
