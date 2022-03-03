@@ -2,9 +2,10 @@
   "pages": [
     "pages/home/home",
     "pages/register/register",
-    "pages/errorOptions/errorOptions",
-    "pages/duoxuan/duoxuan",
-    "pages/danxuan/danxuan"
+    "pages/answer_questions/answer_questions",
+    "pages/answer_card/answer_card"
+
+
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -13,21 +14,7 @@
     "navigationBarTextStyle": "black"
   },
 
-  "tabBar":{
-    "color": "#8a8a8a",
-    "selectedColor":"#ffb965",
-    "list":[{
-      "pagePath":"pages/home/home",
-      "text":"答题",
-      "iconPath": "images/1.1.png",
-      "selectedIconPath": "images/1.2.png"
-    },{
-      "pagePath":"pages/errorOptions/errorOptions",
-      "text":"错题集",
-      "iconPath": "images/2.1.png",
-      "selectedIconPath": "images/2.2.png"
-    }]
-  },
+
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

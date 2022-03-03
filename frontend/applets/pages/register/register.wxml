@@ -1,25 +1,20 @@
-
-<view class='container'>
-  <image src='/images/bg.jpg' bindload="imageLoad" style="width:100%; height:{{images[index].height}}rpx"></image>
-  <!-- <view class="divLine"></view> -->
-
-<form bindsubmit="register">
-  <view>
-    <input placeholder='账号' name="account" bindinput="getName" />
-  </view>
-  <view>
-  <input  password='true' placeholder='密码' name="pwd" bindinput="getPassword"/>
-  </view>
-  <view class='button'>
-  <button class='buttoncolor' form-type='submit' style="background:#0164a6">注册</button>
-  </view>
-  <view class='title'>
-    <text>请用您学分制主页的账号密码进行认证，认证后可进入答题系统，且以后无需再认证！</text>
-   
-  </view>
-</form>
+<view class="image_size">
+<!-- <image src='/images/id_logo.png' bindload="imageLoad" style="width:60%; height:{{images[index].height}}rpx "></image> -->
+  <image src='/images/id_logo.png' bindload="imageLoad" style="width:30%; height:200rpx "></image>
+<!-- <image src='/images/demo1.png' bindload="imageLoad" style="width:40%; height:250rpx "></image> -->
 </view>
-
-
+<view class="center">
+  <text class="text-black text-bold">校园身份验证</text>
+</view>
+<view class='title'>
+  <text>请用您学分制主页的账号密码进行认证！</text>
+</view>
+<view class="input_out_type">
+  <input class="input_type" placeholder='输入学号' name="account" bindinput="getName"/>
+  <input class="input_type" password='true' placeholder='输入密码' name="pwd" bindinput="getPassword"/>
+</view>
+<view class="button_center">
+  <button class="cu-btn round bg-blue" role="button" aria-disabled='false' style="width:65%; height:75rpx" bindtap="register">开始认证</button>
+</view>
 
 
