@@ -16,6 +16,7 @@ from .models import (
     Question,
     StudentAnswer,
     StudentPaperContact,
+    UserCourseContact,
 )
 from .views import is_teacher
 
@@ -941,7 +942,8 @@ def get_student_answer_info(request):
             'student_id': student_id,
             'name': all_student_info[student_id].name,
             'class_number': all_student_info[student_id].class_number,
-            'class': all_student_info[student_id].professional_class
+            'class': all_student_info[student_id].professional_class,
+            'status': answer_student_info[student_id].status,
         } for student_id in submitted]
         return_data['not_submitted'] = [{
             'student_id': student_id,

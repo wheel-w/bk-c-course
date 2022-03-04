@@ -188,11 +188,13 @@ class StudentPaperContact(models.Model):
         NOT_ANSWER = 'NOT_ANSWER'
         SAVED = 'SAVED'
         SUBMITTED = 'SUBMITTED'
+        MARKED = 'MARKED'
 
     STATUS = [
         (Status.NOT_ANSWER, '未答题'),
         (Status.SAVED, '已保存'),
-        (Status.SUBMITTED, '已提交')
+        (Status.SUBMITTED, '已提交'),
+        (Status.MARKED, '已批改')
     ]
 
     course_id = models.IntegerField('课程id')
