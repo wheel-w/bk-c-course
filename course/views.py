@@ -713,3 +713,19 @@ def verify_school_user(request):
         except Exception as e:
             data = {"result": False, "message": e, "code": 500, "data": []}  # 后端出错
             return JsonResponse(data)
+
+
+# 下载出题模板
+def download_set_question_excel_template_url(request):
+    host_path = request.get_host()
+    url = "{}/course/download_set_question_excel_template/".format(host_path)
+    return JsonResponse(
+        {
+            "result": True,
+            "message": "跳转成功",
+            "url": url,
+            "code": 200,
+            "data": [],
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )
