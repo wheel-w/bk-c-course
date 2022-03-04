@@ -16,6 +16,7 @@ from .models import (
     Question,
     StudentAnswer,
     StudentPaperContact,
+    UserCourseContact,
 )
 from .views import is_teacher
 
@@ -151,8 +152,14 @@ def paper(request):
             }
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
-                for SPContact in StudentPaperContact.objects.filter(student_id=request.user.id):
-                    paper_info[SPContact.paper_id]['student_status'] = SPContact.status
+                SPContacts = {spc.paper_id: spc for spc in StudentPaperContact.objects.filter(student_id=request.user.id)}
+                for paper_id, paper in paper_info.items():
+                    paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
+                        status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
+
+                    if paper['status'] == Paper.Status.MARKED:
+                        paper_info[paper_id]['score'] = SPContacts[paper_id]. \
+                            score if paper_id in SPContacts.keys() else 0
             # 如果是老师请求，而且卷子截至时间已经过期
             for paper_id, paper in paper_info.items():
                 if (paper['status'] == Paper.Status.MARKED) or (
@@ -881,6 +888,7 @@ def teacher_correct_paper(request):
                 id=student_paper_contact_id
             )
             student_paper_score.score = total_score
+            student_paper_score.status = StudentPaperContact.Status.MARKED
             student_paper_score.save()
             return JsonResponse(
                 {"result": True, "message": "卷子批改成功", "code": 200, "data": []}
@@ -941,7 +949,8 @@ def get_student_answer_info(request):
             'student_id': student_id,
             'name': all_student_info[student_id].name,
             'class_number': all_student_info[student_id].class_number,
-            'class': all_student_info[student_id].professional_class
+            'class': all_student_info[student_id].professional_class,
+            'status': answer_student_info[student_id].status,
         } for student_id in submitted]
         return_data['not_submitted'] = [{
             'student_id': student_id,
