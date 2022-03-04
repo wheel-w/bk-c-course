@@ -1,3 +1,4 @@
+const app=getApp()
 Page({
   data: {
     name: '',
@@ -22,26 +23,39 @@ Page({
           images:image
      })
     },
-
+    //获取用户名
+  getName(event) {
+    this.setData({
+      name: event.detail.value
+    })
+  },
+    // 获取密码
+  getPassword(event) {
+    this.setData({
+      password: event.detail.value
+    })
+  },
   //注册
   register() {
-    var that=this;
+    // console.log(this.data.name)
     let name = this.data.name
+    var url = app.globalData.url+'config-query/course/authenticate'
     let password = this.data.password
     var header;
     header = {
-      'content-type':'application/x-www-form-urlencoded',
-      'cookie':wx.getStorageSync("states")
+      'content-type': 'application/json', // 默认值
+      'state':wx.getStorageSync("states")
     }
     wx.request({
-      url: 'http://dev.paas-edu.bktencent.com:8000/weixin/authenticate',
+      // url: 'https://paas-edu.bktencent.com/t/config-query/course/authenticate',
+      url: url,
       method:'POST',
       data: {
-        name: name,
-        password: password
+        'username': name,
+        'password': password
       },
       header: header,
-      //加载中代码，未测试
+      // 加载中代码，未测试
       // if(header){
       //   wx.showLoading({
       //     title: '加载中',
@@ -52,6 +66,7 @@ Page({
       //   }, 2000)
       // },
       success(res) {
+        // console.log('成功')
       if(res.data.result){
         wx.showToast({
           title: res.data.message,
@@ -59,7 +74,7 @@ Page({
           duration:2000, 
           success:function(){ 
               setTimeout(function () { 
-                wx.switchTab({ 
+                wx.navigateTo({ 
                       url: '../home/home'
                    }) 
                }, 2000) 

@@ -1,51 +1,46 @@
-
-.container{
-  padding: 0rpx;
-  width: 100%;
-  margin: 0%;
+ .button_center{
+  display:flex;      
+  justify-content: center; 
+ }
+.title{
+  text-align: center;
+  margin-bottom: 40rpx;
 }
-form{
-  width: 310px;
-  height: 240px;
-  line-height: 0px;
-  margin-top: 30px;
-  margin-bottom: 0px;
-  }
-
-  input{
-  border-bottom: 1px solid #ccc;
-  width: 310px;
-  height: 40px;
-  }
-  
-  .button{
-  margin-top: 20px;
-  margin-bottom: 40px;
-  }
-  
-  .title text{
-  font-size: 10px;
+ .title text{
+  font-size: 20rpx;
   color: #666;
   line-height: 30rpx;
-  }
-  
-  form text{
-  font-size: 20px;
-  color: #666;
+
   }
 
+ .center{
+  text-align: center;
+  font-size: 35rpx;
+  margin-bottom: 10rpx;
+  letter-spacing:5rpx;
+}
+
+.image_size{
+  display:flex;                 
+  justify-content: center; 
+  margin-bottom: 20rpx;
+  margin-top: 40rpx;
+}
+
+ .input_type{
+  height: 90rpx; 
+  border: 1rpx solid rgba(233, 231, 231, 0.932);
+  /* background: #ffffff46; */
+  background: rgb(224, 223, 223);
+  border-radius: 50rpx;
+  text-align: center;
+  margin: 20rpx;
+ }
+ .input_out_type{
+   text-align: center;
+   width: 70%;
+   margin-right: 15%;
+   margin-left: 15%;
+   margin-bottom: 80rpx;
+ }
  
- .bg{
-   width: 100%;
-   position: absolute;
-   height: 80%;
- }
-
- .buttoncolor{
-   color:white;
-   margin-top:20px;
-   margin-left: 5px;
-   height: 40px;
-   width: 80%;
-   align-items: center;
- }

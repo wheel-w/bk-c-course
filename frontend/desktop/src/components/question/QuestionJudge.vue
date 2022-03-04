@@ -7,21 +7,22 @@
                     <bk-input
                         type="textarea"
                         :autosize="{ minRows: 2, maxRows: 2 }"
+                        :readonly="readonly"
                         placeholder="请输入题目内容"
                         v-model="Question.question"
                         style="width:84%;">
                     </bk-input>
                 </bk-form-item>
             </div>
-            <div class="options">
+            <div class="options" v-if="!readonly">
                 <bk-form-item :required="true" :rules="rules.answer" :property="'answer'" error-display-type="normal">
                     <bk-radio-group v-model="Question.answer">
-                        <div class="option" @click="chooseT">
+                        <div class="option" @click="choose('true')">
                             <bk-radio name="T" value="true" style="margin-top: 38px;margin-left:10px;">
                                 T
                             </bk-radio>
                         </div>
-                        <div class="option" @click="chooseF">
+                        <div class="option" @click="choose('false')">
                             <bk-radio name="F" value="false" style="margin-top: 38px;margin-left:10px;">
                                 F
                             </bk-radio>
@@ -41,12 +42,13 @@
                     off-text="解析"
                     @change="handleSwitcherChange">
                 </bk-switcher>
-                <bk-button class="reset" theme="primary" @click="reset">重置</bk-button>
-                <bk-button class="upload" theme="primary" @click="checkData">上传</bk-button>
+                <bk-button v-if="!readonly" class="reset" theme="primary" @click="reset">重置</bk-button>
+                <bk-button v-if="!readonly" class="upload" theme="primary" @click="checkData">上传</bk-button>
                 <bk-form-item :required="true" :rules="rules.explain" :property="'explain'" v-if="explainOpen" error-display-type="normal">
                     <bk-input
                         type="textarea"
                         :autosize="{ minRows: 2, maxRows: 2 }"
+                        :readonly="readonly"
                         placeholder="请输入答案解析内容"
                         v-model="Question.explain"
                         v-if="explainOpen"
@@ -71,6 +73,10 @@
                 }
             },
             editable: {
+                type: Boolean,
+                default: false
+            },
+            readonly: {
                 type: Boolean,
                 default: false
             }
@@ -117,22 +123,17 @@
             }
         },
         created () {
-            if (this.editable) {
-                if (this.Question.explain) {
-                    this.explainOpen = true
-                }
+            if (this.Question.explain) {
+                this.explainOpen = true
             }
         },
         methods: {
-            chooseT () {
-                this.Question.answer = 'true'
-            },
-            chooseF () {
-                this.Question.answer = 'false'
+            choose (option) {
+                this.Question.answer = option
             },
             handleSwitcherChange (status) {
-                if (!status) {
-                    this.Question.analysis = null
+                if (!status && !this.readonly) {
+                    this.Question.explain = null
                 }
             },
             checkData () {

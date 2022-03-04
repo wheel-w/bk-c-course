@@ -1,0 +1,24 @@
+.wrapper1 {
+    height: 600px;
+
+    .wrapper-body {
+      height: 75%;
+      .bk-table {
+        max-height: 86%;
+        overflow-y: auto;
+      }
+    }
+}
+.wrapper-head1 {
+  display: flex;
+  justify-content: end;
+}
+.dialog-body {
+    display: flex;
+    justify-content: center;
+}
+.excel-dialog-body {
+  text-align: center;
+  height: 100px;
+  overflow: hidden;
+}
