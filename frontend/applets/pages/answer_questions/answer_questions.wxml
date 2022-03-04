@@ -1,0 +1,133 @@
+<view class="content">
+  <block wx:key="idx" wx:for-item="item" wx:for-index="{{idx}}">
+    <view class="dis">
+    <view class="flex solid-bottom padding justify-between">
+      <view class="cuIcon-time lg">{{hours}}:{{minute}}:{{second}}</view>
+      <view class="cuIcon-form lg'"bindtap='card'>答题卡</view>
+    </view>
+  </view>
+      <view class="dis">
+        <!-- <view class='cuIcon-time lg '>{{item.countDown}}</view> -->
+        <view class="cal">第{{current}}/{{total}}题</view>
+      </view>
+  </block>
+</view>
+<view class="line"></view>
+<view class="tit">
+<view class="padding-xl radius shadow-warp bg-white margin-top">{{current}}.{{subject.question}}</view> 
+</view>
+<!-- 单选 -->
+<view wx:if="{{subject.types == 'SINGLE'}}">
+  <radio-group bindchange="Click" class="radio">
+    <!-- <radio style="transform: scale(0.6)" value="{{item.code}}"checked="{{item.selected}}"/> -->
+    <view class="padding-xl radius shadow-warp bg-white margin-top">
+      <radio style="transform: scale(0.6)" value="A"checked="{{subject.A}}"/>
+    <text>A:{{subject.option_A}}</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+    <radio style="transform: scale(0.6)" value="B"checked="{{subject.B}}"/>
+    <text>B:{{subject.option_B}}</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+    <radio style="transform: scale(0.6)" value="C"checked="{{subject.C}}"/>
+    <text>C:{{subject.option_C}}</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+    <radio style="transform: scale(0.6)" value="D"checked="{{subject.D}}"/>
+    <text>D:{{subject.option_D}}</text>
+  </view>
+</radio-group>
+<view class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="pre" size="mini">上一题</button>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="next" size="mini">下一题</button>
+</view>
+<button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="save">保存</button>
+</view>
+<!-- 多选 -->
+<view wx:if="{{subject.types == 'MULTIPLE'}}">
+  <checkbox-group bindchange="moreClick" class="radio">
+  <!-- <view wx:for="{{multiple_options}}" class="padding-xl radius shadow-warp bg-white margin-top"> -->
+    <view class="padding-xl radius shadow-warp bg-white margin-top">
+      <checkbox style="transform: scale(0.6)" value="A"checked="{{subject.A}}"/>
+    <text>A:{{subject.option_A}}</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+      <checkbox style="transform: scale(0.6)" value="B"checked="{{subject.B}}"/>
+    <text>B:{{subject.option_B}}</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+      <checkbox style="transform: scale(0.6)" value="C"checked="{{subject.C}}"/>
+    <text>C:{{subject.option_C}}</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+      <checkbox style="transform: scale(0.6)" value="D"checked="{{subject.D}}"/>
+    <text>D:{{subject.option_D}}</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+      <checkbox style="transform: scale(0.6)" value="E"checked="{{subject.E}}"/>
+    <text>E:{{subject.option_E}}</text>
+  </view>
+    <!-- <checkbox style="transform: scale(0.6)" value="{{item.code}}"checked="{{item.selected}}"/>
+    <text>{{item.code}}:{{item.option}}</text> -->
+  <!-- </view> -->
+</checkbox-group>
+<view class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="pre" size="mini">上一题</button>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="next" size="mini">下一题</button>
+</view>
+<button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="save">保存</button>
+</view>
+<!-- 判断 -->
+<view wx:if="{{subject.types == 'JUDGE'}}">
+  <radio-group bindchange="judgeClick" class="radio">
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+    <radio style="transform: scale(0.6)" value="正确"checked="{{subject.A}}"/>
+    <text>A:正确</text>
+  </view>
+  <view class="padding-xl radius shadow-warp bg-white margin-top">
+    <radio style="transform: scale(0.6)" value="错误"checked="{{subject.B}}"/>
+    <text>B:错误</text>
+  </view>
+</radio-group>
+<view class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="pre" size="mini">上一题</button>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="next" size="mini">下一题</button>
+</view>
+<button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="save">保存</button>
+</view>
+<!-- 填空 -->
+<view wx:if="{{subject.types == 'COMPLETION'}}" class="input">
+<form bindreset="clean">
+<view class="cu-form-group margin-top">
+		<textarea maxlength="-1" disabled="{{modalName!=null}}" bindinput="Write" placeholder="请输入你的答案" value='{{inputValue}}'></textarea>
+  </view>
+  <view class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="preclearInputEvent" size="mini">上一题</button>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="nextclearInputEvent" size="mini">下一题</button>
+</view>
+<button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="save" formType="reset">保存</button>
+</form>
+</view>
+<!-- 简答题 -->
+<view wx:if="{{subject.types == 'SHORT_ANSWER'}}" class="input">
+<form bindreset="clean">
+  <view class="cu-form-group margin-top">
+    <textarea maxlength="-1" disabled="{{modalName!=null}}" bindinput="Write" placeholder="请输入你的答案" value='{{inputValue}}'></textarea>
+  </view>
+  <view class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="preclearInputEvent" size="mini">上一题</button>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="nextclearInputEvent" size="mini">下一题</button>
+
+</view>
+<button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="save" formType="reset">保存</button>
+</form>
+</view>
+<!-- 提交 -->
+<view wx:if="{{can_submit==false}}" class='btn_root'>
+<!-- <button class="cu-btn round line-blue margin-tb-sm lg" disabled>不可提交</button> -->
+<button class="cubtn round bg-gray" disabled>不可提交</button>
+</view>
+<view wx:if="{{can_submit==true}}" class='btn_root'>
+  <button class='cubtn round bg-blue' role="button" aria-disabled="false" bindtap="submit">提交</button>
+</view>
+

@@ -97,10 +97,18 @@
                             group: true
                         },
                         {
-                            id: 'my_join_class',
-                            name: '课程管理',
+                            id: 'mycourse',
+                            name: '我的课程',
                             icon: 'icon-tree-module-shape',
-                            pathName: 'my_join_class',
+                            pathName: 'my_course',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'classnumber',
+                            name: '成员管理',
+                            icon: 'icon-tree-module-shape',
+                            pathName: 'course_number',
                             children: [],
                             group: true
                         },
@@ -191,11 +199,9 @@
         }
     }
 </script>
-
 <style lang="postcss">
     @import './css/reset.css';
     @import './css/app.css';
-
     .monitor-navigation-header {
         -webkit-box-flex: 1;
         -ms-flex: 1;
@@ -337,7 +343,10 @@
         border-radius: 2px;
         border: 1px solid rgba(220,222,229,1);
         .main-content {
-            min-height: 600px;
+            height: 100%;
+            .wrapper {
+                height: 100%;
+            }
         }
     }
     .monitor-navigation-footer {

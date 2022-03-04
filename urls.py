@@ -15,7 +15,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
-    url(r"^admin/", admin.site.urls),
+    url(r"^django_admin/", admin.site.urls),
     url(r"^course/", include("course.urls")),
     url(r"^account/", include("blueapps.account.urls")),
     # 如果你习惯使用 Django 模板，请在 home_application 里开发你的应用，

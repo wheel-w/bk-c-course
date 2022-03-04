@@ -1,3 +1,17 @@
-button{
-  margin: 30rpx;
+.tower-swiper .tower-item {
+  transform: scale(calc(0.5 + var(--index) / 10));
+  margin-left: calc(var(--left) * 100rpx - 150rpx);
+  z-index: var(--index);
+}
+.center{
+  text-align: center;
+  font-size: 35rpx;
+  margin-bottom: 10rpx;
+}
+.dis {
+  height: 70rpx;
+  width: 100%;
+  font-size: 25rpx;
+  /* color: #009FE5; */
+  box-sizing: border-box;
 }

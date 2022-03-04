@@ -4,8 +4,8 @@ from django.db import models
 from django_mysql.models import JSONField
 
 # member属性列表
-MEMBER_ATTR_LIST = ["id", "username", "class_number", "name", "college", "professional_class", "gender", "identity",
-                    "phone_number", "email_number", "qq_number", "wechat_number"]
+MEMBER_ATTR_LIST = ["id", "username", "class_number", "name", "college", "professional_class", "classroom", "gender",
+                    "identity", "phone_number", "email_number", "qq_number", "wechat_number"]
 
 
 # Create your models here.
@@ -66,7 +66,8 @@ class Member(models.Model):
     class_number = models.CharField("学号/工号", max_length=30, unique=True, blank=True, null=True)
     name = models.CharField("姓名", max_length=30, blank=True, null=True)
     college = models.CharField("学院", max_length=40, blank=True, null=True)
-    professional_class = models.CharField("专业班级", max_length=30, blank=True, null=True)
+    professional_class = models.CharField("专业", max_length=30, blank=True, null=True)
+    classroom = models.CharField("班级", max_length=20, blank=True, null=True)
     gender = models.CharField(max_length=20, choices=GENDER, blank=True, null=True)
     identity = models.CharField(max_length=20, choices=IDENTITY, default=Identity.NOT_CERTIFIED)
     phone_number = models.CharField("手机号", max_length=30, blank=True, null=True)

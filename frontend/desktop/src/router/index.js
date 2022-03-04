@@ -17,13 +17,13 @@ const NotFound = () => import(/* webpackChunkName: 'none' */'@/views/404')
 const Welcome = () => import('@/views/welcome')
 const Home = () => import('@/views/home')
 const Person = () => import('@/views/person')
-const MyClass = () => import('@/views/my_class')
 const MyJoinClass = () => import('@/views/my_class/my_class_item/my_join_class')
 const MyJoinClassDetail = () => import('@/views/my_class/my_class_item/my_join_class_detail')
 const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
 const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
-const SetQuestionDetail = () => import('@/views/my_class/my_class_item/set_question/set_question_detail')
+const Mycourse = () => import('@/views/my_class/my_class_item/class_manage/my_course.vue')
+const Coursenumber = () => import('@/views/my_class/my_class_item/class_manage/course_number.vue')
 
 const routes = [
     {
@@ -49,41 +49,39 @@ const routes = [
                 component: Home
             },
             {
-                path: 'my_class',
-                name: 'my_class',
-                component: MyClass,
-                children: [
-                    {
-                        path: 'my_join_class',
-                        name: 'my_join_class',
-                        component: MyJoinClass
-                    },
-                    {
-                        path: 'my_join_class_detail',
-                        name: 'my_join_class_detail',
-                        component: MyJoinClassDetail
-                    },
-                    {
-                        path: 'answer_question_index',
-                        name: 'answer_question_index',
-                        component: AnswerQuestionIndex
-                    },
-                    {
-                        path: 'answer_question_detail',
-                        name: 'answer_question_detail',
-                        component: AnswerQuestionDetail
-                    },
-                    {
-                        path: 'set_question_index',
-                        name: 'set_question_index',
-                        component: SetQuestionIndex
-                    },
-                    {
-                        path: 'set_question_detail',
-                        name: 'set_question_detail',
-                        component: SetQuestionDetail
-                    }
-                ]
+                path: 'my_join_class',
+                name: 'my_join_class',
+                component: MyJoinClass
+            },
+            {
+                path: 'my_join_class_detail',
+                name: 'my_join_class_detail',
+                component: MyJoinClassDetail
+            },
+            {
+                path: 'my_course',
+                name: 'my_course',
+                component: Mycourse
+            },
+            {
+                path: 'course_number',
+                name: 'course_number',
+                component: Coursenumber
+            },
+            {
+                path: 'answer_question_index',
+                name: 'answer_question_index',
+                component: AnswerQuestionIndex
+            },
+            {
+                path: 'answer_question_detail',
+                name: 'answer_question_detail',
+                component: AnswerQuestionDetail
+            },
+            {
+                path: 'set_question_index',
+                name: 'set_question_index',
+                component: SetQuestionIndex
             }
         ]
     },
