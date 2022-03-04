@@ -151,11 +151,19 @@ def paper(request):
             }
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
-                for SPContact in StudentPaperContact.objects.filter(
-                    student_id=request.user.id
-                ):
-                    paper_info[SPContact.paper_id]["student_status"] = SPContact.status
-            [p.pop("question_order") for _, p in paper_info.items()]
+                for SPContact in StudentPaperContact.objects.filter(student_id=request.user.id):
+                    paper_info[SPContact.paper_id]['student_status'] = SPContact.status
+            # 如果是老师请求，而且卷子截至时间已经过期
+            for paper_id, paper in paper_info.items():
+                if (paper['status'] == Paper.Status.MARKED) or (
+                        paper['status'] == Paper.Status.RELEASE and paper['end_time'] > timezone.now()):
+                    # 获取那些学生没有答，那些学生答过(数量)
+                    total_students_num = len(UserCourseContact.objects.filter(course_id=paper['course_id']))
+                    submitted_students_num = len(
+                        StudentPaperContact.objects.filter(paper_id=paper_id, course_id=paper['course_id']))
+                    paper_info[paper_id]['total_students_num'] = total_students_num
+                    paper_info[paper_id]['submitted_students_num'] = submitted_students_num
+            [p.pop('question_order') for _, p in paper_info.items()]
 
         except Exception as e:
             logger.exception(e)
@@ -494,6 +502,7 @@ def manage_paper_question_contact(request):
         )
 
 
+
 @is_teacher
 def mark_or_check_paper(request):
     """
@@ -558,7 +567,8 @@ def mark_or_check_paper(request):
                 question["student_answer_id"] = student_answer[question_id][2]
                 questions_list.append(question)
             return_data[custom_types[int(title_id)]] = questions_list
-        return_data["total_score"] = SPContact.get().score if SPContact else 0
+        return_data['total_score'] = SPContact.get().score if SPContact else 0
+        return_data['StudentPaperContact_id'] = SPContact.get().id if SPContact else -1
 
         return JsonResponse(
             {"result": True, "code": 200, "message": "查询成功", "data": return_data}
@@ -896,27 +906,111 @@ def teacher_correct_paper(request):
         )
 
 
-def check_students_score(request):
+@is_teacher
+def get_student_answer_info(request):
     """
-    线上测试接口
+    功能: 看查这份卷子的那些学生作答了，那些没有作答
+    输入: paper_id
+    返回: 作答的学生信息列表，未作答的学生信息列表（学号 + 名字）
     """
-    if request.method == "GET":
-        paper_id = request.GET.get("paper_id")
+    if request.method == 'GET':
+        paper_id = request.GET.get('paper_id')
+        if not paper_id:
+            return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
 
         try:
-            student_score = StudentPaperContact.objects.filter(
-                paper_id=paper_id
-            ).values()
-            return JsonResponse(
-                {
-                    "result": True,
-                    "code": 200,
-                    "message": "查询成功",
-                    "data": list(student_score),
-                }
-            )
+            paper = Paper.objects.get(id=paper_id)
+            all_student_ids = [i.id for i in UserCourseContact.objects.filter(course_id=paper.course_id)]
+
+            all_student_info = {user.id: user for user in Member.objects.filter(id__in=all_student_ids)}
+            answer_student_info = {int(user_paper.student_id): user_paper for user_paper in StudentPaperContact.objects.filter(paper_id=paper.id, course_id=paper.course_id)}
         except DatabaseError as e:
             logger.exception(e)
-            return JsonResponse(
-                {"result": False, "code": 500, "message": "查询失败", "data": {}}
-            )
+            return JsonResponse({
+                'result': False,
+                'code': 500,
+                'message': '查询失败(请检查日志)',
+                'data': {}
+            })
+
+        # 构造数据
+        return_data = {'submitted': [], 'not_submitted': []}
+        submitted = all_student_info.keys() & answer_student_info.keys()
+        not_submitted = all_student_info.keys() - answer_student_info.keys()
+        return_data['submitted'] = [{
+            'student_id': student_id,
+            'name': all_student_info[student_id].name,
+            'class_number': all_student_info[student_id].class_number,
+            'class': all_student_info[student_id].professional_class
+        } for student_id in submitted]
+        return_data['not_submitted'] = [{
+            'student_id': student_id,
+            'name': all_student_info[student_id].name,
+            'class_number': all_student_info[student_id].class_number,
+            'class': all_student_info[student_id].professional_class
+        } for student_id in not_submitted]
+
+        return JsonResponse({
+            'result': True,
+            'message': '查询成功',
+            'code': 200,
+            'data': return_data,
+        })
+
+    else:
+        return JsonResponse(
+            {
+                'result': False,
+                'message': '请求方法错误',
+                'code': 400,
+                'data': [],
+            }
+        )
+
+
+@is_teacher
+def check_students_score(request):
+    """
+    功能: 老师根据卷子获得本张卷子的所有人的答题情况
+    输入: paper_id
+    返回: 卷子所属课程的成员的答题情况
+    """
+    if request.method == 'GET':
+        paper_id = request.GET.get('paper_id')
+        if not paper_id:
+            return JsonResponse({'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}})
+        try:
+            if Paper.objects.get(id=paper_id).status != Paper.Status.MARKED:
+                return JsonResponse({'result': False, 'code': 400, 'message': '卷子未批改完成', 'data': {}})
+            paper_course = Paper.objects.get(id=paper_id).course_id
+            student_ids = UserCourseContact.objects.filter(course_id=paper_course).values("user_id")
+            students = {student.id: (student.name, student.class_number) for student in
+                        Member.objects.filter(id__in=student_ids)}
+            student_score = {int(student.student_id): student.score for student in
+                             StudentPaperContact.objects.filter(paper_id=paper_id)}
+        except DatabaseError as e:
+            logger.exception(e)
+            return JsonResponse({'result': False, 'code': 500, 'message': '查询失败', 'data': {}})
+
+        return_data = []
+        for student_id, student_info in students.items():
+            if student_id in student_score.keys():
+                return_data.append({
+                    'student_id': student_id,
+                    'student_name': student_info[0],
+                    'student_class_number': student_info[1],
+                    'score': student_score[student_id]
+                })
+            else:
+                return_data.append({
+                    'student_id': student_id,
+                    'student_name': student_info[0],
+                    'student_class_number': student_info[1],
+                    'score': 0
+                })
+        return JsonResponse({
+            'result': True,
+            'message': '查询成功',
+            'code': 200,
+            'data': return_data,
+        })
