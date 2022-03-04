@@ -152,8 +152,14 @@ def paper(request):
             }
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
-                for SPContact in StudentPaperContact.objects.filter(student_id=request.user.id):
-                    paper_info[SPContact.paper_id]['student_status'] = SPContact.status
+                SPContacts = {spc.paper_id: spc for spc in StudentPaperContact.objects.filter(student_id=request.user.id)}
+                for paper_id, paper in paper_info.items():
+                    paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
+                        status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
+
+                    if paper['status'] == Paper.Status.MARKED:
+                        paper_info[paper_id]['score'] = SPContacts[paper_id]. \
+                            score if paper_id in SPContacts.keys() else 0
             # 如果是老师请求，而且卷子截至时间已经过期
             for paper_id, paper in paper_info.items():
                 if (paper['status'] == Paper.Status.MARKED) or (
