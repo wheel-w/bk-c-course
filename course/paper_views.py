@@ -22,10 +22,6 @@ from .views import is_teacher
 
 logger = logging.getLogger("root")
 
-"""
-1. 给卷子的时候没有区分老师与学生
-"""
-
 
 @is_teacher
 def question_title(request):
@@ -164,11 +160,10 @@ def paper(request):
                     if paper['status'] == Paper.Status.MARKED:
                         paper_info[paper_id]['score'] = SPContacts[paper_id]. \
                             score if paper_id in SPContacts.keys() else 0
-            # 如果是老师请求，而且卷子截至时间已经过期
+            # 如果是老师请求，而且卷子在答题之中或者未批改看查提交人数
             if identity == Member.Identity.TEACHER:
                 for paper_id, paper in paper_info.items():
-                    if (paper['status'] == Paper.Status.MARKED) or (
-                            paper['status'] == Paper.Status.RELEASE and paper['end_time'] > timezone.now()):
+                    if (paper['status'] == Paper.Status.MARKED) or (paper['status'] == Paper.Status.RELEASE):
                         # 获取那些学生没有答，那些学生答过(数量)
                         total_students_num = len(UserCourseContact.objects.filter(course_id=paper['course_id']))
                         submitted_students_num = len(
