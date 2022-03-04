@@ -22,6 +22,10 @@ from .views import is_teacher
 
 logger = logging.getLogger("root")
 
+"""
+1. 给卷子的时候没有区分老师与学生
+"""
+
 
 @is_teacher
 def question_title(request):
@@ -161,15 +165,16 @@ def paper(request):
                         paper_info[paper_id]['score'] = SPContacts[paper_id]. \
                             score if paper_id in SPContacts.keys() else 0
             # 如果是老师请求，而且卷子截至时间已经过期
-            for paper_id, paper in paper_info.items():
-                if (paper['status'] == Paper.Status.MARKED) or (
-                        paper['status'] == Paper.Status.RELEASE and paper['end_time'] > timezone.now()):
-                    # 获取那些学生没有答，那些学生答过(数量)
-                    total_students_num = len(UserCourseContact.objects.filter(course_id=paper['course_id']))
-                    submitted_students_num = len(
-                        StudentPaperContact.objects.filter(paper_id=paper_id, course_id=paper['course_id']))
-                    paper_info[paper_id]['total_students_num'] = total_students_num
-                    paper_info[paper_id]['submitted_students_num'] = submitted_students_num
+            if identity == Member.Identity.TEACHER:
+                for paper_id, paper in paper_info.items():
+                    if (paper['status'] == Paper.Status.MARKED) or (
+                            paper['status'] == Paper.Status.RELEASE and paper['end_time'] > timezone.now()):
+                        # 获取那些学生没有答，那些学生答过(数量)
+                        total_students_num = len(UserCourseContact.objects.filter(course_id=paper['course_id']))
+                        submitted_students_num = len(
+                            StudentPaperContact.objects.filter(paper_id=paper_id, course_id=paper['course_id']))
+                        paper_info[paper_id]['total_students_num'] = total_students_num
+                        paper_info[paper_id]['submitted_students_num'] = submitted_students_num
             [p.pop('question_order') for _, p in paper_info.items()]
 
         except Exception as e:
@@ -509,7 +514,6 @@ def manage_paper_question_contact(request):
         )
 
 
-
 @is_teacher
 def mark_or_check_paper(request):
     """
@@ -546,6 +550,7 @@ def mark_or_check_paper(request):
             student_answer = {}
             PQContact_ids = questions.keys()
             for sa in StudentAnswer.objects.filter(
+                student_id=student_id,
                 PQContact_id__in=PQContact_ids
             ).values():
                 student_answer[sa["PQContact_id"]] = (
