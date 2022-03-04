@@ -882,6 +882,7 @@ def teacher_correct_paper(request):
                 id=student_paper_contact_id
             )
             student_paper_score.score = total_score
+            student_paper_score.status = StudentPaperContact.Status.MARKED
             student_paper_score.save()
             return JsonResponse(
                 {"result": True, "message": "卷子批改成功", "code": 200, "data": []}
