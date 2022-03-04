@@ -537,6 +537,7 @@ def mark_or_check_paper(request):
                 questions_list.append(question)
             return_data[custom_types[int(title_id)]] = questions_list
         return_data['total_score'] = SPContact.get().score if SPContact else 0
+        return_data['StudentPaperContact_id'] = SPContact.get().id if SPContact else -1
 
         return JsonResponse({
             'result': True,
