@@ -872,8 +872,12 @@ def get_student_answer_info(request):
         return_data = {'submitted': [], 'not_submitted': []}
         submitted = all_student_info.keys() & answer_student_info.keys()
         not_submitted = all_student_info.keys() - answer_student_info.keys()
-        return_data['submitted'] = [{'name': all_student_info[id].name, 'class_number': all_student_info[id].class_number} for id in submitted]
-        return_data['not_submitted'] = [{'name': all_student_info[id].name, 'class_number': all_student_info[id].class_number} for id in not_submitted]
+        return_data['submitted'] = [
+            {'student_id': id, 'name': all_student_info[id].name, 'class_number': all_student_info[id].class_number} for
+            id in submitted]
+        return_data['not_submitted'] = [
+            {'student_id': id, 'name': all_student_info[id].name, 'class_number': all_student_info[id].class_number} for
+            id in not_submitted]
 
         return JsonResponse({
             'result': True,
