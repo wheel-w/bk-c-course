@@ -26,6 +26,7 @@ urlpatterns = (
         r"^download_set_question_excel_template/$",
         question_views.download_set_question_excel_template,
     ),  # 下载选择题模板
+    url(r"^download_set_question_excel_template_url/$", views.download_set_question_excel_template_url),
     url(r"^import_question_excel/$", question_views.import_question_excel),  # 导入问题
     url(r"^teacher_set_question/$", question_views.teacher_set_question),  # 出题的增删改
     url(r"^get_question_list/$", question_views.get_question_list),  # 返回课程的题目列表
@@ -39,4 +40,6 @@ urlpatterns = (
     url(r"^mark_or_check_paper/$", paper_views.mark_or_check_paper),
     url(r"^answer_or_check_paper/$", paper_views.answer_or_check_paper),
     url(r"^get_paper_status/$", paper_views.get_paper_status),
+    url(r"^download_student_excel_template_url/$", views.download_student_excel_template_url),  # 下载学生模板路由
+    url(r"^get_student_answer_info/$", paper_views.get_student_answer_info),
 )

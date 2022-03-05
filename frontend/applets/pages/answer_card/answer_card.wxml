@@ -1,0 +1,9 @@
+<view class="solid-bottom text-xl padding">
+  <view class="center">
+        <text class="text-black text-bold">答题卡</text>
+      </view>
+  </view>
+<view class="record-box">
+  <view  wx:key="this" wx:for="{{list}}" class="record{{item.done ? 'true': 'false' }}" catchtap="onClickCardItem" data-index="{{index}}">{{index + 1}}</view>
+</view>
+
