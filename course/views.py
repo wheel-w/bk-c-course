@@ -694,13 +694,12 @@ def verify_school_user(request):
 
                 # 如果是微信小程序端进行认证
                 if request.is_wechat():
-                    create_kwargs = {
-                        "username": "{}X".format(username),
-                        "openid": request.user.openid,
-                        "class_number": username
-                    }
-                    user, _ = Member.objects.get_or_create(**create_kwargs)
-
+                    user, _ = Member.objects.get_or_create(username="{}X".format(username))
+                    kwargs.update(
+                        {
+                            "openid": request.user.openid,
+                        }
+                    )
                 else:
                     user = Member.objects.get(username=request.user.username)
 
