@@ -929,6 +929,7 @@ def get_student_answer_info(request):
         try:
             paper = Paper.objects.get(id=paper_id)
             all_student_ids = [i.user_id for i in UserCourseContact.objects.filter(course_id=paper.course_id)]
+
             all_student_info = {user.id: user for user in Member.objects.filter(id__in=all_student_ids)}
             answer_student_info = {int(user_paper.student_id): user_paper for user_paper in StudentPaperContact.objects.filter(paper_id=paper.id, course_id=paper.course_id)}
         except DatabaseError as e:
