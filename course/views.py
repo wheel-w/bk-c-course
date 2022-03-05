@@ -681,7 +681,6 @@ def verify_school_user(request):
                 username=username, password=password
             )
             if result:
-                user, _ = Member.objects.get_or_create(class_number=username)
                 kwargs = {
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
@@ -692,9 +691,18 @@ def verify_school_user(request):
                     "identity": Member.Identity.STUDENT,
                     "college": user_info["user_college"],
                 }
+
+                # 如果是微信小程序端进行认证
                 if request.is_wechat():
-                    kwargs["username"] = "{}X".format(user_info["user_name"])
-                    kwargs["openid"] = request.user.openid
+                    create_kwargs = {
+                        "username": "{}X".format(username),
+                        "openid": request.user.openid,
+                        "class_number": username
+                    }
+                    user, _ = Member.objects.get_or_create(**create_kwargs)
+
+                else:
+                    user = Member.objects.get(username=request.user.username)
 
                 for attr_name, attr_value in kwargs.items():
                     setattr(user, attr_name, attr_value)
