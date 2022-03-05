@@ -183,6 +183,9 @@
             // 点击导航栏跳转对应页面
             handleSelect (id, item) {
                 this.nav.id = id
+                if (item.pathName === 'exit') {
+                    window.open('https://paas-edu.bktencent.com/login/?c_url=https%3A//paas-edu.bktencent.com/t/config-query/&app_code=config-query')
+                }
                 this.$router.push({
                     name: item.pathName
                 })

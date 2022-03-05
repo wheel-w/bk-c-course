@@ -17,12 +17,12 @@
             <div class="options" v-if="!readonly">
                 <bk-form-item :required="true" :rules="rules.answer" :property="'answer'" error-display-type="normal">
                     <bk-radio-group v-model="Question.answer">
-                        <div class="option" @click="choose('true')">
+                        <div :class="optionStyle('true')" @click="choose('true')" @mouseover="mouseOver = 'true'" @mouseleave="mouseOver = ''">
                             <bk-radio name="T" value="true" style="margin-top: 38px;margin-left:10px;">
                                 T
                             </bk-radio>
                         </div>
-                        <div class="option" @click="choose('false')">
+                        <div :class="optionStyle('false')" @click="choose('false')" @mouseover="mouseOver = 'false'" @mouseleave="mouseOver = ''">
                             <bk-radio name="F" value="false" style="margin-top: 38px;margin-left:10px;">
                                 F
                             </bk-radio>
@@ -52,7 +52,7 @@
                         placeholder="请输入答案解析内容"
                         v-model="Question.explain"
                         v-if="explainOpen"
-                        style="width:84%;display:block;margin-top:10px">
+                        style="width:100%;display:block;margin-top:10px">
                     </bk-input>
                 </bk-form-item>
             </div>
@@ -83,6 +83,7 @@
         },
         data () {
             return {
+                mouseOver: '',
                 config: {
                     message: null,
                     theme: 'error',
@@ -119,6 +120,19 @@
                             trigger: 'blur'
                         }
                     ]
+                }
+            }
+        },
+        computed: {
+            optionStyle () {
+                return (option) => {
+                    if (this.Question.answer === option) {
+                        return 'choosed-style'
+                    } else if (this.mouseOver === option) {
+                        return 'mouseover-style'
+                    } else {
+                        return 'option'
+                    }
                 }
             }
         },
@@ -165,6 +179,30 @@
     }
 </script>
 <style lang="postcss" scoped>
+.mouseover-style {
+    border-width: 2px;
+    border-radius: 5px;
+    border-color: #979BA5;
+    border-style: solid;
+    background-color: #EAEBF0;
+    height:100px;
+    width: 39%;
+    margin-right: 6%;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+.choosed-style {
+    border-width: 2px;
+    border-radius: 5px;
+    border-color: #3A84FF;
+    border-style: solid;
+    background-color: #E1ECFF;
+    height:100px;
+    width: 39%;
+    margin-right: 6%;
+    margin-bottom: 10px;
+    display: inline-block;
+}
 .question {
     height: 110px;
     margin-left: 1%;
@@ -179,7 +217,7 @@
     .option {
         border-width: 1px;
         border-radius: 5px;
-        border-color: #1768EF;
+        border-color: #979BA5;
         border-style: solid;
         height:100px;
         width: 39%;
@@ -192,10 +230,15 @@
     margin-left: 1%;
 }
 .analysis {
+    width: 84%;
     height: 125px;
     margin-left: 1%;
+    .upload {
+        float: right;
+    }
     .reset {
-        margin-left: 66.6%;
+        margin-left: 10px;
+        float: right;
     }
 }
 </style>

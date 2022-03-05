@@ -31,7 +31,7 @@
             </bk-tab>
         </div>
         <bk-dialog v-model="editQuestion.visable" width="1200" :draggable="false" :show-footer="false">
-            <component v-if="editQuestion.visable" :is="Dict[editQuestion.Question.types]" :info="editQuestion.Question" :readonly="true"></component>
+            <component v-if="editQuestion.visable" :is="Dict[editQuestion.Question.types]" :info="editQuestion.Question" :editable="true"></component>
         </bk-dialog>
         <div class="questions">
             <bk-button theme="primary" @click="deleteQuestions" style="margin-bottom: 10px">批量删除</bk-button>

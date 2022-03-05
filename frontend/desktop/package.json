@@ -53,13 +53,14 @@
     }
   },
   "dependencies": {
-    "bk-magic-vue": "latest",
     "axios": "~0.18.0",
+    "bk-magic-vue": "latest",
     "cookie": "~0.4.0",
     "jsonp": "~0.2.1",
     "query-string": "~6.5.0",
     "url-parse": "~1.4.7",
     "vue": "~2.5.22",
+    "vue-cookies": "^1.7.4",
     "vue-router": "~3.0.6",
     "vuex": "~3.1.1"
   },
