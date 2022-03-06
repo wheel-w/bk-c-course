@@ -11,7 +11,8 @@
                 style="width:100%;"
             ></bk-upload>
         </div>
-        <a href="http://dev.paas-edu.bktencent.com:8000/course/download_set_question_excel_template/">下载模板</a>
+        <!-- <a href="http://dev.paas-edu.bktencent.com:8000/course/download_set_question_excel_template/">下载模板</a> -->
+        <bk-button :theme="'primary'" text :class="mr10" @click="downloadSetQuestionExcelTemplate">下载模板</bk-button>
     </div>
 </template>
 <script>
@@ -34,7 +35,17 @@
         },
         methods: {
             downloadSetQuestionExcelTemplate () {
-                window.open('http://dev.paas-edu.bktencent.com:8000/course/download_set_question_excel_template/')
+                const a = document.createElement('a')
+                this.$http.get('/course/download_student_excel_template_url/').then(res => {
+                    if (res.result) {
+                        a.href = res.url
+                        a.click()
+                    } else {
+                        this.config.message = '下载模板失败'
+                        this.$bkMessage(this.config)
+                    }
+                })
+                // window.open('http://dev.paas-edu.bktencent.com:8000/course/download_set_question_excel_template/')
             },
             testSuccess (file, fileList) {
             },

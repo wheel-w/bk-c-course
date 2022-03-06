@@ -211,7 +211,7 @@
                     if (res.result) {
                         this.page.count = res.count
                         this.data = res.data
-                        console.info(this.data)
+                        // console.info(this.data)
                     } else {
                         this.$bkMessage({
                             message: '页面加载出错，请刷新重试！',
@@ -251,7 +251,7 @@
                         this.$http.post('/course/add_course_member/', this.formData).then(res => {
                             if (res.result) {
                                 this.$bkMessage({
-                                    message: '增加成功',
+                                    message: '添加成功',
                                     delay: 1000,
                                     theme: 'success',
                                     offsetY: 60,
@@ -260,7 +260,7 @@
                                 this.getList()
                             } else {
                                 this.$bkMessage({
-                                    message: '增加失败，请重新尝试',
+                                    message: '添加失败，请重新尝试',
                                     delay: 1000,
                                     theme: 'success',
                                     affsetY: 60,
@@ -277,7 +277,7 @@
                         if (res.result) {
                             this.getList()
                             this.$bkMessage({
-                                message: '增加成功',
+                                message: '添加成功',
                                 delay: 1000,
                                 theme: 'success',
                                 offsetY: 60,
@@ -297,7 +297,7 @@
             },
             // 导入学生
             addExcel (param) {
-                console.info(param)
+                // console.info(param)
                 const data = new FormData()
                 data.append('excel_file', param.fileList[0].origin)
                 data.append('course_id', this.course_id)
@@ -310,7 +310,7 @@
                     if (res.result) {
                         this.getList()
                         this.$bkMessage({
-                            message: '导入成功',
+                            message: '导入学生信息成功',
                             delay: 1000,
                             theme: 'success',
                             offsetY: 60,
@@ -340,9 +340,10 @@
                     if (res.result) {
                         a.href = res.url
                         a.click()
+                        // window.open(res.url)
                     } else {
                         this.$bkMessage({
-                            message: '下载失败请重新尝试',
+                            message: '点名册模板下载失败请重新尝试',
                             delay: 1000,
                             theme: 'error',
                             offsetY: 60,
