@@ -54,7 +54,7 @@
             ok-text="保存"
             :auto-close="false"
             @confirm="validatedata"
-            @cancel="edit = true, $refs.paperinfo.clearError()"
+            @cancel="edit = true, $refs.paperinfo.clearError(), selectdata.start = undefined, selectdata.end = undefined"
             title="修改试卷信息">
             <bk-form label-width="200" :model="selectdata" :rules="rules" ref="paperinfo">
                 <bk-form-item :error-display-type="'normal'" label="卷子类型:" :required="true" :property="'papertype'">
@@ -78,10 +78,10 @@
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item :required="true" :error-display-type="'normal'" :property="'start'" label="开始时间:">
-                    <bk-date-picker :readonly="edit" v-model="selectdata.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
                 </bk-form-item>
                 <bk-form-item :required="true" :error-display-type="'normal'" :property="'end'" label="结束时间:">
-                    <bk-date-picker :readonly="edit" v-model="selectdata.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
                 </bk-form-item>
                 <bk-form-item>
                     <bk-button v-if="edit" @click="edit = false" theme="primary">编辑</bk-button>
@@ -320,7 +320,7 @@
                                 if (this.selectdata.end === undefined || this.selectdata.end === '') {
                                     return true
                                 } else {
-                                    if (val.getTime() < this.selectdata.end.getTime()) {
+                                    if (this.selectdata.start.getTime() < this.selectdata.end.getTime()) {
                                         return true
                                     } else {
                                         return false
@@ -342,7 +342,7 @@
                                 if (this.selectdata.start === undefined || this.selectdata.start === '') {
                                     return true
                                 } else {
-                                    if (this.selectdata.start.getTime() < val.getTime()) {
+                                    if (this.selectdata.start.getTime() < this.selectdata.end.getTime()) {
                                         return true
                                     } else {
                                         return false
@@ -387,6 +387,15 @@
                 const hourminutesecond = tmp.substr(Tpos + 1, Zpos - Tpos - 8)
                 const beijing = yearmonthday + ' ' + hourminutesecond
                 return beijing
+            },
+            beijingtime (time) {
+                const date = new Date(time)
+                const timestamp1 = date.getTime()
+                const timestamp2 = timestamp1 / 1000
+                const timestamp3 = timestamp2 + 8 * 60 * 60
+                // 转换成UTC格式
+                const tmp = new Date(parseInt(timestamp3) * 1000).toISOString()
+                return tmp
             },
             typeFilterMethod (value, row, column) { // 通过试卷类型过滤
                 const property = column.property
@@ -463,10 +472,10 @@
                             }
                             if (res.data[i].end_time !== null) {
                                 tmp.endtime = this.utc2beijing(res.data[i].end_time)
-                                tmp.end = res.data[i].end_time
+                                tmp.end = this.beijingtime(res.data[i].end_time)
                             }
                             if (res.data[i].start_time !== null) {
-                                tmp.start = res.data[i].start_time
+                                tmp.start = this.beijingtime(res.data[i].start_time)
                                 tmp.starttime = this.utc2beijing(res.data[i].start_time)
                             }
                             if (res.data[i].types === 'EXAM') {
@@ -531,7 +540,6 @@
                         }
                     })
                 }, validator => {
-                    /* this.$refs.addform.clearError() */
                     this.dialogsetting.custom.visible = true
                     this.$bkMessage({
                         message: '请检查输入',
@@ -580,6 +588,8 @@
                             start_time: this.selectdata.start,
                             end_time: this.selectdata.end
                         }
+                        this.selectdata.start = undefined
+                        this.selectdata.end = undefined
                         this.$http.put('/course/paper/', { paper_id: this.selectdata.paperid, update_info: info }).then(res => {
                             if (res.result === true) {
                                 this.$bkMessage({
@@ -588,6 +598,7 @@
                                 })
                                 this.getpaperlist()
                                 this.editdialog.custom.visible = false
+                                this.edit = true
                             }
                         })
                     }, validator => {
