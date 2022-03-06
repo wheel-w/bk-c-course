@@ -24,6 +24,8 @@ const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
 const Mycourse = () => import('@/views/my_class/my_class_item/class_manage/my_course.vue')
 const Coursenumber = () => import('@/views/my_class/my_class_item/class_manage/course_number.vue')
+const Displaypaper = () => import('@/views/make_paper/display_paper.vue')
+const Selectquestion = () => import('@/views/make_paper/select_question.vue')
 
 const routes = [
     {
@@ -82,6 +84,16 @@ const routes = [
                 path: 'set_question_index',
                 name: 'set_question_index',
                 component: SetQuestionIndex
+            },
+            {
+                path: 'displaypaper',
+                name: 'displaypaper',
+                component: Displaypaper
+            },
+            {
+                path: 'selectquestion',
+                name: 'selectquestion',
+                component: Selectquestion
             }
         ]
     },

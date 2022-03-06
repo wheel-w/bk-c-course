@@ -127,6 +127,14 @@
                             pathName: 'answer_question_index',
                             children: [],
                             group: true
+                        },
+                        {
+                            id: 'displaypaper',
+                            name: '出卷页面',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'displaypaper',
+                            children: [],
+                            group: true
                         }
                     ],
                     id: 'home',
