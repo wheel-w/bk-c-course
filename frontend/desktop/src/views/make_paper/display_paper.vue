@@ -665,23 +665,11 @@
                     this.getpaperlist()
                 })
             },
-            markpaper (row) { // 批改试卷
-                this.$http.get('/course/get_student_answer_info/', { params: { paper_id: row.id } }).then(res => {
-                    if (res.result === true) {
-                        const submitted = res.data.submitted
-                        // const notsubmitted = res.data.not_submitted
-                        this.$router.push({
-                            name: 'correct_paper',
-                            query: {
-                                paperid: row.id,
-                                submitted: submitted
-                            }
-                        })
-                    } else {
-                        this.$bkMessage({
-                            message: res.message,
-                            theme: 'error'
-                        })
+            markpaper (row) { // 跳转批改试卷
+                this.$router.push({
+                    name: 'correct_paper',
+                    query: {
+                        paperid: row.id
                     }
                 })
             },
