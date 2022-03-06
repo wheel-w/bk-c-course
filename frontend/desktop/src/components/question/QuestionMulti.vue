@@ -143,7 +143,7 @@
                         {
                             required: true,
                             message: '选项内容不能为空！',
-                            trigger: 'blur'
+                            trigger: 'change'
                         }
                     ],
                     answer: [

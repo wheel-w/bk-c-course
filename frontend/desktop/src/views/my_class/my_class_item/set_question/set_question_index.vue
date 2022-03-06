@@ -23,7 +23,7 @@
                     v-for="(panel, index) in panels"
                     v-bind="panel"
                     :key="index"
-                    style="height:400px;padding-left:;">
+                    style="height:390px;">
                     <keep-alive :key="componentKey2">
                         <component :is="active" :chapterid="curChapterId" @createQuestion="createQuestion" @importQuestionExcel="getQuestionList()"></component>
                     </keep-alive>
@@ -67,7 +67,7 @@
                     filter-placement="bottom-end"
                     :filter-multiple="true">
                     <template slot-scope="scope">
-                        <bk-tag>
+                        <bk-tag theme="info">
                             {{questionType(scope.row.types)}}
                         </bk-tag>
                     </template>
@@ -458,6 +458,5 @@
     background   : #ededed;
     }
     .questions {
-        margin-bottom: 20px;
     }
 </style>

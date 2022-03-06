@@ -8,7 +8,7 @@
         </div>
         <div class="content">
             <div class="content-item" v-for="item in courseList" :key="item.pk" @click="toMyClassDetail(item.pk)">
-                <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.fields.course_name }}</h3>
+                <!-- <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.fields.course_name }}</h3> -->
                 <span>课程id：{{ item.pk }}</span>
                 <span>任教老师：{{ item.fields.teacher }}</span>
             </div>
