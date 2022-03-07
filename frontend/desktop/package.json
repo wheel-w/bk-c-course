@@ -53,10 +53,14 @@
     }
   },
   "dependencies": {
-    "bk-magic-vue": "latest",
+    " @vue/babel-preset-jsx": "~1.2.4",
+    "@vue/babel-helper-vue-jsx-merge-props": "^1.2.1",
+    "@vue/babel-preset-jsx": "^1.2.4",
     "axios": "~0.18.0",
+    "bk-magic-vue": "latest",
     "cookie": "~0.4.0",
     "jsonp": "~0.2.1",
+    "qrcodejs2": "0.0.2",
     "query-string": "~6.5.0",
     "url-parse": "~1.4.7",
     "vue": "~2.5.22",

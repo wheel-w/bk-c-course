@@ -286,7 +286,7 @@
                         const right = this.pagingConfigTwo.current * this.pagingConfigTwo.limit
                         const left = right - this.pagingConfigTwo.limit
                         this.List = this.course.slice(left, right)
-                        console.info(this.List)
+                        // console.info(this.List)
                     } else {
                         this.$bkMessage({
                             message: '页面加载出错，请刷新重试！',
@@ -397,7 +397,7 @@
                 this.visible.deletcourse.isshow = true
             },
             removeCourse (e) {
-                console.info('课程id' + e)
+                // console.info('课程id' + e)
                 this.$http.delete('/course/manage_course/', { params: { course_id: JSON.stringify(e) } }).then(res => {
                     if (res.result) {
                         this.$bkMessage({
