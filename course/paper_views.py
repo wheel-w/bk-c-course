@@ -148,7 +148,7 @@ def paper(request):
             # 得到查询参数的卷子信息
             papers = Paper.objects.filter(**query_param).values()
             # 得到卷子的所属章节
-            chapter_ids = {p['chapter_id'] for p in papers}
+            chapter_ids = [p['chapter_id'] for p in papers]
             chapters = {chapter.id: chapter.chapter_name for chapter in Chapter.objects.filter(id__in=chapter_ids)}
             # 构造数据
             paper_info = {}
