@@ -669,7 +669,7 @@
                 this.$router.push({
                     name: 'correct_paper',
                     query: {
-                        paper_id: row.id
+                        paperid: row.id
                     }
                 })
             },
