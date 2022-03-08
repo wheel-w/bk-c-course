@@ -36,7 +36,7 @@
         methods: {
             downloadSetQuestionExcelTemplate () {
                 const a = document.createElement('a')
-                this.$http.get('/course/download_student_excel_template_url/').then(res => {
+                this.$http.get('/course/download_set_question_excel_template_url/').then(res => {
                     if (res.result) {
                         a.href = res.url
                         a.click()
