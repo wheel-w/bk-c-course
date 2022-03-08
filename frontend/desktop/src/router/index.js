@@ -17,7 +17,7 @@ const NotFound = () => import(/* webpackChunkName: 'none' */'@/views/404')
 const Welcome = () => import('@/views/welcome')
 const Home = () => import('@/views/home')
 const Person = () => import('@/views/person')
-const MyClass = () => import('@/views/my_class')
+// const MyClass = () => import('@/views/my_class')
 const Mycourse = () => import('@/views/my_class/my_class_item/class_manage/my_course.vue')
 const Coursenumber = () => import('@/views/my_class/my_class_item/class_manage/course_number.vue')
 const CorrectPaper = () => import('@/views/my_class/my_class_item/class_manage/correct_paper')
@@ -49,16 +49,6 @@ const routes = [
                 name: 'home',
                 alias: '',
                 component: Home
-            },
-            {
-                path: 'my_join_class',
-                name: 'my_join_class',
-                component: MyJoinClass
-            },
-            {
-                path: 'my_join_class_detail',
-                name: 'my_join_class_detail',
-                component: MyJoinClassDetail
             },
             {
                 path: 'my_course',
