@@ -37,14 +37,14 @@ export default {
                 answer: [
                     {
                         required: true,
-                        message: '答案不能为空！',
+                        message: '答案不能为空',
                         trigger: 'change'
                     }
                 ],
                 explain: [
                     {
                         required: true,
-                        message: '答案解析不能为空！',
+                        message: '答案解析不能为空',
                         trigger: 'change'
                     }
                 ]
