@@ -1,6 +1,6 @@
 <template>
     <div style="border-style:;display:inline-block">
-        <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-left:5px;margin-bottom:21px;border-style:double;" @click="chapterManage">
+        <bk-button :theme="'primary'" :title="'主要按钮'" icon="icon-block-shape" style="margin-left:5px;margin-bottom:21px;border-style:double;" @click="chapterManage">
             章节管理
         </bk-button>
         <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="handleHidden" @shown="handleShown">
@@ -61,8 +61,6 @@
                     </bk-button>
                 </div>
             </div>
-            <!-- <div slot="footer">
-            </div> -->
         </bk-sideslider>
     </div>
 </template>
