@@ -24,24 +24,23 @@
                             D：{{ item.dialogdata.option_D }}
                         </bk-radio>
                     </bk-radio-group>
-                    <bk-checkbox-group v-if="item.dialogdata.types === 'MULTIPLE'" class="radio-common">
-                        <bk-checkbox value="A" :disabled="true">
+                    <bk-radio-group v-if="item.dialogdata.types === 'MULTIPLE'" class="radio-common">
+                        <bk-radio value="A" :disabled="true">
                             A：{{ item.dialogdata.option_A }}
-                        </bk-checkbox>
-                        <bk-checkbox value="B" :disabled="true">
+                        </bk-radio>
+                        <bk-radio value="B" :disabled="true">
                             B：{{ item.dialogdata.option_B }}
-                        </bk-checkbox>
-                        <bk-checkbox value="C" :disabled="true">
+                        </bk-radio>
+                        <bk-radio value="C" :disabled="true">
                             C：{{ item.dialogdata.option_C }}
-                        </bk-checkbox>
-                        <bk-checkbox value="D" :disabled="true">
+                        </bk-radio>
+                        <bk-radio value="D" :disabled="true">
                             D：{{ item.dialogdata.option_D }}
-                        </bk-checkbox>
-                        <bk-checkbox value="E" :disabled="true">
+                        </bk-radio>
+                        <bk-radio value="E" :disabled="true">
                             E：{{ item.dialogdata.option_E }}
-                        </bk-checkbox>
-                    </bk-checkbox-group>
-                    <bk-divider></bk-divider>
+                        </bk-radio>
+                    </bk-radio-group>
                 </bk-card>
             </div>
         </bk-dialog>
@@ -181,7 +180,7 @@
                 previewsetting: {
                     visible: false,
                     position: {
-                        top: 50
+                        top: 25
                     }
                 },
                 Dict: {

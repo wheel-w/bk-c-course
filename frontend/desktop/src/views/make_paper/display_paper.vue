@@ -189,7 +189,6 @@
                 ],
                 chapterFilters: [
                 ],
-                chapterMap: {},
                 statusFilters: [
                     {
                         text: '草稿',
@@ -411,18 +410,15 @@
             },
             async getchapterlist () { // 获得章节
                 this.$http.get('/course/get_chapter_list/', { params: { course_id: this.CourseId } }).then(res => {
-                    this.chapterMap = {}
                     this.chapterFilters.splice(0, this.chapterFilters.length)
                     this.$set(this.chapterFilters, 0, {
                         text: '全部章节',
                         value: '全部章节'
                     })
                     this.chapterlist = [{ id: -1, name: '全部章节' }]
-                    this.$set(this.chapterMap, -1, '全部章节')
                     if (res.data.length !== 0) {
                         const count = { val: 1 }
                         for (const i in res.data) {
-                            this.$set(this.chapterMap, res.data[i].id, res.data[i].chapter_name)
                             this.chapterlist.push({
                                 id: res.data[i].id,
                                 name: res.data[i].chapter_name
@@ -463,8 +459,7 @@
                             tmp.id = res.data[i].id
                             tmp.paperchapterid = res.data[i].chapter_id
                             tmp.types = res.data[i].types
-                            // tmp.paperchapter =
-                            // tmp.paperchapter = this.chapterMap[res.data[i].chapter_id]
+                            tmp.paperchapter = res.data[i].chapter_name
                             if (res.data[i].submitted_students_num !== undefined && res.data[i].total_students_num !== null) {
                                 tmp.submited = res.data[i].submitted_students_num
                                 tmp.sum = res.data[i].total_students_num
