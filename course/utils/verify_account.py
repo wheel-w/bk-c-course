@@ -93,9 +93,9 @@ def identify_user(username, password):
         name = name[0].split('同')[0]
         user_info = get_information(cookies, username, name)
         return True, user_info, '认证成功'
+    elif '密码错误' in resource:
+        return False, None, '密码错误'
+    elif '用户名不存在' in resource:
+        return False, None, '用户名不存在'
     else:
-        if '密码错误' in resource:
-            return False, None, '密码错误'
-        else:
-            if '用户名不存在' in resource:
-                return False, None, '用户名不存在'
+        return False, None, "未知错误，请联系管理员"

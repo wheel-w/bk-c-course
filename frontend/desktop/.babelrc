@@ -10,7 +10,9 @@
                 },
                 "debug": false
             }
-        ]
+        ],
+        "@vue/babel-preset-jsx" // 支持jsx语法
+
     ],
     "plugins": [
         "@babel/plugin-transform-runtime",

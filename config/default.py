@@ -16,20 +16,21 @@ from blueapps.conf.log import get_logging_config_dict
 
 # 这里是默认的 INSTALLED_APPS，大部分情况下，不需要改动
 # 如果你已经了解每个默认 APP 的作用，确实需要去掉某些 APP，请去掉下面的注释，然后修改
-# INSTALLED_APPS = (
-#     'bkoauth',
-#     # 框架自定义命令
-#     'blueapps.contrib.bk_commands',
-#     'django.contrib.admin',
-#     'django.contrib.auth',
-#     'django.contrib.contenttypes',
-#     'django.contrib.sessions',
-#     'django.contrib.sites',
-#     'django.contrib.messages',
-#     'django.contrib.staticfiles',
-#     # account app
-#     'blueapps.account',
-# )
+INSTALLED_APPS = (
+    "simpleui",
+    'bkoauth',
+    # 框架自定义命令
+    'blueapps.contrib.bk_commands',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    # account app
+    'blueapps.account',
+)
 
 # 请在这里加入你的自定义 APP
 INSTALLED_APPS += (  # noqa

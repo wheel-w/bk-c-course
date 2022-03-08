@@ -24,6 +24,8 @@ const CorrectPaper = () => import('@/views/my_class/my_class_item/class_manage/c
 const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
 const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
+const Displaypaper = () => import('@/views/make_paper/display_paper.vue')
+const Selectquestion = () => import('@/views/make_paper/select_question.vue')
 
 const routes = [
     {
@@ -49,41 +51,54 @@ const routes = [
                 component: Home
             },
             {
-                path: 'my_class',
-                name: 'my_class',
-                component: MyClass,
-                children: [
-                    {
-                        path: 'correct_paper',
-                        name: 'correct_paper',
-                        component: CorrectPaper
-                    },
-                    {
-                        path: 'answer_question_index',
-                        name: 'answer_question_index',
-                        component: AnswerQuestionIndex
-                    },
-                    {
-                        path: 'answer_question_detail',
-                        name: 'answer_question_detail',
-                        component: AnswerQuestionDetail
-                    },
-                    {
-                        path: 'set_question_index',
-                        name: 'set_question_index',
-                        component: SetQuestionIndex
-                    },
-                    {
-                        path: 'my_course',
-                        name: 'my_course',
-                        component: Mycourse
-                    },
-                    {
-                        path: 'course_number',
-                        name: 'course_number',
-                        component: Coursenumber
-                    }
-                ]
+                path: 'my_join_class',
+                name: 'my_join_class',
+                component: MyJoinClass
+            },
+            {
+                path: 'my_join_class_detail',
+                name: 'my_join_class_detail',
+                component: MyJoinClassDetail
+            },
+            {
+                path: 'my_course',
+                name: 'my_course',
+                component: Mycourse
+            },
+            {
+                path: 'course_number',
+                name: 'course_number',
+                component: Coursenumber
+            },
+            {
+                path: 'answer_question_index',
+                name: 'answer_question_index',
+                component: AnswerQuestionIndex
+            },
+            {
+                path: 'answer_question_detail',
+                name: 'answer_question_detail',
+                component: AnswerQuestionDetail
+            },
+            {
+                path: 'correct_paper',
+                name: 'correct_paper',
+                component: CorrectPaper
+            },
+            {
+                path: 'set_question_index',
+                name: 'set_question_index',
+                component: SetQuestionIndex
+            },
+            {
+                path: 'displaypaper',
+                name: 'displaypaper',
+                component: Displaypaper
+            },
+            {
+                path: 'selectquestion',
+                name: 'selectquestion',
+                component: Selectquestion
             }
         ]
     },
