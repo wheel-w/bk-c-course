@@ -49,15 +49,6 @@
                     }
                 })
             },
-            testSuccess (file, fileList) {
-            },
-            testProgress (e, file, fileList) {
-                this.update(e)
-            },
-            testDone () {
-            },
-            testErr (file, fileList) {
-            },
             handleRes (response) {
                 if (response.id) {
                     return true
@@ -70,6 +61,7 @@
                     data.append('excel_file', param.fileList[0].origin)
                     data.append('course_id', this.$store.state.currentCourseId)
                     data.append('chapter_id', this.chapterid)
+                    data.append('is_file', true)
                     const config = {
                         headers: {
                             'Content-Type': 'multipart/form-data'
