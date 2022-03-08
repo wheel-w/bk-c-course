@@ -19,8 +19,11 @@ def set_question_rights(fun):
         if request.method == "DELETE":
             course_id = request.GET.get("course_id")
         else:
-            req = json.loads(request.body)
-            course_id = req.get("course_id")
+            if request.POST.get("is_file"):
+                course_id = request.POST.get("course_id")
+            else:
+                req = json.loads(request.body)
+                course_id = req.get("course_id")
         user_info = "{}({})".format(request.user.class_number, request.user.name)
         try:
             course = Course.objects.get(id=course_id)
@@ -204,7 +207,9 @@ def import_question_excel(request):
                 json_dumps_params={"ensure_ascii": False},
             )
         for content in question_info_list:
-            if content["types"] == "COMPLETION" and ("()" not in content["question"] and "（）" not in content["question"]):
+            if content["types"] == "COMPLETION" and (
+                "()" not in content["question"] and "（）" not in content["question"]
+            ):
                 pass
             else:
                 question_list.append(
