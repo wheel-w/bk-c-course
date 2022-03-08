@@ -682,13 +682,13 @@ def verify_school_user(request):
                     "username": username + "X",
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
-                    "professional_class": user_info["user_class"],
+                    "professional_class": user_info["user_major"],
                     "gender": Member.Gender.MAN
                     if user_info["user_sex"] == "男"
                     else Member.Gender.WOMAN,
                     "identity": Member.Identity.STUDENT,
                     "college": user_info["user_college"],
-                    "classroom": user_info["user_major"]
+                    "classroom": user_info["user_class"]
                 }
                 if request.is_wechat():
                     kwargs["username"] = "{}X".format(user_info["user_name"])
