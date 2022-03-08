@@ -99,5 +99,3 @@ def identify_user(username, password):
         else:
             if '用户名不存在' in resource:
                 return False, None, '用户名不存在'
-
-
