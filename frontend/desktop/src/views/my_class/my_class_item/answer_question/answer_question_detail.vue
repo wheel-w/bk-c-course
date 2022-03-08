@@ -1,5 +1,65 @@
 <template>
-    <div class="wrapper">
+    <div class="myWrapper" v-if="$route.query.isAccomplish" ref="top">
+        <div class="header">
+            <h2>总分：{{ totalScore }}</h2>
+        </div>
+        <div v-for="(item,index) in totalQuestion" :key="index">
+            <h3 v-if="item.length !== 0">{{ index }}</h3>
+            <bk-card class="radio-common" :title="`${childIndex + 1}.${childItem.question} （${childItem.score}分）`" v-for="(childItem,childIndex) in item" :key="childIndex" :border="false">
+                <bk-radio-group v-if="childItem.types === 'SINGLE'" class="radio-common" v-model="childItem.student_answer">
+                    <bk-radio value="A" :disabled="true">
+                        A：{{ childItem.option_A }}
+                    </bk-radio>
+                    <bk-radio value="B" :disabled="true">
+                        B：{{ childItem.option_B }}
+                    </bk-radio>
+                    <bk-radio value="C" :disabled="true">
+                        C：{{ childItem.option_C }}
+                    </bk-radio>
+                    <bk-radio value="D" :disabled="true">
+                        D：{{ childItem.option_D }}
+                    </bk-radio>
+                </bk-radio-group>
+                <bk-checkbox-group v-if="childItem.types === 'MULTIPLE'" class="radio-common" v-model="childItem.student_answer">
+                    <bk-checkbox value="A" :disabled="true">
+                        A：{{ childItem.option_A }}
+                    </bk-checkbox>
+                    <bk-checkbox value="B" :disabled="true">
+                        B：{{ childItem.option_B }}
+                    </bk-checkbox>
+                    <bk-checkbox value="C" :disabled="true">
+                        C：{{ childItem.option_C }}
+                    </bk-checkbox>
+                    <bk-checkbox value="D" :disabled="true">
+                        D：{{ childItem.option_D }}
+                    </bk-checkbox>
+                    <bk-checkbox value="E" :disabled="true">
+                        E：{{ childItem.option_E }}
+                    </bk-checkbox>
+                </bk-checkbox-group>
+                <bk-divider></bk-divider>
+                <div style="margin-top: 10px">
+                    你的答案：<span>{{ childItem.student_answer }}</span>
+                </div>
+                <div style="margin-top: 10px">
+                    正确答案为：
+                    <span v-if="childItem.types === 'JUDGE'">{{ item.answer === 'false' ? '错误' : '正确' }}</span>
+                    <span v-else>{{ childItem.answer }}</span>
+                </div>
+                <div style="margin-top: 10px">
+                    解析：<span>{{ childItem.explain === null ? '暂无解析' : childItem.explain}}</span>
+                </div>
+                <div style="margin-top: 10px">
+                    得分：{{ childItem.student_score }}
+                </div>
+            </bk-card>
+        </div>
+
+        <bk-button @click="$refs.top.scrollTop = 0" style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="'primary'">
+            返回顶部
+        </bk-button>
+    </div>
+    <div class="wrapper" v-else>
         <div class="progress">
             <div>
                 <bk-icon type="clock" />
@@ -122,44 +182,53 @@
 </template>
 
 <script>
-    import {
-        bkRadio,
-        bkRadioGroup,
-        bkCheckbox,
-        bkCheckboxGroup,
-        bkInput,
-        bkButton
-    } from 'bk-magic-vue'
     export default {
         name: 'answer_question_detail',
-        components: {
-            bkRadio,
-            bkRadioGroup,
-            bkCheckbox,
-            bkCheckboxGroup,
-            bkInput,
-            bkButton
-        },
         data () {
             return {
+                totalQuestion: {}, // 总习题列表
+                totalScore: 0, // 总分
+
                 count: '', // 计时
                 seconds: 0, // 从0秒开始计数
                 msg: '',
                 questionList: [],
                 questionTitle: {},
                 answer_info: [],
-                paper_id: 6
+                paper_id: 0
+            }
+        },
+        watch: {
+            // 监听当前课程id的变化
+            '$store.state.currentCourseId' () {
+                this.$router.replace({
+                    name: 'answer_question_index'
+                })
             }
         },
         mounted () {
-            this.Time() // 调用定时器
-            this.getPaperStatus() // 调用获取题目接口
-            const that = this
-            setTimeout(function () {
-                that.submitButtonDisabled()
-            }, 2000)
+            this.paper_id = this.$route.query.id
+            if (this.$route.query.isAccomplish) {
+                this.getStudentQuestionList()
+            } else {
+                this.Time() // 调用定时器
+                this.getPaperStatus() // 调用获取题目接口
+                const that = this
+                setTimeout(function () {
+                    that.submitButtonDisabled()
+                }, 2000)
+            }
         },
         methods: {
+            // 获取问题列表
+            async getStudentQuestionList () {
+                this.$http.get('/course/answer_or_check_paper/', { params: { paper_id: this.paper_id } }).then(res => {
+                    this.totalQuestion = res.data
+                    this.totalScore = res.data.total_score
+                    delete this.totalQuestion['total_score']
+                    delete this.totalQuestion['cumulative_time']
+                })
+            },
             // 时 分 秒 格式化函数
             countDown () {
                 let h = parseInt(this.seconds / (60 * 60) % 24)
@@ -338,7 +407,21 @@
 </script>
 
 <style scoped>
-    .answer {
+.myWrapper {
+    display: flex;
+    flex-direction: column;
+    height: 580px;
+    overflow-y: auto;
+}
+
+.radio-common {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    box-shadow: none;
+}
+
+.answer {
         width: 65%;
         float: right;
     }

@@ -127,6 +127,14 @@
                             pathName: 'answer_question_index',
                             children: [],
                             group: true
+                        },
+                        {
+                            id: 'displaypaper',
+                            name: '出卷页面',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'displaypaper',
+                            children: [],
+                            group: true
                         }
                     ],
                     id: 'home',
@@ -158,6 +166,17 @@
             }
         },
         created () {
+            // 在页面加载时读取sessionStorage里的状态信息
+            this.nav.id = sessionStorage.getItem('navId') ? JSON.parse(sessionStorage.getItem('navId')) : 'home'
+            if (sessionStorage.getItem('courseId')) {
+                this.$store.commit('updateCourseId', JSON.parse(sessionStorage.getItem('courseId')))
+            }
+            // 在页面刷新时将信息保存到sessionStorage里
+            window.addEventListener('beforeunload', () => {
+                sessionStorage.setItem('navId', JSON.stringify(this.nav.id))
+                sessionStorage.setItem('courseId', JSON.stringify(this.$store.state.currentCourseId))
+            })
+
             this.getCourseList()
             const platform = window.navigator.platform.toLowerCase()
             if (platform.indexOf('win') === 0) {
@@ -192,6 +211,8 @@
                 this.$http.get('/course/get_course_list/').then(res => {
                     if (res.data.length !== 0) {
                         this.courseList = res.data
+                    }
+                    if (this.$store.state.currentCourseId === 0) {
                         this.$store.commit('updateCourseId', res.data[0].course_id)
                     }
                 })

@@ -8,8 +8,9 @@ from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
-from course.models import Course, Member, UserCourseContact
-from course.utils.verify_account import identify_user
+from .models import Course, Member, UserCourseContact
+from .utils.verify_account import identify_user
+
 
 # Create your views here.
 
@@ -53,7 +54,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                identity.first()["identity"] == Member.Identity.TEACHER
+                    identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -119,7 +120,7 @@ def manage_course(request):
                 },
                 json_dumps_params={"ensure_ascii": False},
             )
-# 删
+    # 删
     if request.method == "DELETE":
         course_ids = json.loads(request.GET.get("course_id"))
         user_info = "{}({})".format(
@@ -340,9 +341,9 @@ def import_student_excel(request):
                     row_err = row
                     row_values = table.row_values(row)
                     if not (
-                        row_values[0] == ""
-                        and row_values[2] == ""
-                        and row_values[4] == ""
+                            row_values[0] == ""
+                            and row_values[2] == ""
+                            and row_values[4] == ""
                     ):
                         student_info["class_number"] = int(row_values[0])
                         student_info["professional_class"] = row_values[4]
@@ -513,17 +514,21 @@ def download_student_excel_template(request):
     response["Content-Disposition"] = 'attachment;filename="studentTemplate.xls"'
     return response
 
+
 def download_student_excel_template_url(request):
+    host_path = request.get_host()
+    url = "{}/course/download_student_excel_template/".format(host_path)
     return JsonResponse(
         {
             "result": True,
             "message": "跳转成功",
-            "url": "http://dev.paas-edu.bktencent.com:8000/course/download_student_excel_template/",
+            "url": url,
             "code": 200,
             "data": [],
         },
         json_dumps_params={"ensure_ascii": False},
     )
+
 
 def delete_student_course_contact(request):
     if request.method == "DELETE":
@@ -693,9 +698,17 @@ def verify_school_user(request):
                     "college": user_info["user_college"],
                     "classroom": user_info["user_class"]
                 }
+
+                # 如果是微信小程序端进行认证
                 if request.is_wechat():
-                    kwargs["username"] = "{}X".format(user_info["user_name"])
-                    kwargs["openid"] = request.user.openid
+                    user, _ = Member.objects.get_or_create(username="{}X".format(username))
+                    kwargs.update(
+                        {
+                            "openid": request.user.openid,
+                        }
+                    )
+                else:
+                    user = Member.objects.get(username=request.user.username)
 
                 for attr_name, attr_value in kwargs.items():
                     setattr(user, attr_name, attr_value)
@@ -714,3 +727,19 @@ def verify_school_user(request):
         except Exception as e:
             data = {"result": False, "message": e, "code": 500, "data": []}  # 后端出错
             return JsonResponse(data)
+
+
+# 下载出题模板
+def download_set_question_excel_template_url(request):
+    host_path = request.get_host()
+    url = "{}/course/download_set_question_excel_template/".format(host_path)
+    return JsonResponse(
+        {
+            "result": True,
+            "message": "跳转成功",
+            "url": url,
+            "code": 200,
+            "data": [],
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )

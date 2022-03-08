@@ -14,6 +14,7 @@ import time
 
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.views import static
 
 
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt
@@ -23,6 +24,11 @@ def home(request):
     首页
     """
     return render(request, "index.html")
+
+
+def django_admin_static_serve(request, path, document_root=None, show_indexes=False):
+
+    return static.serve(request, path.split("static")[1], document_root, show_indexes)
 
 
 def test_get_or_post(request):
