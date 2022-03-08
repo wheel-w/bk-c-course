@@ -18,14 +18,12 @@ const Welcome = () => import('@/views/welcome')
 const Home = () => import('@/views/home')
 const Person = () => import('@/views/person')
 const MyClass = () => import('@/views/my_class')
-const MyJoinClass = () => import('@/views/my_class/my_class_item/my_join_class')
-const MyJoinClassDetail = () => import('@/views/my_class/my_class_item/my_join_class_detail')
-const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
-const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
-const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
 const Mycourse = () => import('@/views/my_class/my_class_item/class_manage/my_course.vue')
 const Coursenumber = () => import('@/views/my_class/my_class_item/class_manage/course_number.vue')
 const CorrectPaper = () => import('@/views/my_class/my_class_item/class_manage/correct_paper')
+const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
+const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
+const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
 
 const routes = [
     {
@@ -59,16 +57,6 @@ const routes = [
                         path: 'correct_paper',
                         name: 'correct_paper',
                         component: CorrectPaper
-                    },
-                    {
-                        path: 'my_join_class',
-                        name: 'my_join_class',
-                        component: MyJoinClass
-                    },
-                    {
-                        path: 'my_join_class_detail',
-                        name: 'my_join_class_detail',
-                        component: MyJoinClassDetail
                     },
                     {
                         path: 'answer_question_index',

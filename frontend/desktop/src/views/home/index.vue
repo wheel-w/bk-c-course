@@ -2,7 +2,7 @@
     <div class="wrapper">
         <div class="header">
             <h2>我的课程</h2>
-            <bk-button theme="primary" @click="toMyClass">
+            <bk-button v-if="$store.state.user.identity === 'TEACHER'" theme="primary" @click="toMyClass" style="margin-left: 2vw">
                 新增课程
             </bk-button>
         </div>
@@ -33,17 +33,17 @@
         methods: {
             // 跳转至课程管理界面
             toMyClass () {
-                bus.$emit('updateNavId', 'my_join_class')
+                bus.$emit('updateNavId', 'mycourse')
                 this.$router.replace({
-                    name: 'my_join_class'
+                    name: 'my_course'
                 })
             },
             // 跳转至点击的课程详情页面
             toMyClassDetail (id) {
-                bus.$emit('updateNavId', 'my_join_class')
+                bus.$emit('updateNavId', 'answer_question_index')
                 this.$store.commit('updateCourseId', id)
                 this.$router.replace({
-                    name: 'my_join_class_detail'
+                    name: 'answer_question_index'
                 })
             },
             // 获取课程列表
@@ -66,10 +66,10 @@
 }
 
 .header {
-    width: 20%;
+    width: 20vw;
     display: flex;
     align-items: center;
-    justify-content: space-around;
+    justify-content: flex-start;
 }
 
 .content {

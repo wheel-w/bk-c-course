@@ -53,9 +53,10 @@
     }
   },
   "dependencies": {
-    "bk-magic-vue": "latest",
     "axios": "~0.18.0",
+    "bk-magic-vue": "latest",
     "cookie": "~0.4.0",
+    "dayjs": "^1.10.8",
     "jsonp": "~0.2.1",
     "query-string": "~6.5.0",
     "url-parse": "~1.4.7",
