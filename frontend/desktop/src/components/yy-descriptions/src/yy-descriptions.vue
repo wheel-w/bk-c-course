@@ -74,11 +74,14 @@
                 const url = '/account/get_user_info/'
                 const res = await this.$http.get(url)
                 this.userInfo = res.data
+                console.log(res.data)
                 if (this.userInfo['identity'] === 'TEACHER') {
                     this.userInfo['identity'] = '老师'
+                    this.$emit('Identified')
                 }
                 if (this.userInfo['identity'] === 'STUDENT') {
                     this.userInfo['identity'] = '学生'
+                    this.$emit('Identified')
                 }
                 if (this.userInfo['identity'] === 'NOT_CERTIFIED') {
                     this.userInfo['identity'] = '未认证'
