@@ -665,6 +665,7 @@ def verify_school_user(request):
             password = body.get("password")
             if not username or not password:
                 return JsonResponse({'result': False, 'message': '请求参数不完整', 'code': 400, 'data': {}})
+
             if username == "test_teacher":
                 member = Member.objects.get(username=request.user.username)
                 member.identity = "TEACHER"
@@ -682,6 +683,9 @@ def verify_school_user(request):
                 username=username, password=password
             )
             if result:
+                user, _ = Member.objects.get_or_create(class_number=username)
+                if user and user.identity != Member.Identity.NOT_CERTIFIED:
+                    return JsonResponse({'result': False, 'message': '改账号已被认证', 'code': 400, 'data': {}})
                 kwargs = {
                     "username": username + "X",
                     "class_number": user_info["user_name"],
