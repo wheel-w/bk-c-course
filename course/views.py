@@ -660,6 +660,10 @@ def verify_school_user(request):
             password = body.get("password")
             if not username or not password:
                 return JsonResponse({'result': False, 'message': '请求参数不完整', 'code': 400, 'data': {}})
+
+            if username + 'X' != request.user.username:
+                return JsonResponse({'result': False, 'message': '你不能认证别人的账号', 'code': 400, 'data': {}})
+
             if username == "test_teacher":
                 member = Member.objects.get(username=request.user.username)
                 member.identity = "TEACHER"
