@@ -1,7 +1,7 @@
 <template>
     <div class="create_question">
         <div>
-            <bk-select :disabled="false" v-model="curChapterId" style="width: 250px;display:inline-block;"
+            <bk-select :disabled="false" v-model="curChapterId" style="width: 25%;display:inline-block;"
                 ext-cls="select-custom"
                 ext-popover-cls="select-popover-custom"
                 searchable
@@ -31,7 +31,7 @@
             </bk-tab>
         </div>
         <bk-dialog v-model="editQuestion.visable" width="1200" :draggable="false" :show-footer="false">
-            <component v-if="editQuestion.visable" :is="Dict[editQuestion.Question.types]" :info="editQuestion.Question" :editable="true"></component>
+            <component v-if="editQuestion.visable" :is="Dict[editQuestion.Question.types]" :info="editQuestion.Question" :editable="true" @updateQuestion="updateQuestion"></component>
         </bk-dialog>
         <div class="questions">
             <bk-button theme="primary" @click="deleteQuestions" style="margin-bottom: 10px">批量删除</bk-button>
@@ -411,15 +411,6 @@
                 } else {
                     return []
                 }
-            },
-            chapterName (id) {
-                let chapterName = null
-                this.chapterList.forEach(chapter => {
-                    if (chapter.id === id) {
-                        chapterName = chapter.chapter_name
-                    }
-                })
-                return chapterName
             },
             handlePageChange (newPage) {
                 this.pagination.current = newPage
