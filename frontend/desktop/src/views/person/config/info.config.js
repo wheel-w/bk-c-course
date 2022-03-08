@@ -20,11 +20,15 @@ export const infoConfig = [
         label: '身份'
     },
     {
-        field: 'affiliated_college',
+        field: 'college',
         label: '学院'
     },
     {
         field: 'professional_class',
-        label: '专业班级'
+        label: '专业'
+    },
+    {
+        field: 'classroom',
+        label: '班级'
     }
 ]
