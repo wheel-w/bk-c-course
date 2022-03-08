@@ -3,6 +3,48 @@
         <bk-dialog v-model="editQuestion.visable" width="1200" :draggable="false" :show-footer="false">
             <component v-if="editQuestion.visable" :is="Dict[editQuestion.Question.types]" :info="editQuestion.Question" @updateQuestion="updateQuestion" :editable="true" :readonly="true"></component>
         </bk-dialog>
+        <bk-dialog v-model="previewsetting.visible"
+            width="720"
+            :position="previewsetting.position"
+            title="试卷预览">
+            <div v-for="questiontitle in papertree[0].children" :key="questiontitle.name">
+                <h3>{{questiontitle.name}}</h3>
+                <bk-card class="radio-common" :title="`${index + 1}.${item.dialogdata.question} （${item.score}分）`" v-for="(item,index) in questiontitle.children" :key="index" :border="false">
+                    <bk-radio-group v-if="item.dialogdata.types === 'SINGLE'" class="radio-common">
+                        <bk-radio value="A" :disabled="true">
+                            A：{{ item.dialogdata.option_A }}
+                        </bk-radio>
+                        <bk-radio value="B" :disabled="true">
+                            B：{{ item.dialogdata.option_B }}
+                        </bk-radio>
+                        <bk-radio value="C" :disabled="true">
+                            C：{{ item.dialogdata.option_C }}
+                        </bk-radio>
+                        <bk-radio value="D" :disabled="true">
+                            D：{{ item.dialogdata.option_D }}
+                        </bk-radio>
+                    </bk-radio-group>
+                    <bk-checkbox-group v-if="item.dialogdata.types === 'MULTIPLE'" class="radio-common">
+                        <bk-checkbox value="A" :disabled="true">
+                            A：{{ item.dialogdata.option_A }}
+                        </bk-checkbox>
+                        <bk-checkbox value="B" :disabled="true">
+                            B：{{ item.dialogdata.option_B }}
+                        </bk-checkbox>
+                        <bk-checkbox value="C" :disabled="true">
+                            C：{{ item.dialogdata.option_C }}
+                        </bk-checkbox>
+                        <bk-checkbox value="D" :disabled="true">
+                            D：{{ item.dialogdata.option_D }}
+                        </bk-checkbox>
+                        <bk-checkbox value="E" :disabled="true">
+                            E：{{ item.dialogdata.option_E }}
+                        </bk-checkbox>
+                    </bk-checkbox-group>
+                    <bk-divider></bk-divider>
+                </bk-card>
+            </div>
+        </bk-dialog>
         <bk-sideslider :is-show.sync="sidesliderSettings.isShow" :quick-close="true">
             <div slot="header">{{ sidesliderSettings.title }}</div>
             <div slot="content">
@@ -114,7 +156,7 @@
                 :tpl="tpl"
                 @on-click="clicknode">
             </bk-tree>
-            <bk-button theme="primary" @click="previewpaper">预览试卷</bk-button>
+            <bk-button style="margin-left:10px;margin-right:10px" theme="primary" @click="previewsetting.visible = true">预览试卷</bk-button>
             <bk-button theme="primary" @click="savepaper">保存试卷</bk-button>
         </div>
     </div>
@@ -136,6 +178,12 @@
         },
         data () {
             return {
+                previewsetting: {
+                    visible: false,
+                    position: {
+                        top: 50
+                    }
+                },
                 Dict: {
                     'SINGLE': 'QuestionRadio',
                     'MULTIPLE': 'QuestionMulti',
@@ -297,7 +345,6 @@
                 }
             },
             deltitlenode (node) {
-                console.log(node.id)
                 this.delquestion(node.id).then(res => {
                     this.$refs.tree.delNode(node.parent, node)
                 })
@@ -614,6 +661,7 @@
             },
             async getpaperinfo () { // 获得试卷信息
                 this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: this.$route.query.paperid } }).then(res => {
+                    console.log(res)
                     if (res.result === true) {
                         const count = { val: 0 }
                         this.existlist = []
@@ -689,6 +737,7 @@
                             })
                         }
                     }
+                    console.log(this.papertree)
                 }).then(res => {
                     this.getquetionlist() // 获得题目
                 })
@@ -768,5 +817,11 @@ tr.bk-table-row.success-row {
 }
 .bk-select {
     line-height: 32px;
+}
+.radio-common {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    box-shadow: none;
 }
 </style>
