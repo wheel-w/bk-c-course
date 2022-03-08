@@ -16,7 +16,9 @@ import Exception from '@/components/exception'
 import { bus } from '@/common/bus'
 import AuthComponent from '@/components/auth'
 import '@/common/bkmagic'
+import dayjs from 'dayjs'
 
+Vue.prototype.dayjs = dayjs
 Vue.component('app-exception', Exception)
 Vue.component('app-auth', AuthComponent)
 
