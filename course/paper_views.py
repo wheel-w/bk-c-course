@@ -16,7 +16,7 @@ from .models import (
     Question,
     StudentAnswer,
     StudentPaperContact,
-    UserCourseContact,
+    UserCourseContact, Chapter,
 )
 from .views import is_teacher
 
@@ -146,10 +146,16 @@ def paper(request):
 
         try:
             # 得到查询参数的卷子信息
-            paper_info = {
-                paper["id"]: paper
-                for paper in Paper.objects.filter(**query_param).values()
-            }
+            papers = Paper.objects.filter(**query_param).values()
+            # 得到卷子的所属章节
+            chapter_ids = [p['chapter_id'] for p in papers]
+            chapters = {chapter.id: chapter.chapter_name for chapter in Chapter.objects.filter(id__in=chapter_ids)}
+            # 构造数据
+            paper_info = {}
+            for paper in papers:
+                paper_info[paper['id']] = paper
+                paper_info[paper['id']]['chapter_name'] = chapters[paper['chapter_id']]
+
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
                 SPContacts = {spc.paper_id: spc for spc in StudentPaperContact.objects.filter(student_id=request.user.id)}

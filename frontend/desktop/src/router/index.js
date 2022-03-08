@@ -17,13 +17,13 @@ const NotFound = () => import(/* webpackChunkName: 'none' */'@/views/404')
 const Welcome = () => import('@/views/welcome')
 const Home = () => import('@/views/home')
 const Person = () => import('@/views/person')
-const MyJoinClass = () => import('@/views/my_class/my_class_item/my_join_class')
-const MyJoinClassDetail = () => import('@/views/my_class/my_class_item/my_join_class_detail')
+const MyClass = () => import('@/views/my_class')
+const Mycourse = () => import('@/views/my_class/my_class_item/class_manage/my_course.vue')
+const Coursenumber = () => import('@/views/my_class/my_class_item/class_manage/course_number.vue')
+const CorrectPaper = () => import('@/views/my_class/my_class_item/class_manage/correct_paper')
 const AnswerQuestionIndex = () => import('@/views/my_class/my_class_item/answer_question/answer_question_index')
 const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer_question/answer_question_detail')
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
-const Mycourse = () => import('@/views/my_class/my_class_item/class_manage/my_course.vue')
-const Coursenumber = () => import('@/views/my_class/my_class_item/class_manage/course_number.vue')
 const Displaypaper = () => import('@/views/make_paper/display_paper.vue')
 const Selectquestion = () => import('@/views/make_paper/select_question.vue')
 
@@ -79,6 +79,11 @@ const routes = [
                 path: 'answer_question_detail',
                 name: 'answer_question_detail',
                 component: AnswerQuestionDetail
+            },
+            {
+                path: 'correct_paper',
+                name: 'correct_paper',
+                component: CorrectPaper
             },
             {
                 path: 'set_question_index',

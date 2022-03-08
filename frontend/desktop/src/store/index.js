@@ -23,7 +23,7 @@ const store = new Vuex.Store({
         // 系统当前登录用户
         user: {},
         // 当前的课程id
-        currentCourseId: 1
+        currentCourseId: 0
     },
     // 公共 getters
     getters: {
