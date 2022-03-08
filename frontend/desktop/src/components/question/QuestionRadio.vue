@@ -10,7 +10,7 @@
                         :autosize="{ minRows: 2, maxRows: 2 }"
                         placeholder="请输入题目内容"
                         v-model="Question.question"
-                        style="width:100%;">
+                        style="width:84%;">
                     </bk-input>
                 </bk-form-item>
             </div>
@@ -19,7 +19,7 @@
                     <bk-radio-group v-model="Question.answer">
                         <div :class="optionStyle('A')">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_A'" :icon-offset="20" error-display-type="tooltips">
-                                <bk-input ref="optionA" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" style="width:100%;">
+                                <bk-input ref="optionA" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" @enter="nextOption('B')" style="width:100%;">
                                     <template slot="prepend">
                                         <div class="group-text" @click="choose('A')" @mouseover="mouseOver = 'A'" @mouseleave="mouseOver = ''"><label>A</label></div>
                                     </template>
@@ -87,8 +87,10 @@
     </div>
 </template>
 <script>
+    import questionMixin from '@/mixin/questionMixin.js'
     export default {
         name: 'QuestionRadio',
+        mixins: [questionMixin],
         props: {
             info: {
                 type: Object,
@@ -102,56 +104,10 @@
                     answer: null,
                     types: '单选题'
                 }
-            },
-            editable: {
-                type: Boolean,
-                default: false
-            },
-            readonly: {
-                type: Boolean,
-                default: false
             }
         },
         data () {
             return {
-                mouseOver: '',
-                config: {
-                    message: null,
-                    theme: 'error',
-                    offset: 80
-                },
-                Question: JSON.parse(JSON.stringify(this.info)),
-                explainOpen: false,
-                rules: {
-                    question: [
-                        {
-                            required: true,
-                            message: '题目内容不能为空！',
-                            trigger: 'blur'
-                        }
-                    ],
-                    option: [
-                        {
-                            required: true,
-                            message: '选项内容不能为空！',
-                            trigger: 'change'
-                        }
-                    ],
-                    answer: [
-                        {
-                            required: true,
-                            message: '答案不能为空！',
-                            trigger: 'blur'
-                        }
-                    ],
-                    explain: [
-                        {
-                            required: true,
-                            message: '答案解析不能为空！',
-                            trigger: 'blur'
-                        }
-                    ]
-                }
             }
         },
         computed: {
@@ -178,9 +134,6 @@
             }
         },
         created () {
-            if (this.Question.explain) {
-                this.explainOpen = true
-            }
         },
         methods: {
             choose (option) {
@@ -193,26 +146,12 @@
                     this.Question.explain = null
                 }
             },
-            checkData () {
-                this.$refs.Question.validate().then(validator => {
-                    if (this.editable) {
-                        this.$emit('updateQuestion', this.Question)
-                    } else {
-                        this.$emit('createQuestion', this.Question)
-                    }
-                }, validator => {
-                    this.config.message = validator.content
-                    this.config.theme = 'error'
-                    this.$bkMessage(this.config)
-                })
-            },
             reset () {
                 this.Question.question = null
                 this.Question.option_A = null
                 this.Question.option_B = null
                 this.Question.option_C = null
                 this.Question.option_D = null
-                this.Question.option_E = null
                 this.Question.answer = null
                 this.Question.explain = null
                 this.explainOpen = false
@@ -240,9 +179,8 @@
     background-color: #1768EF;
 }
 .question {
-    width: 84%;
     height: 110px;
-    padding-left: 1%;
+    margin-left: 1%;
     p {
         width:80%;
     }

@@ -19,12 +19,12 @@
                     <bk-radio-group v-model="Question.answer">
                         <div :class="optionStyle('true')" @click="choose('true')" @mouseover="mouseOver = 'true'" @mouseleave="mouseOver = ''">
                             <bk-radio name="T" value="true" style="margin-top: 38px;margin-left:10px;">
-                                T
+                                正确
                             </bk-radio>
                         </div>
                         <div :class="optionStyle('false')" @click="choose('false')" @mouseover="mouseOver = 'false'" @mouseleave="mouseOver = ''">
                             <bk-radio name="F" value="false" style="margin-top: 38px;margin-left:10px;">
-                                F
+                                错误
                             </bk-radio>
                         </div>
                     </bk-radio-group>
@@ -165,11 +165,6 @@
             },
             reset () {
                 this.Question.question = null
-                this.Question.option_A = null
-                this.Question.option_B = null
-                this.Question.option_C = null
-                this.Question.option_D = null
-                this.Question.option_E = null
                 this.Question.answer = null
                 this.Question.explain = null
                 this.explainOpen = false

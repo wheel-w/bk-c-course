@@ -15,11 +15,11 @@
                 </bk-form-item>
             </div>
             <div class="options">
-                <bk-form-item :required="true" :rules="rules.answer" :property="'answer'" error-display-type="tooltips">
+                <bk-form-item :required="true" :rules="rules.answer" :property="'answer'" error-display-type="normal">
                     <bk-radio-group v-model="Question.answer">
                         <div :class="optionStyle('A')">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_A'" :icon-offset="20" error-display-type="tooltips">
-                                <bk-input v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" style="width:100%;">
+                                <bk-input ref="optionA" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" @enter="nextOption('B')" style="width:100%;">
                                     <template slot="prepend">
                                         <div class="group-text" @click="choose('A')" @mouseover="mouseOver = 'A'" @mouseleave="mouseOver = ''"><label>A</label></div>
                                     </template>
@@ -28,7 +28,7 @@
                         </div>
                         <div :class="optionStyle('B')">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_B'" :icon-offset="20" error-display-type="tooltips">
-                                <bk-input v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" style="width:100%;">
+                                <bk-input ref="optionB" v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" @enter="nextOption('C')" style="width:100%;">
                                     <template slot="prepend">
                                         <div class="group-text" @click="choose('B')" @mouseover="mouseOver = 'B'" @mouseleave="mouseOver = ''"><label>B</label></div>
                                     </template>
@@ -37,7 +37,7 @@
                         </div>
                         <div :class="optionStyle('C')">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_C'" :icon-offset="20" error-display-type="tooltips">
-                                <bk-input v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" style="width:100%;">
+                                <bk-input ref="optionC" v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" @enter="nextOption('D')" style="width:100%;">
                                     <template slot="prepend">
                                         <div class="group-text" @click="choose('C')" @mouseover="mouseOver = 'C'" @mouseleave="mouseOver = ''"><label>C</label></div>
                                     </template>
@@ -46,7 +46,7 @@
                         </div>
                         <div :class="optionStyle('D')">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_D'" :icon-offset="20" error-display-type="tooltips">
-                                <bk-input v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" style="width:100%">
+                                <bk-input ref="optionD" v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" @enter="nextOption('E')" style="width:100%">
                                     <template slot="prepend">
                                         <div class="group-text" @click="choose('D')" @mouseover="mouseOver = 'D'" @mouseleave="mouseOver = ''"><label>D</label></div>
                                     </template>
@@ -55,7 +55,7 @@
                         </div>
                         <div :class="optionStyle('E')">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_E'" :icon-offset="20" error-display-type="tooltips">
-                                <bk-input v-model="Question.option_E" :readonly="readonly" placeholder="请输入选项E内容" size="large" style="width:100%">
+                                <bk-input ref="optionE" v-model="Question.option_E" :readonly="readonly" placeholder="请输入选项E内容" size="large" @enter="nextOption('A')" style="width:100%">
                                     <template slot="prepend">
                                         <div class="group-text" @click="choose('E')" @mouseover="mouseOver = 'E'" @mouseleave="mouseOver = ''"><label>E</label></div>
                                     </template>
@@ -95,8 +95,10 @@
     </div>
 </template>
 <script>
+    import questionMixin from '@/mixin/questionMixin.js'
     export default {
         name: 'QuestionRadio',
+        mixins: [questionMixin],
         props: {
             info: {
                 type: Object,
@@ -111,56 +113,10 @@
                     answer: [],
                     types: '多选题'
                 }
-            },
-            editable: {
-                type: Boolean,
-                default: false
-            },
-            readonly: {
-                type: Boolean,
-                default: false
             }
         },
         data () {
             return {
-                mouseOver: '',
-                config: {
-                    message: null,
-                    theme: 'error',
-                    offset: 80
-                },
-                explainOpen: false,
-                Question: JSON.parse(JSON.stringify(this.info)),
-                rules: {
-                    question: [
-                        {
-                            required: true,
-                            message: '题目内容不能为空！',
-                            trigger: 'blur'
-                        }
-                    ],
-                    option: [
-                        {
-                            required: true,
-                            message: '选项内容不能为空！',
-                            trigger: 'change'
-                        }
-                    ],
-                    answer: [
-                        {
-                            required: true,
-                            message: '答案不能为空',
-                            trigger: 'blur'
-                        }
-                    ],
-                    explain: [
-                        {
-                            required: true,
-                            message: '答案解析不能为空！',
-                            trigger: 'blur'
-                        }
-                    ]
-                }
             }
         },
         computed: {
@@ -191,9 +147,6 @@
             if (this.editable) {
                 this.Question.answer = this.Question.answer.split('')
             }
-            if (this.Question.explain) {
-                this.explainOpen = true
-            }
         },
         methods: {
             choose (option) {
@@ -204,13 +157,9 @@
                 }
                 this.ascending_sort(this.Question.answer)
             },
-            handleSwitcherChange (status) {
-                if (!status && !this.readonly) {
-                    this.Question.explain = null
-                }
-            },
             checkData () {
                 this.Question.answer = this.Question.answer.join('')
+                console.log(this.Question.answer)
                 this.$refs.Question.validate().then(validator => {
                     if (this.editable) {
                         this.$emit('updateQuestion', this.Question)
@@ -222,6 +171,7 @@
                     this.config.theme = 'error'
                     this.$bkMessage(this.config)
                 })
+                this.Question.answer = this.Question.answer.split('')
             },
             ascending_sort (array) {
                 return array.sort(function (a, b) {
@@ -241,6 +191,19 @@
                 this.Question.explain = null
                 this.explainOpen = false
                 this.$refs.Question.clearError()
+            },
+            nextOption (option) {
+                if (option === 'A') {
+                    this.$refs.optionA.focus()
+                } else if (option === 'B') {
+                    this.$refs.optionB.focus()
+                } else if (option === 'C') {
+                    this.$refs.optionC.focus()
+                } else if (option === 'D') {
+                    this.$refs.optionD.focus()
+                } else {
+                    this.$refs.optionE.focus()
+                }
             }
         }
     }
@@ -267,7 +230,7 @@
         width: 45%;
         border-radius: 2px;
         margin-right: 10%;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
         padding: 3px 3px 3px 3px;
         display: inline-block;
         box-sizing: border-box;
@@ -275,7 +238,7 @@
     .optionBD {
         width: 45%;
         border-radius: 5px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
         padding: 3px 3px 3px 3px;
         display: inline-block;
         box-sizing: border-box;
