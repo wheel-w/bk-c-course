@@ -131,7 +131,6 @@
                 <template slot-scope="props">
                     <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '草稿'" :disabled="props.row.paperstatus !== '草稿'" @click="publishpaper(props.row)">发布</bk-button>
                     <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus !== '草稿'" @click="cancel(props.row)">取消</bk-button>
-                    <!-- <bk-button class="mr10" theme="primary" text v-if="props.row.submited === props.row.sum">发布成绩</bk-button> -->
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="modifiypaper(props.row)">选题</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="openedit(props.row)">修改</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.isend" @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>

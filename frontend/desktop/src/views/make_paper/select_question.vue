@@ -733,7 +733,6 @@
                                 children: tmp
                             })
                         }
-                        console.log(this.papertree[0].children)
                     } else {
                         if (res.message === '卷子没有题目') {
                             this.$bkMessage({
