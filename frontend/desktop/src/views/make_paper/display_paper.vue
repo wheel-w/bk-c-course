@@ -131,9 +131,10 @@
                 <template slot-scope="props">
                     <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '草稿'" :disabled="props.row.paperstatus !== '草稿'" @click="publishpaper(props.row)">发布</bk-button>
                     <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus !== '草稿'" @click="cancel(props.row)">取消</bk-button>
+                    <!-- <bk-button class="mr10" theme="primary" text v-if="props.row.submited === props.row.sum">发布成绩</bk-button> -->
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="modifiypaper(props.row)">选题</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="openedit(props.row)">修改</bk-button>
-                    <bk-button class="mr10" theme="primary" text @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
+                    <bk-button class="mr10" theme="primary" text :disabled="props.row.isend" @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '已发布'" @click="markpaper(props.row)">批改</bk-button>
                 </template>
             </bk-table-column>
@@ -435,7 +436,6 @@
             },
             getpaperlist () { // 获得试卷
                 this.$http.get('/course/paper/', { params: { course_id: this.CourseId } }).then(res => {
-                    console.log(res)
                     this.paperlist = []
                     if (res.data.length !== 0) {
                         for (const i in res.data) {
@@ -453,7 +453,15 @@
                                 end: undefined,
                                 submited: undefined,
                                 sum: undefined,
-                                rate: undefined
+                                rate: undefined,
+                                isend: undefined
+                            }
+                            const now = new Date()
+                            const end = new Date(res.data[i].end_time)
+                            if (now.getTime() >= end.getTime()) {
+                                tmp.isend = true
+                            } else {
+                                tmp.isend = false
                             }
                             tmp.papername = res.data[i].paper_name
                             tmp.id = res.data[i].id
@@ -642,23 +650,32 @@
                 })
             },
             publishpaper (row) {
-                const info = {
-                    status: 'RELEASE'
-                }
-                this.$http.put('/course/paper/', { paper_id: row.id, update_info: info }).then(res => {
-                    if (res.result === true) {
-                        this.$bkMessage({
-                            message: '发布成功！',
-                            theme: 'success'
-                        })
-                    } else {
-                        this.$bkMessage({
-                            message: res.message,
-                            theme: 'error'
-                        })
+                const now = new Date()
+                const end = new Date(row.end)
+                if (now.getTime() >= end.getTime()) {
+                    this.$bkMessage({
+                        message: '结束时间设置不合理，发布失败',
+                        theme: 'error'
+                    })
+                } else {
+                    const info = {
+                        status: 'RELEASE'
                     }
-                    this.getpaperlist()
-                })
+                    this.$http.put('/course/paper/', { paper_id: row.id, update_info: info }).then(res => {
+                        if (res.result === true) {
+                            this.$bkMessage({
+                                message: '发布成功！',
+                                theme: 'success'
+                            })
+                        } else {
+                            this.$bkMessage({
+                                message: res.message,
+                                theme: 'error'
+                            })
+                        }
+                        this.getpaperlist()
+                    })
+                }
             },
             markpaper (row) { // 跳转批改试卷
                 this.$router.push({
@@ -669,9 +686,19 @@
                 })
             },
             code (row) {
-                this.$nextTick(function () {
-                    this.bindQRCode(row.id)
-                })
+                const now = new Date()
+                const end = new Date(row.end)
+                if (now.getTime() >= end.getTime()) {
+                    this.$bkMessage({
+                        message: '答卷时间已过',
+                        theme: 'error'
+                    })
+                    this.getpaperlist()
+                } else {
+                    this.$nextTick(function () {
+                        this.bindQRCode(row.id)
+                    })
+                }
             },
             bindQRCode: function (id) {
                 // eslint-disable-next-line no-new
