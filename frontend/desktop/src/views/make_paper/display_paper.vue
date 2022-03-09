@@ -19,7 +19,7 @@
             @confirm="check"
             :auto-close="false"
             :position="dialogsetting.custom.position"
-            @cancel="$refs.addform.clearError()"
+            @cancel="$refs.addform.clearError(), formData.start = undefined, formData.end = undefined"
             title="新增试卷">
             <bk-form ref="addform" :model="formData" :rules="rules1" label-width="200">
                 <bk-form-item :required="true" :error-display-type="'normal'" :property="'papertype'" label="卷子类型:">
@@ -54,7 +54,7 @@
             ok-text="保存"
             :auto-close="false"
             @confirm="validatedata"
-            @cancel="edit = true, $refs.paperinfo.clearError()"
+            @cancel="edit = true, $refs.paperinfo.clearError(), selectdata.start = undefined, selectdata.end = undefined"
             title="修改试卷信息">
             <bk-form label-width="200" :model="selectdata" :rules="rules" ref="paperinfo">
                 <bk-form-item :error-display-type="'normal'" label="卷子类型:" :required="true" :property="'papertype'">
@@ -78,10 +78,10 @@
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item :required="true" :error-display-type="'normal'" :property="'start'" label="开始时间:">
-                    <bk-date-picker :readonly="edit" v-model="selectdata.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
                 </bk-form-item>
                 <bk-form-item :required="true" :error-display-type="'normal'" :property="'end'" label="结束时间:">
-                    <bk-date-picker :readonly="edit" v-model="selectdata.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
                 </bk-form-item>
                 <bk-form-item>
                     <bk-button v-if="edit" @click="edit = false" theme="primary">编辑</bk-button>
@@ -130,7 +130,7 @@
             <bk-table-column align="center" label="操作" width="240">
                 <template slot-scope="props">
                     <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '草稿'" :disabled="props.row.paperstatus !== '草稿'" @click="publishpaper(props.row)">发布</bk-button>
-                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '已发布'" @click="cancel(props.row)">取消</bk-button>
+                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus !== '草稿'" @click="cancel(props.row)">取消</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="modifiypaper(props.row)">选题</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="openedit(props.row)">修改</bk-button>
                     <bk-button class="mr10" theme="primary" text @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
@@ -189,7 +189,6 @@
                 ],
                 chapterFilters: [
                 ],
-                chapterMap: {},
                 statusFilters: [
                     {
                         text: '草稿',
@@ -320,7 +319,7 @@
                                 if (this.selectdata.end === undefined || this.selectdata.end === '') {
                                     return true
                                 } else {
-                                    if (val.getTime() < this.selectdata.end.getTime()) {
+                                    if (this.selectdata.start.getTime() < this.selectdata.end.getTime()) {
                                         return true
                                     } else {
                                         return false
@@ -342,7 +341,7 @@
                                 if (this.selectdata.start === undefined || this.selectdata.start === '') {
                                     return true
                                 } else {
-                                    if (this.selectdata.start.getTime() < val.getTime()) {
+                                    if (this.selectdata.start.getTime() < this.selectdata.end.getTime()) {
                                         return true
                                     } else {
                                         return false
@@ -388,6 +387,15 @@
                 const beijing = yearmonthday + ' ' + hourminutesecond
                 return beijing
             },
+            beijingtime (time) {
+                const date = new Date(time)
+                const timestamp1 = date.getTime()
+                const timestamp2 = timestamp1 / 1000
+                const timestamp3 = timestamp2 + 8 * 60 * 60
+                // 转换成UTC格式
+                const tmp = new Date(parseInt(timestamp3) * 1000).toISOString()
+                return tmp
+            },
             typeFilterMethod (value, row, column) { // 通过试卷类型过滤
                 const property = column.property
                 return row[property] === value
@@ -402,18 +410,15 @@
             },
             async getchapterlist () { // 获得章节
                 this.$http.get('/course/get_chapter_list/', { params: { course_id: this.CourseId } }).then(res => {
-                    this.chapterMap = {}
                     this.chapterFilters.splice(0, this.chapterFilters.length)
                     this.$set(this.chapterFilters, 0, {
                         text: '全部章节',
                         value: '全部章节'
                     })
                     this.chapterlist = [{ id: -1, name: '全部章节' }]
-                    this.$set(this.chapterMap, -1, '全部章节')
                     if (res.data.length !== 0) {
                         const count = { val: 1 }
                         for (const i in res.data) {
-                            this.$set(this.chapterMap, res.data[i].id, res.data[i].chapter_name)
                             this.chapterlist.push({
                                 id: res.data[i].id,
                                 name: res.data[i].chapter_name
@@ -430,6 +435,7 @@
             },
             getpaperlist () { // 获得试卷
                 this.$http.get('/course/paper/', { params: { course_id: this.CourseId } }).then(res => {
+                    console.log(res)
                     this.paperlist = []
                     if (res.data.length !== 0) {
                         for (const i in res.data) {
@@ -453,7 +459,7 @@
                             tmp.id = res.data[i].id
                             tmp.paperchapterid = res.data[i].chapter_id
                             tmp.types = res.data[i].types
-                            tmp.paperchapter = this.chapterMap[res.data[i].chapter_id]
+                            tmp.paperchapter = res.data[i].chapter_name
                             if (res.data[i].submitted_students_num !== undefined && res.data[i].total_students_num !== null) {
                                 tmp.submited = res.data[i].submitted_students_num
                                 tmp.sum = res.data[i].total_students_num
@@ -463,10 +469,10 @@
                             }
                             if (res.data[i].end_time !== null) {
                                 tmp.endtime = this.utc2beijing(res.data[i].end_time)
-                                tmp.end = res.data[i].end_time
+                                tmp.end = this.beijingtime(res.data[i].end_time)
                             }
                             if (res.data[i].start_time !== null) {
-                                tmp.start = res.data[i].start_time
+                                tmp.start = this.beijingtime(res.data[i].start_time)
                                 tmp.starttime = this.utc2beijing(res.data[i].start_time)
                             }
                             if (res.data[i].types === 'EXAM') {
@@ -531,7 +537,6 @@
                         }
                     })
                 }, validator => {
-                    /* this.$refs.addform.clearError() */
                     this.dialogsetting.custom.visible = true
                     this.$bkMessage({
                         message: '请检查输入',
@@ -580,6 +585,8 @@
                             start_time: this.selectdata.start,
                             end_time: this.selectdata.end
                         }
+                        this.selectdata.start = undefined
+                        this.selectdata.end = undefined
                         this.$http.put('/course/paper/', { paper_id: this.selectdata.paperid, update_info: info }).then(res => {
                             if (res.result === true) {
                                 this.$bkMessage({
@@ -588,6 +595,7 @@
                                 })
                                 this.getpaperlist()
                                 this.editdialog.custom.visible = false
+                                this.edit = true
                             }
                         })
                     }, validator => {
@@ -635,9 +643,7 @@
             },
             publishpaper (row) {
                 const info = {
-                    status: 'RELEASE'/* ,
-                    start_time: '2022-3-3 15:00',
-                    end_time: '2022-3-6 15:00' */
+                    status: 'RELEASE'
                 }
                 this.$http.put('/course/paper/', { paper_id: row.id, update_info: info }).then(res => {
                     if (res.result === true) {
@@ -654,23 +660,11 @@
                     this.getpaperlist()
                 })
             },
-            markpaper (row) { // 批改试卷
-                this.$http.get('/course/get_student_answer_info/', { params: { paper_id: row.id } }).then(res => {
-                    if (res.result === true) {
-                        const submitted = res.data.submitted
-                        // const notsubmitted = res.data.not_submitted
-                        this.$router.push({
-                            name: 'correct_paper',
-                            query: {
-                                paperid: row.id,
-                                submitted: submitted
-                            }
-                        })
-                    } else {
-                        this.$bkMessage({
-                            message: res.message,
-                            theme: 'error'
-                        })
+            markpaper (row) { // 跳转批改试卷
+                this.$router.push({
+                    name: 'correct_paper',
+                    query: {
+                        paperid: row.id
                     }
                 })
             },

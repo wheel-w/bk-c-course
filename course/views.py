@@ -663,6 +663,8 @@ def verify_school_user(request):
             body = json.loads(request.body)
             username = body.get("username")
             password = body.get("password")
+            if not username or not password:
+                return JsonResponse({'result': False, 'message': '请求参数不完整', 'code': 400, 'data': {}})
 
             if username == "test_teacher":
                 member = Member.objects.get(username=request.user.username)
@@ -681,15 +683,20 @@ def verify_school_user(request):
                 username=username, password=password
             )
             if result:
+                user, _ = Member.objects.get_or_create(class_number=username)
+                if user and user.identity != Member.Identity.NOT_CERTIFIED:
+                    return JsonResponse({'result': False, 'message': '改账号已被认证', 'code': 400, 'data': {}})
                 kwargs = {
+                    "username": username + "X",
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
-                    "professional_class": user_info["user_class"],
+                    "professional_class": user_info["user_major"],
                     "gender": Member.Gender.MAN
                     if user_info["user_sex"] == "男"
                     else Member.Gender.WOMAN,
                     "identity": Member.Identity.STUDENT,
                     "college": user_info["user_college"],
+                    "classroom": user_info["user_class"]
                 }
 
                 # 如果是微信小程序端进行认证

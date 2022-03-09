@@ -74,7 +74,6 @@
                 const url = '/account/get_user_info/'
                 const res = await this.$http.get(url)
                 this.userInfo = res.data
-                console.log(res.data)
                 if (this.userInfo['identity'] === 'TEACHER') {
                     this.userInfo['identity'] = '老师'
                     this.$emit('Identified')
