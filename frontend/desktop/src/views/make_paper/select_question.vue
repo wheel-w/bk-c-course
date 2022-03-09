@@ -379,7 +379,8 @@
                     openedIcon: 'icon-folder-open',
                     closedIcon: 'icon-folder',
                     expanded: true,
-                    id: this.titilevalue,
+                    id: -this.titilevalue,
+                    Id: this.titilevalue,
                     children: []
                 })
                 this.titilevalue = undefined
