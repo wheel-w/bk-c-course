@@ -140,7 +140,6 @@
                         this.paperEmpty = true
                         return
                     }
-                    console.log(res)
                     this.studentInfoList = res.data.submitted
                     this.studentInfo = res.data.submitted[0]
                     this.currentStudentIndex = 0
@@ -149,7 +148,6 @@
                         this.totalQuestion = res.data
                         delete this.totalQuestion['StudentPaperContact_id']
                         delete this.totalQuestion['total_score']
-                        console.log(this.totalQuestion)
                     })
                 })
             },
