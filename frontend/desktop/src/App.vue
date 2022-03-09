@@ -202,6 +202,11 @@
             // 点击导航栏跳转对应页面
             handleSelect (id, item) {
                 this.nav.id = id
+                if (item.pathName === 'exit') {
+                    const url = window.PROJECT_CONFIG.SITE_URL
+                    const appCode = url.split('/')[url.split('/').length - 2]
+                    window.location.href = 'https://paas-edu.bktencent.com/login/?c_url=' + url + '&app_code=' + appCode
+                }
                 this.$router.push({
                     name: item.pathName
                 })
