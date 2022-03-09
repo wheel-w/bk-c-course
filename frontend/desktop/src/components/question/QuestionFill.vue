@@ -1,5 +1,5 @@
 <template>
-    <div class="question-fill">
+    <div>
         <bk-form :model="Question" :label-width="0" ref="Question">
             <div class="question">
                 <p>题目:</p>
@@ -7,14 +7,11 @@
                     <bk-form-item :required="true" :rules="rules.question" :property="'question'" error-display-type="normal">
                         <bk-input
                             type="textarea"
-                            :autosize="{ minRows: 4, maxRows: 4 }"
                             :readonly="readonly"
+                            :autosize="{ minRows: 2, maxRows: 2 }"
                             placeholder="请输入题目内容"
                             v-model="Question.question"
-                            style="width:84%;"
-                            @focus="handleInputFocus"
-                            @change="handleInputChange"
-                            @mouseup="handleMouseSelect">
+                            style="width:84%;">
                         </bk-input>
                     </bk-form-item>
                 </div>
@@ -56,7 +53,7 @@
                         placeholder="请输入答案解析内容"
                         v-model="Question.explain"
                         v-if="explainOpen"
-                        style="width:84%;display:block;margin-top:10px">
+                        style="width:100%;display:block;margin-top:10px">
                     </bk-input>
                 </bk-form-item>
             </div>
@@ -64,8 +61,10 @@
     </div>
 </template>
 <script>
+    import questionMixin from '@/mixin/questionMixin.js'
     export default {
         name: 'QuestionFill',
+        mixins: [questionMixin],
         props: {
             info: {
                 type: Object,
@@ -75,50 +74,12 @@
                     answer: [],
                     types: '填空题'
                 }
-            },
-            editable: {
-                type: Boolean,
-                default: false
-            },
-            readonly: {
-                type: Boolean,
-                default: false
             }
         },
         data () {
             return {
-                config: {
-                    message: null,
-                    theme: 'error',
-                    offset: 80
-                },
                 separator: ' ',
-                explainOpen: false,
-                answer: [],
-                Question: JSON.parse(JSON.stringify(this.info)),
-                rules: {
-                    question: [
-                        {
-                            required: true,
-                            message: '题目内容不能为空！',
-                            trigger: 'blur'
-                        }
-                    ],
-                    answer: [
-                        {
-                            required: true,
-                            message: '答案不能为空',
-                            trigger: 'blur'
-                        }
-                    ],
-                    explain: [
-                        {
-                            required: true,
-                            message: '答案解析不能为空！',
-                            trigger: 'blur'
-                        }
-                    ]
-                }
+                answer: []
             }
         },
         computed: {
@@ -167,14 +128,10 @@
                     this.config.theme = 'error'
                     this.$bkMessage(this.config)
                 })
+                this.Question.answer = this.Question.answer.split(this.separator)
             },
             reset () {
                 this.Question.question = null
-                this.Question.option_A = null
-                this.Question.option_B = null
-                this.Question.option_C = null
-                this.Question.option_D = null
-                this.Question.option_E = null
                 this.answer = []
                 this.Question.explain = null
                 this.explainOpen = false
@@ -223,10 +180,6 @@
                 if (!status && !this.readonly) {
                     this.Question.explain = null
                 }
-            },
-            handleInputChange (value, event) {
-            },
-            handleInputFocus (value, event) {
             }
         }
     }
@@ -258,10 +211,15 @@
     margin-left: 1%;
 }
 .analysis {
+    width: 84%;
     height: 125px;
     margin-left: 1%;
+    .upload {
+        float: right;
+    }
     .reset {
-        margin-left: 66.6%;
+        margin-left: 10px;
+        float: right;
     }
 }
 </style>
