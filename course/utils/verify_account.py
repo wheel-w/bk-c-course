@@ -29,7 +29,7 @@ def get_information(cookies, username, name):
         'Accept':
             'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
     }
-    information_url = base_url + 'xsgrxx.aspx?xh=' + username + '&xm=' + name + '&gnmkdm=N121501'
+    information_url = base_url.replace('default2.aspx', '') + 'xsgrxx.aspx?xh=' + username + '&xm=' + name + '&gnmkdm=N121501'
     data = requests.get(information_url, cookies=cookies, headers=headers)
     data.encoding = data.apparent_encoding
     dom_tree = etree.HTML(data.text)
@@ -50,7 +50,8 @@ def get_information(cookies, username, name):
 def identify_user(username, password):
     global base_url
 
-    base_url = "http://202.200.112.200/"
+    # base_url = "http://202.200.112.200/"
+    base_url = "http://xfz.xaut.edu.cn/(kghpch55sipvlx55jgkbvz55)/default2.aspx"
     headers = {
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 '
@@ -61,11 +62,11 @@ def identify_user(username, password):
 
     login_url = base_url
     res = requests.get(login_url, allow_redirects=False)
-    login_url = login_url + res.headers['location']
-    login_url = login_url.replace('Default', 'default2')
-    login_url = login_url.replace(r'/(', '(')
+    # login_url = login_url + res.headers['location']
+    # login_url = login_url.replace('Default', 'default2')
+    # login_url = login_url.replace(r'/(', '(')
     checkcode_url = login_url.replace(r'/default2.aspx', r'/CheckCode.aspx?')
-    base_url = login_url.replace(r'/default2.aspx', r'/')
+    # base_url = login_url.replace(r'/default2.aspx', r'/')
 
     cookies = res.cookies
     checkcode = requests.get(checkcode_url, cookies=cookies, headers=headers)  # 伪装成浏览器
