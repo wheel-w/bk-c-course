@@ -172,15 +172,6 @@
                     }
                 })
             },
-            // 跳转至试卷批改页面
-            toCorrect (paperid) {
-                this.$router.push({
-                    name: 'correct_paper',
-                    query: {
-                        paperid
-                    }
-                })
-            },
             // 监听pagination的限制个数变化
             handlePageLimitChange () {
                 this.pagination.limit = arguments[0]
