@@ -1,5 +1,5 @@
 <template>
-    <div style="display:flex;">
+    <div id="my" style="display:flex;">
         <bk-dialog v-model="editQuestion.visable" width="1200" :draggable="false" :show-footer="false">
             <component v-if="editQuestion.visable" :is="Dict[editQuestion.Question.types]" :info="editQuestion.Question" @updateQuestion="updateQuestion" :editable="true" :readonly="true"></component>
         </bk-dialog>
@@ -44,48 +44,6 @@
                 </bk-card>
             </div>
         </bk-dialog>
-        <bk-sideslider :is-show.sync="sidesliderSettings.isShow" :quick-close="true">
-            <div slot="header">{{ sidesliderSettings.title }}</div>
-            <div slot="content">
-                <bk-form :rules="rules" :model="append" ref="appendSection" :label-width="0">
-                    <div style="margin-top:5px;margin-bottom:5px">
-                        <bk-form-item :error-display-type="'normal'" :property="'questiontitle'">
-                            <bk-input v-model="append.questiontitle" ref="appendInput" :clearable="false" style="width:231px;"></bk-input>
-                            <bk-button style="display:inline-block" :theme="'primary'" :title="'主要按钮'" icon="plus" class="mr10" @click="addtitle">
-                                新增大题
-                            </bk-button>
-                        </bk-form-item>
-                    </div>
-                </bk-form>
-                <div class="sections">
-                    <bk-table
-                        :data="paperquestiontype"
-                        :size="size"
-                        :outer-border="true"
-                        :virtual-render="false"
-                        :show-header="false"
-                        @row-dblclick="handleRowDbclick"
-                        @selection-change="handleSelectChange"
-                        height="480">
-                        <bk-table-column
-                            label="章节"
-                            prop="name"
-                            sortable
-                            @row-dblclick="handleRowDbclickSection">
-                            <template slot-scope="props">
-                                <bk-input
-                                    readonly
-                                    ref="myinput"
-                                    class="input"
-                                    v-model="props.row.name"
-                                    style="display:inline-block;">
-                                </bk-input>
-                            </template>
-                        </bk-table-column>
-                    </bk-table>
-                </div>
-            </div>
-        </bk-sideslider>
         <bk-dialog v-model="dialogsetting.visible"
             width="300"
             :position="dialogsetting.position"
@@ -104,8 +62,8 @@
         </bk-dialog>
         <div class="left">
             <div>
-                <span style="display:inline-block">所属大题：</span>
-                <bk-select class="type-select" v-model="questionparameter.questiontype" searchable>
+                <span style="display:inline-block;">所属大题：</span>
+                <bk-select style="width: 200px;display:inline-block" class="type-select" v-model="questionparameter.questiontype" searchable>
                     <bk-option v-for="option in papertree[0].children"
                         :key="option.id"
                         :id="option.name"
@@ -123,7 +81,7 @@
                 :height="480"
                 :data="questionlist"
                 :row-class-name="tableRowClassName"
-                @setCurrentRow="setCurrentRow(row)"
+                :row-style="tableRowStyle"
                 @row-click="handleRowClick"
                 @selection-change="handleSelectionChange">
                 <bk-table-column
@@ -143,20 +101,24 @@
                     prop="status"></bk-table-column>
             </bk-table>
         </div>
-        <div class="right">
-            <bk-button theme="primary" @click="modifiytype">新增大题</bk-button>
-            <bk-tree
-                ref="tree"
-                :data="papertree"
-                :node-key="'id'"
-                :draggable="true"
-                :drag-sort="dragSort"
-                :has-border="true"
-                :tpl="tpl"
-                @on-click="clicknode">
-            </bk-tree>
-            <bk-button style="margin-left:10px;margin-right:10px" theme="primary" @click="previewsetting.visible = true">预览试卷</bk-button>
-            <bk-button theme="primary" @click="savepaper">保存试卷</bk-button>
+        <div>
+            <div class="right-top">
+                <question-title-manage :questiontitles="questionTitleList" @updateQuestionTitle="updateQuestionTitle"></question-title-manage>
+            </div>
+            <div class="right-bottom">
+                <bk-tree
+                    ref="tree"
+                    :data="papertree"
+                    :node-key="'id'"
+                    :draggable="true"
+                    :drag-sort="dragSort"
+                    :has-border="true"
+                    :tpl="tpl"
+                    @on-click="clicknode">
+                </bk-tree>
+                <bk-button style="margin-left:10px;margin-right:10px" theme="primary" @click="previewsetting.visible = true">预览试卷</bk-button>
+                <bk-button theme="primary" :loading="loadingbutton" @click="savepaper">保存试卷</bk-button>
+            </div>
         </div>
     </div>
 </template>
@@ -167,13 +129,15 @@
     import QuestionJudge from '../../components/question/QuestionJudge.vue'
     import QuestionShort from '../../components/question/QuestionShort.vue'
     import QuestionFill from '../../components/question/QuestionFill.vue'
+    import QuestionTitleManage from '../../components/question-title/QuestionTitleManage.vue'
     export default {
         components: {
             QuestionRadio,
             QuestionMulti,
             QuestionJudge,
             QuestionShort,
-            QuestionFill
+            QuestionFill,
+            QuestionTitleManage
         },
         data () {
             return {
@@ -202,7 +166,7 @@
                         expanded: true,
                         openedIcon: 'icon-folder-open',
                         closedIcon: 'icon-folder',
-                        id: 1,
+                        id: 0,
                         children: [
                         ]
                     }
@@ -229,20 +193,6 @@
                 },
                 append: {
                     questiontitle: undefined
-                },
-                rules: {
-                    questiontitle: [
-                        {
-                            required: true,
-                            message: '大题名称不能为空！',
-                            trigger: 'change'
-                        },
-                        {
-                            max: 10,
-                            message: '不能多于10个字符',
-                            trigger: 'change'
-                        }
-                    ]
                 },
                 paperquestiontype: [
                 ],
@@ -283,7 +233,9 @@
                 firstrow: undefined,
                 popbutton: true,
                 moveoutbutton: true,
-                isdiabled: true
+                isdiabled: true,
+                loadingbutton: false,
+                questionTitleList: []
             }
         },
         computed: {
@@ -344,12 +296,29 @@
                 }
             },
             deltitlenode (node) {
-                if (node.children.length === 0) {
+                if (node.children === undefined) { // 没有children的为题目
+                    this.delquestion(node.id)
                     this.$refs.tree.delNode(node.parent, node)
                 } else {
-                    for (let i = 0; i < node.children.length; i++) {
+                    if (node.children.length > 2) { // 大题下面的题目多于2道时，才会提醒
+                        this.$bkInfo({
+                            type: 'warning',
+                            title: '确认要删除？',
+                            confirmFn: function () {
+                                node.children.forEach(item => {
+                                    this.delquestion(item.id)
+                                })
+                                this.$refs.tree.delNode(node.parent, node)
+                            },
+                            cancelFn: function () {
+                                node.expanded = true
+                            }
+                        })
+                    } else {
+                        node.children.forEach(item => {
+                            this.delquestion(item.id)
+                        })
                         this.$refs.tree.delNode(node.parent, node)
-                        this.delquestion(node.children[i].id)
                     }
                 }
             },
@@ -460,15 +429,6 @@
                     this.confirmquestion()
                 }
             },
-            pushquestion () { // 移出试卷
-                const that = this
-                this.$bkInfo({
-                    title: '确认要移出？',
-                    confirmFn () {
-                        that.moveout()
-                    }
-                })
-            },
             moveout () { // 将题目移出卷子
                 const flag = { value: 0 }
                 for (const j in this.Selections) {
@@ -546,35 +506,40 @@
             modifiytype () {
                 this.sidesliderSettings.isShow = true
             },
-            tableRowClassName ({ row, rowIndex }) {
+            tableRowStyle ({ row, rowIndex }) {
                 if (row.status === '已录入') {
-                    return 'success-row'
-                }
-            },
-            addtitle () {
-                this.$refs.appendSection.validate().then(validator => {
-                    this.savetitle()
-                }, validator => {
-                    this.$bkMessage({
-                        message: '输入有误',
-                        theme: 'warning'
-                    })
-                })
-            },
-            savepaper () { // 保存试卷
-                const data = []
-                for (const i in this.papertree[0].children) {
-                    const quesitonlist = []
-                    const scorelist = []
-                    const tmp = {}
-                    for (const j in this.papertree[0].children[i].children) {
-                        quesitonlist.push(this.papertree[0].children[i].children[j].id)
-                        scorelist.push(this.papertree[0].children[i].children[j].score)
+                    const style = {
+                        'background-color': '#E1ECFF'
                     }
-                    this.$set(tmp, this.papertree[0].children[i].Id, [quesitonlist, scorelist])
-                    data.push(tmp)
+                    return style
                 }
-                this.updatepaper(data)
+            },
+            async savepaper () { // 保存试卷
+                try {
+                    this.loadingbutton = true
+                    await new Promise(resolve => {
+                        setTimeout(() => {
+                            resolve('成功')
+                        }, 1500)
+                    })
+                    const data = []
+                    for (const i in this.papertree[0].children) {
+                        const quesitonlist = []
+                        const scorelist = []
+                        const tmp = {}
+                        for (const j in this.papertree[0].children[i].children) {
+                            quesitonlist.push(this.papertree[0].children[i].children[j].id)
+                            scorelist.push(this.papertree[0].children[i].children[j].score)
+                        }
+                        this.$set(tmp, this.papertree[0].children[i].Id, [quesitonlist, scorelist])
+                        data.push(tmp)
+                    }
+                    this.updatepaper(data)
+                    this.loadingbutton = false
+                    return true
+                } catch (e) {
+                    return false
+                }
             },
             async getquetionlist () { // 获得题目
                 this.$http.get('/course/get_question_list/', { params: { course_id: this.CourseId, chapter_id: this.$route.query.chapterid } }).then(res => {
@@ -623,45 +588,62 @@
                     }
                 })
             },
-            async savetitle () {
-                const data = {
-                    course_id: this.CourseId,
-                    custom_type_info: [
-                        {
-                            custom_type_name: this.append.questiontitle
-                        }
-                    ]
-                }
-                this.$http.post('/course/question_title/', data).then(res => {
-                    if (res.result === true) {
+            async operateQuestionTitle (questionTitleList) {
+                this.$http.post('/course/question_title/', { course_id: this.$store.state.currentCourseId, custom_type_info: questionTitleList }).then(res => {
+                    if (res.result) {
                         this.$bkMessage({
-                            message: '添加成功',
+                            message: '修改成功！',
                             theme: 'success'
                         })
-                        this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
-                            if (res.result === true) {
-                                this.paperquestiontype = []
-                                for (const i in res.data.custom_types) {
-                                    this.$set(this.paperquestiontypeMap, res.data.custom_types[i].custom_type_name, res.data.custom_types[i].id)
-                                    this.paperquestiontype.push({
-                                        name: res.data.custom_types[i].custom_type_name,
-                                        id: res.data.custom_types[i].id
-                                    })
-                                }
-                            }
+                    } else {
+                        this.$bkMessage({
+                            message: res.message,
+                            theme: 'error'
                         })
                     }
+                }).then(res => {
+                    this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
+                        if (res.result === true) {
+                            this.paperquestiontype = []
+                            this.questionTitleList = []
+                            for (const i in res.data.custom_types) {
+                                this.$set(this.paperquestiontypeMap, res.data.custom_types[i].custom_type_name, res.data.custom_types[i].id)
+                                this.paperquestiontype.push({
+                                    name: res.data.custom_types[i].custom_type_name,
+                                    id: res.data.custom_types[i].id
+                                })
+                                this.questionTitleList.push({
+                                    custom_type_name: res.data.custom_types[i].custom_type_name,
+                                    custom_type_id: res.data.custom_types[i].id
+                                })
+                            }
+                        }
+                    }).then(res => {
+                        this.papertree[0].children.forEach(item1 => {
+                            this.paperquestiontype.forEach(item2 => {
+                                if (item1.Id === item2.id && item1.name !== item2.name) {
+                                    item1.title = item2.name
+                                    item1.name = item2.name
+                                }
+                            })
+                        })
+                    })
                 })
             },
             async getquestiontitle () { // 获得大题名字
                 this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
                     if (res.result === true) {
                         this.paperquestiontype = []
+                        this.questionTitleList = []
                         for (const i in res.data.custom_types) {
                             this.$set(this.paperquestiontypeMap, res.data.custom_types[i].custom_type_name, res.data.custom_types[i].id)
                             this.paperquestiontype.push({
                                 name: res.data.custom_types[i].custom_type_name,
                                 id: res.data.custom_types[i].id
+                            })
+                            this.questionTitleList.push({
+                                custom_type_name: res.data.custom_types[i].custom_type_name,
+                                custom_type_id: res.data.custom_types[i].id
                             })
                         }
                     }
@@ -765,6 +747,29 @@
                         })
                     }
                 })
+            },
+            updateQuestionTitle (item, saved) {
+                if (saved) {
+                    this.operateQuestionTitle(item)
+                } else {
+                    this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
+                        if (res.result === true) {
+                            this.paperquestiontype = []
+                            this.questionTitleList = []
+                            for (const i in res.data.custom_types) {
+                                this.$set(this.paperquestiontypeMap, res.data.custom_types[i].custom_type_name, res.data.custom_types[i].id)
+                                this.paperquestiontype.push({
+                                    name: res.data.custom_types[i].custom_type_name,
+                                    id: res.data.custom_types[i].id
+                                })
+                                this.questionTitleList.push({
+                                    custom_type_name: res.data.custom_types[i].custom_type_name,
+                                    custom_type_id: res.data.custom_types[i].id
+                                })
+                            }
+                        }
+                    })
+                }
             }
         }
 
@@ -772,18 +777,24 @@
 </script>
 
 <style>
-.right {
+#a {
+    overflow-y: scroll;
+    overflow-x:auto;
+}
+#my .right-bottom {
     float: left;
-    width:500px;
-    padding-left:25px;
+    width: 350px;
+    padding-left: 25px;
 }
-.left {
+#my .right-top {
+    float: left;
+    width: 350px;
+    padding-left: 0px;
+}
+#my .left {
     float: left;
 }
-tr.bk-table-row.success-row {
-    background-color: #E1ECFF;
-}
-.add-button {
+#my .add-button {
     width: 24px;
     height: 24px;
     line-height: 20px;
@@ -797,7 +808,7 @@ tr.bk-table-row.success-row {
     text-align: center;
     cursor: pointer;
 }
-.delete-button {
+#my .delete-button {
     width: 24px;
     height: 24px;
     line-height: 20px;
@@ -811,23 +822,19 @@ tr.bk-table-row.success-row {
     text-align: center;
     cursor: pointer;
 }
-.monitor-navigation-content {
-    overflow-y: scroll;
-}
-.type-select {
+#my .type-select {
     display: inline-block;
     width: 200px;
-    margin-top: 0px;
 }
-.bk-select .bk-select-name {
+#my .bk-select .bk-select-name {
     display: inline-block;
     line-height: 32px;
-    height: 22px;
+    height: 23px;
 }
-.bk-select {
+#my .bk-select {
     line-height: 32px;
 }
-.radio-common {
+#my .radio-common {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
