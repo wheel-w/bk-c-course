@@ -680,7 +680,8 @@
                 this.$router.push({
                     name: 'correct_paper',
                     query: {
-                        paperid: row.id
+                        paperid: row.id,
+                        endTime: row.endtime
                     }
                 })
             },

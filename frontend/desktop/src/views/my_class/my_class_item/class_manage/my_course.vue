@@ -204,6 +204,7 @@
 </template>
 
 <script>
+    import { bus } from '@/common/bus'
     export default {
         data () {
             return {
@@ -371,6 +372,7 @@
                             this.formData.manage_student = []
                             this.formData.manage_student_ids = []
                             this.formData.course_introduction = ''
+                            bus.$emit('updateCourseList')
                         } else {
                             this.$bkMessage({
                                 message: '创建失败，请重试',

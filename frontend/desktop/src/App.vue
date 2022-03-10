@@ -194,8 +194,13 @@
                     window.location.reload()
                 }, 0)
             })
+            // 更新当前导航栏状态
             bus.$on('updateNavId', id => {
                 self.nav.id = id
+            })
+            // 其他页面更新课程下拉选框
+            bus.$on('updateCourseList', () => {
+                self.getCourseList()
             })
         },
         methods: {
