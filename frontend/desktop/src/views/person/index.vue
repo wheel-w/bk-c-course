@@ -1,10 +1,10 @@
 <template>
     <div class="personal">
         <!-- ------------------ -->
-        <YyDescriptions ref="info" title="个人中心" :form-config="infoConfig" :span="6">
+        <YyDescriptions ref="info" title="个人中心" :form-config="infoConfig" :span="6" @Identified="identified = true">
             <div slot="hander">
-                <bk-button theme="primary" size="small" @click="isShowDialog = true">
-                    认证
+                <bk-button theme="primary" size="small" @click="identify">
+                    {{identityStatus}}
                 </bk-button>
             </div>
         </YyDescriptions>
@@ -58,6 +58,12 @@
         },
         data () {
             return {
+                config: {
+                    theme: 'info',
+                    message: '',
+                    offsetY: 80
+                },
+                identified: false,
                 isShowDialog: false,
                 isEdit: false,
                 infoConfig: infoConfig,
@@ -66,6 +72,11 @@
                     username: '',
                     password: ''
                 }
+            }
+        },
+        computed: {
+            identityStatus () {
+                return this.identified ? '已认证' : '未认证'
             }
         },
         methods: {
@@ -84,19 +95,22 @@
                 // 这个是刷新 就是重新获取 更新后的数据
                 this.$refs.info.getUserInfoResult()
                 
-                // Message组件
-                const config = {
-                    message: '',
-                    offsetY: 80
-                }
                 if (res.result) {
-                    config.theme = 'primary'
-                    config.message = '认证成功'
-                    this.$bkMessage(config)
+                    this.config.theme = 'primary'
+                    this.config.message = '认证成功'
+                    this.$bkMessage(this.config)
                 } else {
-                    config.theme = 'error'
-                    config.message = res.message
-                    this.$bkMessage(config)
+                    this.config.theme = 'error'
+                    this.config.message = res.message
+                    this.$bkMessage(this.config)
+                }
+            },
+            identify () {
+                if (this.identified) {
+                    this.config.message = '用户已认证，如需取消认证请联系管理员'
+                    this.$bkMessage(this.config)
+                } else {
+                    this.isShowDialog = true
                 }
             }
         }

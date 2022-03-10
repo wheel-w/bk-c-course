@@ -160,7 +160,6 @@
                         this.paperEmpty = true
                         return
                     }
-
                     this.studentInfo = this.studentInfoList[0]
                     this.currentStudentIndex = 0
                     this.$http.get('/course/mark_or_check_paper/', { params: { paper_id: this.currentPaperId, student_id: this.studentInfo.student_id } }).then(res => {

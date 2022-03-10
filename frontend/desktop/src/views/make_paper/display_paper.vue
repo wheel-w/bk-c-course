@@ -19,7 +19,7 @@
             @confirm="check"
             :auto-close="false"
             :position="dialogsetting.custom.position"
-            @cancel="$refs.addform.clearError()"
+            @cancel="$refs.addform.clearError(), formData.start = undefined, formData.end = undefined"
             title="新增试卷">
             <bk-form ref="addform" :model="formData" :rules="rules1" label-width="200">
                 <bk-form-item :required="true" :error-display-type="'normal'" :property="'papertype'" label="卷子类型:">
@@ -130,7 +130,7 @@
             <bk-table-column align="center" label="操作" width="240">
                 <template slot-scope="props">
                     <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '草稿'" :disabled="props.row.paperstatus !== '草稿'" @click="publishpaper(props.row)">发布</bk-button>
-                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '已发布'" @click="cancel(props.row)">取消</bk-button>
+                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus !== '草稿'" @click="cancel(props.row)">取消</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="modifiypaper(props.row)">选题</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="openedit(props.row)">修改</bk-button>
                     <bk-button class="mr10" theme="primary" text @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
@@ -189,7 +189,6 @@
                 ],
                 chapterFilters: [
                 ],
-                chapterMap: {},
                 statusFilters: [
                     {
                         text: '草稿',
@@ -411,18 +410,15 @@
             },
             async getchapterlist () { // 获得章节
                 this.$http.get('/course/get_chapter_list/', { params: { course_id: this.CourseId } }).then(res => {
-                    this.chapterMap = {}
                     this.chapterFilters.splice(0, this.chapterFilters.length)
                     this.$set(this.chapterFilters, 0, {
                         text: '全部章节',
                         value: '全部章节'
                     })
                     this.chapterlist = [{ id: -1, name: '全部章节' }]
-                    this.$set(this.chapterMap, -1, '全部章节')
                     if (res.data.length !== 0) {
                         const count = { val: 1 }
                         for (const i in res.data) {
-                            this.$set(this.chapterMap, res.data[i].id, res.data[i].chapter_name)
                             this.chapterlist.push({
                                 id: res.data[i].id,
                                 name: res.data[i].chapter_name
@@ -439,6 +435,7 @@
             },
             getpaperlist () { // 获得试卷
                 this.$http.get('/course/paper/', { params: { course_id: this.CourseId } }).then(res => {
+                    console.log(res)
                     this.paperlist = []
                     if (res.data.length !== 0) {
                         for (const i in res.data) {
@@ -462,7 +459,7 @@
                             tmp.id = res.data[i].id
                             tmp.paperchapterid = res.data[i].chapter_id
                             tmp.types = res.data[i].types
-                            tmp.paperchapter = this.chapterMap[res.data[i].chapter_id]
+                            tmp.paperchapter = res.data[i].chapter_name
                             if (res.data[i].submitted_students_num !== undefined && res.data[i].total_students_num !== null) {
                                 tmp.submited = res.data[i].submitted_students_num
                                 tmp.sum = res.data[i].total_students_num
@@ -646,9 +643,7 @@
             },
             publishpaper (row) {
                 const info = {
-                    status: 'RELEASE'/* ,
-                    start_time: '2022-3-3 15:00',
-                    end_time: '2022-3-6 15:00' */
+                    status: 'RELEASE'
                 }
                 this.$http.put('/course/paper/', { paper_id: row.id, update_info: info }).then(res => {
                     if (res.result === true) {

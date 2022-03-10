@@ -1,6 +1,6 @@
 <template>
     <div style="border-style:;display:inline-block">
-        <bk-button :theme="'primary'" :title="'主要按钮'" style="margin-left:5px;margin-bottom:21px;border-style:double;" @click="chapterManage">
+        <bk-button :theme="'primary'" :title="'主要按钮'" icon="icon-block-shape" style="margin-left:5px;margin-bottom:21px;border-style:double;" @click="chapterManage">
             章节管理
         </bk-button>
         <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="handleHidden" @shown="handleShown">
@@ -9,8 +9,8 @@
                 <bk-form :model="append" ref="appendChapter" :label-width="0">
                     <div class="appendChapter">
                         <bk-form-item :required="true" :rules="rules.chapter" :property="'appendText'" :icon-offset="135">
-                            <bk-input ref="appendInput" :clearable="false" v-model="append.appendText" style="width:231px;" @blur="handleAppendBlur" @enter="appendChapter"></bk-input>
-                            <bk-button :theme="'primary'" :title="'主要按钮'" icon="plus" class="mr10" @click="appendChapter">
+                            <bk-input ref="appendInput" :clearable="false" v-model="append.appendText" style="width:70%;" @blur="handleAppendBlur" @enter="appendChapter"></bk-input>
+                            <bk-button :theme="'primary'" :title="'主要按钮'" class="mr10" @click="appendChapter" style="float:right;">
                                 新增章节
                             </bk-button>
                         </bk-form-item>
@@ -61,8 +61,6 @@
                     </bk-button>
                 </div>
             </div>
-            <!-- <div slot="footer">
-            </div> -->
         </bk-sideslider>
     </div>
 </template>
@@ -232,7 +230,6 @@
 }
 .deleteChapter {
     display: inline-block;
-    margin-left: ;
 }
 .saveChange {
     display: inline-block;

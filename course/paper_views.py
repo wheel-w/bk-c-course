@@ -154,7 +154,8 @@ def paper(request):
             paper_info = {}
             for paper in papers:
                 paper_info[paper['id']] = paper
-                paper_info[paper['id']]['chapter_name'] = chapters[paper['chapter_id']]
+                paper_info[paper['id']]['chapter_name'] = chapters[paper['chapter_id']] \
+                    if paper['chapter_id'] != -1 else '全部章节'
 
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
