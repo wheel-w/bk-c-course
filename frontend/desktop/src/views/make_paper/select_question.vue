@@ -344,9 +344,14 @@
                 }
             },
             deltitlenode (node) {
-                this.delquestion(node.id).then(res => {
+                if (node.children.length === 0) {
                     this.$refs.tree.delNode(node.parent, node)
-                })
+                } else {
+                    for (let i = 0; i < node.children.length; i++) {
+                        this.$refs.tree.delNode(node.parent, node)
+                        this.delquestion(node.children[i].id)
+                    }
+                }
             },
             async delquestion (id) { // 将题目状态由已录入改成未录入
                 for (const i in this.questionlist) {
@@ -374,7 +379,8 @@
                     openedIcon: 'icon-folder-open',
                     closedIcon: 'icon-folder',
                     expanded: true,
-                    id: this.titilevalue,
+                    id: -this.titilevalue,
+                    Id: this.titilevalue,
                     children: []
                 })
                 this.titilevalue = undefined
@@ -451,13 +457,7 @@
                     })
                 }
                 if (flag.value === 0) {
-                    const that = this
-                    this.$bkInfo({
-                        title: '确定添加入试卷中？',
-                        confirmFn () {
-                            that.confirmquestion()
-                        }
-                    })
+                    this.confirmquestion()
                 }
             },
             pushquestion () { // 移出试卷
@@ -571,7 +571,7 @@
                         quesitonlist.push(this.papertree[0].children[i].children[j].id)
                         scorelist.push(this.papertree[0].children[i].children[j].score)
                     }
-                    this.$set(tmp, this.papertree[0].children[i].id, [quesitonlist, scorelist])
+                    this.$set(tmp, this.papertree[0].children[i].Id, [quesitonlist, scorelist])
                     data.push(tmp)
                 }
                 this.updatepaper(data)
@@ -638,7 +638,18 @@
                             message: '添加成功',
                             theme: 'success'
                         })
-                        this.getquestiontitle()
+                        this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
+                            if (res.result === true) {
+                                this.paperquestiontype = []
+                                for (const i in res.data.custom_types) {
+                                    this.$set(this.paperquestiontypeMap, res.data.custom_types[i].custom_type_name, res.data.custom_types[i].id)
+                                    this.paperquestiontype.push({
+                                        name: res.data.custom_types[i].custom_type_name,
+                                        id: res.data.custom_types[i].id
+                                    })
+                                }
+                            }
+                        })
                     }
                 })
             },
@@ -660,7 +671,6 @@
             },
             async getpaperinfo () { // 获得试卷信息
                 this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: this.$route.query.paperid } }).then(res => {
-                    console.log(res)
                     if (res.result === true) {
                         const count = { val: 0 }
                         this.existlist = []
@@ -719,7 +729,8 @@
                                 closedIcon: 'icon-folder',
                                 expanded: true,
                                 flag: 1, // 判断需要显示‘+’还是‘-’。0显示‘+’、1显示‘-’
-                                id: this.paperquestiontypeMap[i],
+                                id: -this.paperquestiontypeMap[i], // 树状结构的id，防止与题目id相同出现bug
+                                Id: this.paperquestiontypeMap[i],
                                 children: tmp
                             })
                         }
@@ -736,7 +747,6 @@
                             })
                         }
                     }
-                    console.log(this.papertree)
                 }).then(res => {
                     this.getquetionlist() // 获得题目
                 })
