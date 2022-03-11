@@ -9,7 +9,7 @@
             <template slot="header">
                 <div class="monitor-navigation-header">
                     <div class="header-select">
-                        <bk-select v-if="nav.id !== 'home' && nav.id !== 'person' && nav.id !== 'exit'" v-model="$store.state.currentCourseId" style="width: 250px;"
+                        <bk-select v-if="nav.id !== 'home' && nav.id !== 'person' && nav.id !== 'mycourse' && nav.id !== 'exit'" v-model="$store.state.currentCourseId" style="width: 250px;"
                             ext-cls="select-custom"
                             ext-popover-cls="select-popover-custom"
                             searchable
@@ -127,7 +127,7 @@
                         },
                         {
                             id: 'classnumber',
-                            name: '成员管理',
+                            name: '课程成员',
                             icon: 'icon-tree-module-shape',
                             pathName: 'course_number',
                             children: [],

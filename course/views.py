@@ -464,9 +464,7 @@ def add_course_member(request):
     member_name = req.get("name")
     if Member.objects.filter(class_number=member_class_number).exists():
         user = Member.objects.get(class_number=member_class_number)
-        if UserCourseContact.objects.filter(
-            course_id=course_id, user_id=user.id
-        ).exists():
+        if UserCourseContact.objects.filter(course_id=course_id, user_id=user.id).exists():
             return JsonResponse(
                 {
                     "result": False,
@@ -476,9 +474,7 @@ def add_course_member(request):
                 },
             )
         else:
-            UserCourseContact.objects.update_or_create(
-                course_id=course_id, user_id=user.id
-            )
+            UserCourseContact.objects.update_or_create(course_id=course_id, user_id=user.id)
             return JsonResponse(
                 {
                     "result": True,
