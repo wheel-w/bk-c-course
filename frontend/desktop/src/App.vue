@@ -236,8 +236,6 @@
         },
         created () {
             this.getUserInfo()
-            // 在页面加载时读取sessionStorage里的状态信息
-            this.nav.id = sessionStorage.getItem('navId') ? JSON.parse(sessionStorage.getItem('navId')) : 'home'
             if (sessionStorage.getItem('courseId')) {
                 this.$store.commit('updateCourseId', JSON.parse(sessionStorage.getItem('courseId')))
             }
@@ -300,7 +298,6 @@
             },
             async getUserInfo () {
                 this.$http.get('/account/get_user_info/').then(res => {
-                    console.log('test', res.data)
                     if (res.data.identity === 'TEACHER') {
                         this.nav = this.navTeacher
                     } else if (res.data.identity === 'STUDENT') {
@@ -309,6 +306,8 @@
                         this.nav = this.navNotCertified
                         this.register.primary.visible = true
                     }
+                    // 在页面加载时读取sessionStorage里的状态信息
+                    this.nav.id = sessionStorage.getItem('navId') ? JSON.parse(sessionStorage.getItem('navId')) : 'home'
                 })
             },
             toRegister () {
