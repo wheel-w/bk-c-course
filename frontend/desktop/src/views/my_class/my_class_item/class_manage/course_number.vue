@@ -319,7 +319,6 @@
             },
             // 导入学生
             addExcel (param) {
-                // console.info(param)
                 const data = new FormData()
                 data.append('excel_file', param.fileList[0].origin)
                 data.append('course_id', this.course_id)
@@ -376,7 +375,6 @@
                 selection.forEach(e => {
                     if (e.identify === 'TEACHER') {
                         this.isHasTeacher = true
-                        console.info('有老师存在')
                     }
                     this.student_id.push(e.id)
                 })

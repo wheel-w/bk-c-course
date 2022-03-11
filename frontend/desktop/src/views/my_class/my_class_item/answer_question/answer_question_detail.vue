@@ -1,58 +1,60 @@
 <template>
     <div class="myWrapper" v-if="$route.query.isAccomplish" ref="top">
         <div class="header">
-            <h2>总分：{{ totalScore }}</h2>
+            <h2>总分：{{ totalScore === null ? '————' : totalScore }}</h2>
         </div>
         <div v-for="(item,index) in totalQuestion" :key="index">
-            <h3 v-if="item.length !== 0">{{ index }}</h3>
-            <bk-card class="radio-common" :title="`${childIndex + 1}.${childItem.question} （${childItem.score}分）`" v-for="(childItem,childIndex) in item" :key="childIndex" :border="false">
-                <bk-radio-group v-if="childItem.types === 'SINGLE'" class="radio-common" v-model="childItem.student_answer">
-                    <bk-radio value="A" :disabled="true">
-                        A：{{ childItem.option_A }}
-                    </bk-radio>
-                    <bk-radio value="B" :disabled="true">
-                        B：{{ childItem.option_B }}
-                    </bk-radio>
-                    <bk-radio value="C" :disabled="true">
-                        C：{{ childItem.option_C }}
-                    </bk-radio>
-                    <bk-radio value="D" :disabled="true">
-                        D：{{ childItem.option_D }}
-                    </bk-radio>
-                </bk-radio-group>
-                <bk-checkbox-group v-if="childItem.types === 'MULTIPLE'" class="radio-common" v-model="childItem.student_answer">
-                    <bk-checkbox value="A" :disabled="true">
-                        A：{{ childItem.option_A }}
-                    </bk-checkbox>
-                    <bk-checkbox value="B" :disabled="true">
-                        B：{{ childItem.option_B }}
-                    </bk-checkbox>
-                    <bk-checkbox value="C" :disabled="true">
-                        C：{{ childItem.option_C }}
-                    </bk-checkbox>
-                    <bk-checkbox value="D" :disabled="true">
-                        D：{{ childItem.option_D }}
-                    </bk-checkbox>
-                    <bk-checkbox value="E" :disabled="true">
-                        E：{{ childItem.option_E }}
-                    </bk-checkbox>
-                </bk-checkbox-group>
-                <bk-divider></bk-divider>
-                <div style="margin-top: 10px">
-                    你的答案：<span>{{ childItem.student_answer }}</span>
-                </div>
-                <div style="margin-top: 10px">
-                    正确答案为：
-                    <span v-if="childItem.types === 'JUDGE'">{{ item.answer === 'false' ? '错误' : '正确' }}</span>
-                    <span v-else>{{ childItem.answer }}</span>
-                </div>
-                <div style="margin-top: 10px">
-                    解析：<span>{{ childItem.explain === null ? '暂无解析' : childItem.explain}}</span>
-                </div>
-                <div style="margin-top: 10px">
-                    得分：{{ childItem.student_score }}
-                </div>
-            </bk-card>
+            <div v-if="item.length !== 0">
+                <h3>{{ index }}</h3>
+                <bk-card class="radio-common" :title="`${childIndex + 1}.${childItem.question} （${childItem.score}分）`" v-for="(childItem,childIndex) in item" :key="childIndex" :border="false">
+                    <bk-radio-group v-if="childItem.types === 'SINGLE'" class="radio-common" v-model="childItem.student_answer">
+                        <bk-radio value="A" :disabled="true">
+                            A：{{ childItem.option_A }}
+                        </bk-radio>
+                        <bk-radio value="B" :disabled="true">
+                            B：{{ childItem.option_B }}
+                        </bk-radio>
+                        <bk-radio value="C" :disabled="true">
+                            C：{{ childItem.option_C }}
+                        </bk-radio>
+                        <bk-radio value="D" :disabled="true">
+                            D：{{ childItem.option_D }}
+                        </bk-radio>
+                    </bk-radio-group>
+                    <bk-checkbox-group v-if="childItem.types === 'MULTIPLE'" class="radio-common" v-model="childItem.student_answer">
+                        <bk-checkbox value="A" :disabled="true">
+                            A：{{ childItem.option_A }}
+                        </bk-checkbox>
+                        <bk-checkbox value="B" :disabled="true">
+                            B：{{ childItem.option_B }}
+                        </bk-checkbox>
+                        <bk-checkbox value="C" :disabled="true">
+                            C：{{ childItem.option_C }}
+                        </bk-checkbox>
+                        <bk-checkbox value="D" :disabled="true">
+                            D：{{ childItem.option_D }}
+                        </bk-checkbox>
+                        <bk-checkbox value="E" :disabled="true">
+                            E：{{ childItem.option_E }}
+                        </bk-checkbox>
+                    </bk-checkbox-group>
+                    <bk-divider></bk-divider>
+                    <div style="margin-top: 10px">
+                        你的答案：<span>{{ childItem.student_answer }}</span>
+                    </div>
+                    <div style="margin-top: 10px">
+                        正确答案为：
+                        <span v-if="childItem.types === 'JUDGE'">{{ item.answer === 'false' ? 'F' : 'T' }}</span>
+                        <span v-else>{{ childItem.answer }}</span>
+                    </div>
+                    <div style="margin-top: 10px">
+                        解析：<span>{{ childItem.explain === null ? '暂无解析' : childItem.explain}}</span>
+                    </div>
+                    <div style="margin-top: 10px">
+                        得分：{{ childItem.student_score }}
+                    </div>
+                </bk-card>
+            </div>
         </div>
 
         <bk-button @click="$refs.top.scrollTop = 0" style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="'primary'">
@@ -190,6 +192,7 @@
             return {
                 totalQuestion: {}, // 总习题列表
                 totalScore: 0, // 总分
+
                 disabled: false,
                 count: '', // 计时
                 seconds: 0, // 从0秒开始计数
@@ -229,6 +232,13 @@
                     this.totalScore = res.data.total_score
                     delete this.totalQuestion['total_score']
                     delete this.totalQuestion['cumulative_time']
+                    for (const item in this.totalQuestion) {
+                        for (const childItem of this.totalQuestion[item]) {
+                            if (childItem.student_answer === null) {
+                                childItem.student_answer = '未作答'
+                            }
+                        }
+                    }
                 })
             },
             // 时 分 秒 格式化函数

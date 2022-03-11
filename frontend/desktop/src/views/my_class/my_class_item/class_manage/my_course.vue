@@ -275,7 +275,6 @@
                         const left = right - this.pagingConfigTwo.limit
                         this.List = this.course.slice(left, right)
                         bus.$emit('updateCourseList')
-                        // console.info(this.List)
                     } else {
                         this.$bkMessage({
                             message: '页面加载出错，请刷新重试！',
@@ -352,6 +351,7 @@
                                 theme: 'success',
                                 offsetY: 60,
                                 ellipsisLine: 2 })
+                            this.$store.commit('updateCourseId', 0)
                             this.getList()
                             this.List = this.course.slice(0, this.pagingConfigTwo.limit)
                             this.formData.course_name = ''
@@ -394,6 +394,7 @@
                             theme: 'success',
                             offsetY: 60,
                             ellipsisLine: 2 })
+                        this.$store.commit('updateCourseId', 0)
                         this.getList()
                     } else {
                         this.$bkMessage({

@@ -106,7 +106,7 @@
                 },
                 routerKey: +new Date(),
                 systemCls: 'mac',
-                nav: '',
+                nav: {},
                 navTeacher: {
                     list: [
                         {
@@ -264,8 +264,13 @@
                     window.location.reload()
                 }, 0)
             })
+            // 更新当前导航栏状态
             bus.$on('updateNavId', id => {
                 self.nav.id = id
+            })
+            // 其他页面更新课程下拉选框
+            bus.$on('updateCourseList', () => {
+                self.getCourseList()
             })
         },
         methods: {
@@ -275,6 +280,7 @@
                 if (item.pathName === 'exit') {
                     const url = window.PROJECT_CONFIG.SITE_URL
                     const appCode = url.split('/')[url.split('/').length - 2]
+                    this.$store.commit('updateCourseId', 0)
                     window.location.href = 'https://paas-edu.bktencent.com/login/?c_url=' + url + '&app_code=' + appCode
                 }
                 this.$router.push({
@@ -294,7 +300,6 @@
             },
             async getUserInfo () {
                 this.$http.get('/account/get_user_info/').then(res => {
-                    console.log('test', res.data)
                     if (res.data.identity === 'TEACHER') {
                         this.nav = this.navTeacher
                     } else if (res.data.identity === 'STUDENT') {
