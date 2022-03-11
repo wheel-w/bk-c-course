@@ -159,7 +159,8 @@ def paper(request):
 
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
-                SPContacts = {spc.paper_id: spc for spc in StudentPaperContact.objects.filter(student_id=request.user.id)}
+                SPContacts = {spc.paper_id: spc for spc in
+                              StudentPaperContact.objects.filter(student_id=request.user.id)}
                 for paper_id, paper in paper_info.items():
                     paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
                         status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
