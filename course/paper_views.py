@@ -159,8 +159,7 @@ def paper(request):
 
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
-                SPContacts = {spc.paper_id: spc for spc in
-                              StudentPaperContact.objects.filter(student_id=request.user.id)}
+                SPContacts = {spc.paper_id: spc for spc in StudentPaperContact.objects.filter(student_id=request.user.id)}
                 for paper_id, paper in paper_info.items():
                     paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
                         status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
@@ -675,11 +674,12 @@ def answer_or_check_paper(request):
                     if question_id in student_answer.keys()
                     else None
                 )
-                question["student_answer"] = (
-                    student_answer[question_id][0]
-                    if question_id in student_answer.keys()
-                    else None
-                )
+
+                if question_id in student_answer.keys():
+                    question["student_answer"] = (student_answer[question_id][0])
+                else:
+                    question["student_answer"] = None if question["types"] != Question.Types.MULTIPLE else "[]"
+
                 if paper.status == Paper.Status.MARKED:
                     question["student_score"] = (
                         student_answer[question_id][1]
