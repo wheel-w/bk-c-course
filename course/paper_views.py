@@ -675,11 +675,12 @@ def answer_or_check_paper(request):
                     if question_id in student_answer.keys()
                     else None
                 )
-                question["student_answer"] = (
-                    student_answer[question_id][0]
-                    if question_id in student_answer.keys()
-                    else None
-                )
+
+                if question_id in student_answer.keys():
+                    question["student_answer"] = (student_answer[question_id][0])
+                else:
+                    question["student_answer"] = None if question["types"] != Question.Types.MULTIPLE else "[]"
+
                 if paper.status == Paper.Status.MARKED:
                     question["student_score"] = (
                         student_answer[question_id][1]
