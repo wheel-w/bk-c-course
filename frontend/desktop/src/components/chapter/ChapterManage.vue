@@ -23,7 +23,6 @@
                         :outer-border="true"
                         :virtual-render="false"
                         :show-header="false"
-                        :role-style="tableRowStyle"
                         @row-click="handleRowClick"
                         @row-dblclick="handleRowDbclick"
                         @selection-change="handleSelectChange"
@@ -72,10 +71,6 @@
             chapters: {
                 type: Object,
                 default: () => ({})
-            },
-            id: {
-                type: Number,
-                default: 0
             }
         },
         data () {
@@ -115,7 +110,6 @@
         watch: {
         },
         created () {
-            console.log(this.id)
         },
         methods: {
             handleRowDbclick (row, event, column, rowIndex, columnIndex) {
@@ -220,14 +214,6 @@
                     if (this.chapterList[i].id !== this.chapters[i].id || this.chapterList[i].chapter_name !== this.chapters[i].chapter_name) {
                         this.changed = true
                     }
-                }
-            },
-            tableRowStyle ({ row, rowIndex }) {
-                if (row.id === this.id) {
-                    const style = {
-                        'background-color': '#E1ECFF'
-                    }
-                    return style
                 }
             }
         }
