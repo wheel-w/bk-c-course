@@ -641,7 +641,8 @@ def answer_or_check_paper(request):
             student_answer = {}
             PQContact_ids = questions.keys()
             for sa in StudentAnswer.objects.filter(
-                PQContact_id__in=PQContact_ids
+                PQContact_id__in=PQContact_ids,
+                student_id=student_id
             ).values():
                 student_answer[sa["PQContact_id"]] = (
                     sa["answer"],
