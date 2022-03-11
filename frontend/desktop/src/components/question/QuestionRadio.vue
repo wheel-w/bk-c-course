@@ -21,7 +21,7 @@
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_A'" :icon-offset="20" error-display-type="tooltips">
                                 <bk-input ref="optionA" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" @enter="nextOption('B')" style="width:100%;">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('A')" @mouseover="mouseOver = 'A'" @mouseleave="mouseOver = ''"><label>A</label></div>
+                                        <div class="group-text" @click="choose('A')" @mouseover="mouseOver = 'A'" @mouseleave="mouseOver = ''"><bk-radio :value="'A'"><label>A</label></bk-radio></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
@@ -30,7 +30,7 @@
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_B'" :icon-offset="20">
                                 <bk-input ref="optionB" v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" style="width:100%;" @enter="nextOption('C')">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('B')" @mouseover="mouseOver = 'B'" @mouseleave="mouseOver = ''"><label>B</label></div>
+                                        <div class="group-text" @click="choose('B')" @mouseover="mouseOver = 'B'" @mouseleave="mouseOver = ''"><bk-radio :value="'B'"><label>B</label></bk-radio></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
@@ -39,7 +39,7 @@
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_C'" :icon-offset="20">
                                 <bk-input ref="optionC" v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" style="width:100%;" @enter="nextOption('D')">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('C')" @mouseover="mouseOver = 'C'" @mouseleave="mouseOver = ''"><label>C</label></div>
+                                        <div class="group-text" @click="choose('C')" @mouseover="mouseOver = 'C'" @mouseleave="mouseOver = ''"><bk-radio :value="'C'"><label>C</label></bk-radio></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
@@ -48,7 +48,7 @@
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_D'" :icon-offset="20">
                                 <bk-input ref="optionD" v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" style="width:100%;" @enter="nextOption('A')">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('D')" @mouseover="mouseOver = 'D'" @mouseleave="mouseOver = ''"><label>D</label></div>
+                                        <div class="group-text" @click="choose('D')" @mouseover="mouseOver = 'D'" @mouseleave="mouseOver = ''"><bk-radio :value="'D'"><label>D</label></bk-radio></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>

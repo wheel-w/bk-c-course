@@ -16,12 +16,12 @@
             </div>
             <div class="options">
                 <bk-form-item :required="true" :rules="rules.answer" :property="'answer'" error-display-type="normal">
-                    <bk-radio-group v-model="Question.answer">
+                    <bk-checkbox-group v-model="Question.answer">
                         <div :class="optionStyle('A')">
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_A'" :icon-offset="20" error-display-type="tooltips">
                                 <bk-input ref="optionA" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" @enter="nextOption('B')" style="width:100%;">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('A')" @mouseover="mouseOver = 'A'" @mouseleave="mouseOver = ''"><label>A</label></div>
+                                        <div class="group-text" @mouseover="mouseOver = 'A'" @mouseleave="mouseOver = ''"><bk-checkbox :value="'A'" :checked="true"><label>A</label></bk-checkbox></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
@@ -30,7 +30,7 @@
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_B'" :icon-offset="20" error-display-type="tooltips">
                                 <bk-input ref="optionB" v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" @enter="nextOption('C')" style="width:100%;">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('B')" @mouseover="mouseOver = 'B'" @mouseleave="mouseOver = ''"><label>B</label></div>
+                                        <div class="group-text" @mouseover="mouseOver = 'B'" @mouseleave="mouseOver = ''"><bk-checkbox :value="'B'" :checked="true"><label>B</label></bk-checkbox></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
@@ -39,7 +39,7 @@
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_C'" :icon-offset="20" error-display-type="tooltips">
                                 <bk-input ref="optionC" v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" @enter="nextOption('D')" style="width:100%;">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('C')" @mouseover="mouseOver = 'C'" @mouseleave="mouseOver = ''"><label>C</label></div>
+                                        <div class="group-text" @mouseover="mouseOver = 'C'" @mouseleave="mouseOver = ''"><bk-checkbox :value="'C'" :checked="true"><label>C</label></bk-checkbox></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
@@ -48,21 +48,21 @@
                             <bk-form-item :required="true" :rules="rules.option" :property="'option_D'" :icon-offset="20" error-display-type="tooltips">
                                 <bk-input ref="optionD" v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" @enter="nextOption('E')" style="width:100%">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('D')" @mouseover="mouseOver = 'D'" @mouseleave="mouseOver = ''"><label>D</label></div>
+                                        <div class="group-text" @mouseover="mouseOver = 'D'" @mouseleave="mouseOver = ''"><bk-checkbox :value="'D'" :checked="true"><label>D</label></bk-checkbox></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
                         </div>
                         <div :class="optionStyle('E')">
-                            <bk-form-item :required="true" :rules="rules.option" :property="'option_E'" :icon-offset="20" error-display-type="tooltips">
+                            <bk-form-item :required="false" :rules="rules.option" :property="'option_E'" :icon-offset="20" error-display-type="tooltips">
                                 <bk-input ref="optionE" v-model="Question.option_E" :readonly="readonly" placeholder="请输入选项E内容" size="large" @enter="nextOption('A')" style="width:100%">
                                     <template slot="prepend">
-                                        <div class="group-text" @click="choose('E')" @mouseover="mouseOver = 'E'" @mouseleave="mouseOver = ''"><label>E</label></div>
+                                        <div class="group-text" @mouseover="mouseOver = 'E'" @mouseleave="mouseOver = ''"><bk-checkbox :value="'E'" :checked="true"><label>E</label></bk-checkbox></div>
                                     </template>
                                 </bk-input>
                             </bk-form-item>
                         </div>
-                    </bk-radio-group>
+                    </bk-checkbox-group>
                 </bk-form-item>
             </div>
             <div class="rightAnswer">
@@ -143,41 +143,27 @@
                 }
             }
         },
+        watch: {
+        },
         created () {
             if (this.editable) {
                 this.Question.answer = this.Question.answer.split('')
             }
         },
         methods: {
-            choose (option) {
-                if (this.Question.answer.indexOf(option) < 0) {
-                    this.Question.answer.push(option)
-                } else {
-                    this.Question.answer.splice(this.Question.answer.indexOf(option), 1)
-                }
-                this.ascending_sort(this.Question.answer)
-            },
             checkData () {
-                this.Question.answer = this.Question.answer.join('')
-                console.log(this.Question.answer)
                 this.$refs.Question.validate().then(validator => {
                     if (this.editable) {
                         this.$emit('updateQuestion', this.Question)
                     } else {
+                        this.Question.answer = this.Question.answer.join('')
                         this.$emit('createQuestion', this.Question)
+                        this.Question.answer = this.Question.answer.split('')
                     }
                 }, validator => {
                     this.config.message = validator.content
                     this.config.theme = 'error'
                     this.$bkMessage(this.config)
-                })
-                this.Question.answer = this.Question.answer.split('')
-            },
-            ascending_sort (array) {
-                return array.sort(function (a, b) {
-                    const x = a
-                    const y = b
-                    return ((x < y) ? -1 : (x > y) ? 1 : 0)
                 })
             },
             reset () {
@@ -231,7 +217,7 @@
         border-radius: 2px;
         margin-right: 10%;
         margin-bottom: 5px;
-        padding: 3px 3px 3px 3px;
+        padding: 3px 3px;
         display: inline-block;
         box-sizing: border-box;
     }
@@ -239,7 +225,7 @@
         width: 45%;
         border-radius: 5px;
         margin-bottom: 5px;
-        padding: 3px 3px 3px 3px;
+        padding: 3px 3px;
         display: inline-block;
         box-sizing: border-box;
     }
