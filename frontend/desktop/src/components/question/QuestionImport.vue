@@ -68,10 +68,16 @@
                         }
                     }
                     this.$http.post('/course/import_question_excel/', data, config).then(res => {
-                        this.config.theme = 'success'
-                        this.config.message = res.message
-                        this.$bkMessage(this.config)
-                        this.$emit('importQuestionExcel')
+                        if (res.result) {
+                            this.config.theme = 'success'
+                            this.config.message = res.message
+                            this.$bkMessage(this.config)
+                            this.$emit('importQuestionExcel')
+                        } else {
+                            this.config.theme = 'error'
+                            this.config.message = res.message
+                            this.$bkMessage(this.config)
+                        }
                     })
                 } else {
                     this.config.theme = 'error'

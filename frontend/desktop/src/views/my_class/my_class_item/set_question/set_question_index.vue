@@ -216,7 +216,7 @@
                         this.config.message = '修改成功！'
                         this.$bkMessage(this.config)
                     } else {
-                        this.config.theme = 'success'
+                        this.config.theme = 'error'
                         this.config.message = res.message
                         this.$bkMessage(this.config)
                     }
