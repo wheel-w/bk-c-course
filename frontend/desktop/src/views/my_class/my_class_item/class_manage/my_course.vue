@@ -1,12 +1,8 @@
 <template>
     <div class="wrapper">
-        <div class="wrapper-head">
+        <div class="wrapper-head" v-if="userIdentify === 'TEACHER'">
             <bk-button theme="primary" class="mr10" :outline="true" @click="beforeAdd">创建课程</bk-button>
             <bk-button theme="primary" :outline="true" @click="visible.deleteall.isshow = true">批量删除</bk-button>
-        </div>
-        <div class="wrapper-head1" v-if="false">
-            <bk-button theme="danger" class="mr10" :outline="true" @click="visible.deleteall.isshow = true">删除</bk-button>
-            <bk-button theme="danger" :outline="true" @click="type = false">取消</bk-button>
         </div>
         <div class="wrapper-body">
             <bk-table style="margin-top: 10px;"
@@ -30,7 +26,6 @@
                                 <div class="bk-text pt10 pb5 pl10 pr10" v-for="(item, index) in props.row.manage_student" :key="index">{{item}}</div>
                             </div>
                         </bk-popover>
-                        <div v-if="props.row.manage_student.length === 0">---</div>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="创建人" prop="create_people" align="center" header-align="center"></bk-table-column>
@@ -39,7 +34,7 @@
                         <span @click="showDetail(props.row)" style="cursor : pointer;">{{props.row.course_introduction }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="操作" width="150" align="center" header-align="center">
+                <bk-table-column label="操作" width="150" align="center" header-align="center" v-if="userIdentify === 'TEACHER'">
                     <template slot-scope="props">
                         <bk-button class="mr10" theme="primary" text @click="alterBefore(props.row)">修改</bk-button>
                         <bk-button class="mr10" theme="primary" text @click="removeBefor(props.row)">删除</bk-button>
@@ -208,21 +203,12 @@
     export default {
         data () {
             return {
-                type: false,
+                userIdentify: '',
                 course: [],
                 teacherList: [],
                 studentList: [],
                 course_id: [],
-                List: [
-                    {
-                        course_id: '4',
-                        course_name: 'course.course_name',
-                        course_introduction: 'course.course_introduction',
-                        teacher: '3190911031(None)',
-                        create_people: 'course.create_people',
-                        manage_student: ['3190931021(黄渭涵)']
-                    }
-                ],
+                List: [],
                 formData: {
                     course_name: '',
                     teacher_id: '',
@@ -276,6 +262,7 @@
         },
         created () {
             this.getList()
+            this.userIdentify = this.$store.state.user.identity
         },
         methods: {
             getList () {
@@ -399,7 +386,6 @@
                 this.visible.deletcourse.isshow = true
             },
             removeCourse (e) {
-                // console.info('课程id' + e)
                 this.$http.delete('/course/manage_course/', { params: { course_id: JSON.stringify(e) } }).then(res => {
                     if (res.result) {
                         this.$bkMessage({
