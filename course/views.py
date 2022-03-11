@@ -8,9 +8,9 @@ from django.db import IntegrityError, transaction
 from django.http import FileResponse, JsonResponse
 
 from blueapps.core.exceptions import DatabaseError
+
 from .models import Course, Member, UserCourseContact
 from .utils.verify_account import identify_user
-
 
 # Create your views here.
 
@@ -54,7 +54,7 @@ def is_teacher(fun):
                 "identity"
             )  # 取出数据表中的identity值
             if (
-                    identity.first()["identity"] == Member.Identity.TEACHER
+                identity.first()["identity"] == Member.Identity.TEACHER
             ):  # 将取出的Queryset转化为字典与字符串比较
                 return fun(request, *args, **kwargs)
             else:
@@ -123,9 +123,7 @@ def manage_course(request):
     # 删
     if request.method == "DELETE":
         course_ids = json.loads(request.GET.get("course_id"))
-        user_info = "{}({})".format(
-            request.user.class_number, request.user.name
-        )
+        user_info = "{}({})".format(request.user.class_number, request.user.name)
         if not course_ids:
             return JsonResponse(
                 {
@@ -138,7 +136,9 @@ def manage_course(request):
             )
         del_courses = Course.objects.filter(id__in=course_ids)
         for del_course in del_courses:
-            if not (del_course.create_people == user_info or del_course.teacher == user_info):
+            if not (
+                del_course.create_people == user_info or del_course.teacher == user_info
+            ):
                 return JsonResponse(
                     {
                         "result": False,
@@ -341,9 +341,9 @@ def import_student_excel(request):
                     row_err = row
                     row_values = table.row_values(row)
                     if not (
-                            row_values[0] == ""
-                            and row_values[2] == ""
-                            and row_values[4] == ""
+                        row_values[0] == ""
+                        and row_values[2] == ""
+                        and row_values[4] == ""
                     ):
                         student_info["class_number"] = int(row_values[0])
                         student_info["professional_class"] = row_values[4]
@@ -411,7 +411,7 @@ def import_student_excel(request):
     )
 
 
-# 根具课程id为课程新加学生
+# 根据课程id,为课程新加学生
 def add_course_student(request):
     req = json.loads(request.body)
     course_id = req.get("course_id")
@@ -599,6 +599,7 @@ def search_course_student(request):
             student_info["professional_class"] = user_object.professional_class
             student_info["identify"] = user_object.identity
             student_list.append(student_info.copy())
+        student_list.reverse()  # 逆序输出
         page_size = request.GET.get("page_size", 10)
         paginator = Paginator(student_list, page_size)  # 分页器对象，10是每页展示的数据条数
         page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页
@@ -668,7 +669,9 @@ def verify_school_user(request):
             username = body.get("username")
             password = body.get("password")
             if not username or not password:
-                return JsonResponse({'result': False, 'message': '请求参数不完整', 'code': 400, 'data': {}})
+                return JsonResponse(
+                    {"result": False, "message": "请求参数不完整", "code": 400, "data": {}}
+                )
 
             if username == "test_teacher":
                 member = Member.objects.get(username=request.user.username)
@@ -689,7 +692,9 @@ def verify_school_user(request):
             if result:
                 user, _ = Member.objects.get_or_create(class_number=username)
                 if user and user.identity != Member.Identity.NOT_CERTIFIED:
-                    return JsonResponse({'result': False, 'message': '改账号已被认证', 'code': 400, 'data': {}})
+                    return JsonResponse(
+                        {"result": False, "message": "改账号已被认证", "code": 400, "data": {}}
+                    )
                 kwargs = {
                     "username": username + "X",
                     "class_number": user_info["user_name"],
@@ -700,12 +705,14 @@ def verify_school_user(request):
                     else Member.Gender.WOMAN,
                     "identity": Member.Identity.STUDENT,
                     "college": user_info["user_college"],
-                    "classroom": user_info["user_class"]
+                    "classroom": user_info["user_class"],
                 }
 
                 # 如果是微信小程序端进行认证
                 if request.is_wechat():
-                    user, _ = Member.objects.get_or_create(username="{}X".format(username))
+                    user, _ = Member.objects.get_or_create(
+                        username="{}X".format(username)
+                    )
                     kwargs.update(
                         {
                             "openid": request.user.openid,

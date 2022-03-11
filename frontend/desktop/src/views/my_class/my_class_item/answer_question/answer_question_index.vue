@@ -236,6 +236,9 @@
                     this.exerciseList.push(...waitMarkedList)
                     this.exerciseList.push(...finishedList)
                     this.exerciseList.push(...notSubmittedList)
+                    this.exerciseList = this.exerciseList.filter(item => {
+                        return item.status !== 'DRAFT'
+                    })
                     this.middleExerciseList = this.exerciseList
                     this.pagination.count = this.middleExerciseList.length
                     // 去重函数

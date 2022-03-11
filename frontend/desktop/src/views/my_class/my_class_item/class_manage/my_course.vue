@@ -274,6 +274,7 @@
                         const right = this.pagingConfigTwo.current * this.pagingConfigTwo.limit
                         const left = right - this.pagingConfigTwo.limit
                         this.List = this.course.slice(left, right)
+                        bus.$emit('updateCourseList')
                         // console.info(this.List)
                     } else {
                         this.$bkMessage({
@@ -359,7 +360,6 @@
                             this.formData.manage_student = []
                             this.formData.manage_student_ids = []
                             this.formData.course_introduction = ''
-                            bus.$emit('updateCourseList')
                         } else {
                             this.$bkMessage({
                                 message: '创建失败，请重试',

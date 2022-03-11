@@ -58,7 +58,6 @@ export default {
     },
     methods: {
         checkData () {
-            console.log('mixin-checkdata')
             this.$refs.Question.validate().then(validator => {
                 if (this.editable) {
                     this.$emit('updateQuestion', this.Question)

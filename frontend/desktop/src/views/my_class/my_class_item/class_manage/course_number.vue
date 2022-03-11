@@ -217,7 +217,7 @@
                         this.data = res.data
                     } else {
                         this.$bkMessage({
-                            message: '页面加载出错，请刷新重试！',
+                            message: res.message,
                             delay: 1000,
                             theme: 'error',
                             offsetY: 60,
