@@ -6,9 +6,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from MySQLdb import DatabaseError
-from django.views.decorators.csrf import csrf_exempt
 
-from blueapps.account.decorators import login_exempt
 from .celery_task.judge_objective import judge_objective
 from .models import (
     CustomType,
@@ -789,8 +787,6 @@ def synchronous_paper(request):
         )
 
 
-@login_exempt
-@csrf_exempt
 def save_answer(request):
     """
     功能: 保存学生的答案
@@ -827,17 +823,22 @@ def save_answer(request):
         PQContacts = {PQContact.id: PQContact for PQContact in
                       PaperQuestionContact.objects.filter(id__in=PQContact_ids)}
 
-        for info in answer_info:
-            create_list.append(
-                StudentAnswer(
-                    student_id=student_id,
-                    PQContact_id=info["question_id"],
-                    answer=info["stu_answers"] if (PQContacts[info["question_id"]].types == Question.Types.MULTIPLE and
-                                                   info["stu_answers"]) or PQContacts[
-                                                      info["question_id"]].types != Question.Types.MULTIPLE else "[]",
-                    score=0,
+        try:
+            for info in answer_info:
+                create_list.append(
+                    StudentAnswer(
+                        student_id=student_id,
+                        PQContact_id=info["question_id"],
+                        answer=info["stu_answers"] if (PQContacts[info["question_id"]].types == Question.Types.MULTIPLE and
+                                                       info["stu_answers"]) or PQContacts[
+                                                          info["question_id"]].types != Question.Types.MULTIPLE else "[]",
+                        score=0,
+                    )
                 )
-            )
+        except KeyError as e:
+            logger.exception('函数: [save_answer]: 读取表: [PaperQuestionContact]没有的题目id: [{}]'.format(e))
+            return JsonResponse({'result': False, 'code': 500, 'message': '提交失败(请检查日志)', 'data': {}})
+
         # 数据库操作
         try:
             # 获得卷子对应的course_id
