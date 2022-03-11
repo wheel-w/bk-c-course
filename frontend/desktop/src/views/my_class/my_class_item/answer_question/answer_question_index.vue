@@ -15,7 +15,7 @@
                         <div>
                             <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'SUBMITTED'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)">{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)" :disabled="props.row.status !== 'MARKED'">{{ props.row.paper_name }}</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'UNDERWAY'" theme="primary" text @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;">{{ props.row.paper_name }}</bk-button>
                             <bk-button v-else radius="10px" text disabled>{{ props.row.paper_name }}</bk-button>
                         </div>
@@ -42,7 +42,7 @@
                         <div>
                             <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>暂未开始</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'SUBMITTED'" theme="primary" text disabled>待批改</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)">查看解析</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)" :disabled="props.row.status !== 'MARKED'">查看解析</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'UNDERWAY'" theme="primary" text @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;">开始答题</bk-button>
                             <bk-button v-else theme="primary" text disabled>未提交</bk-button>
                         </div>
