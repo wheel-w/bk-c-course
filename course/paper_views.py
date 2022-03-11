@@ -6,7 +6,9 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from MySQLdb import DatabaseError
+from django.views.decorators.csrf import csrf_exempt
 
+from blueapps.account.decorators import login_exempt
 from .celery_task.judge_objective import judge_objective
 from .models import (
     CustomType,
@@ -159,7 +161,8 @@ def paper(request):
 
             # 如果是学生，查询卷子的作答情况
             if identity == Member.Identity.STUDENT and paper_info:
-                SPContacts = {spc.paper_id: spc for spc in StudentPaperContact.objects.filter(student_id=request.user.id)}
+                SPContacts = {spc.paper_id: spc for spc in
+                              StudentPaperContact.objects.filter(student_id=request.user.id)}
                 for paper_id, paper in paper_info.items():
                     paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
                         status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
@@ -307,13 +310,13 @@ def paper(request):
         update_info = body.get("update_info")
         # 起始时间同时设定
         if paper_id is None or (
-            ("start_time" in update_info.keys()) ^ ("end_time" in update_info.keys())
+                ("start_time" in update_info.keys()) ^ ("end_time" in update_info.keys())
         ):
             return JsonResponse(
                 {"result": False, "code": 400, "message": "请求参数不完整", "data": {}}
             )
         if ("status" in update_info.keys()) and (
-            update_info.get("status") not in Paper.status_list
+                update_info.get("status") not in Paper.status_list
         ):
             return JsonResponse(
                 {"result": False, "code": 400, "message": "卷子状态码不存在", "data": {}}
@@ -321,7 +324,7 @@ def paper(request):
         try:
             paper = Paper.objects.filter(id=paper_id)
             if update_info.get("status") == Paper.Status.RELEASE and (
-                not paper.get().question_order or paper.get().question_order == "{}"
+                    not paper.get().question_order or paper.get().question_order == "{}"
             ):
                 return JsonResponse(
                     {"result": False, "code": 400, "message": "卷子没有题目，无法发布", "data": {}}
@@ -463,7 +466,7 @@ def manage_paper_question_contact(request):
             sum = 0
             order_json = {}
             for title in title_info:
-                order_json[title[0]] = score_list[sum : sum + title[1]]
+                order_json[title[0]] = score_list[sum: sum + title[1]]
                 sum += title[1]
 
             Paper.objects.filter(id=paper_id).update(
@@ -552,8 +555,8 @@ def mark_or_check_paper(request):
             student_answer = {}
             PQContact_ids = questions.keys()
             for sa in StudentAnswer.objects.filter(
-                student_id=student_id,
-                PQContact_id__in=PQContact_ids
+                    student_id=student_id,
+                    PQContact_id__in=PQContact_ids
             ).values():
                 student_answer[sa["PQContact_id"]] = (
                     sa["answer"],
@@ -612,8 +615,8 @@ def answer_or_check_paper(request):
                 paper_id=paper_id, student_id=student_id
             )
             if (
-                SPContact
-                and SPContact.get().status == StudentPaperContact.Status.SUBMITTED
+                    SPContact
+                    and SPContact.get().status == StudentPaperContact.Status.SUBMITTED
             ):
                 return JsonResponse(
                     {"result": False, "code": 400, "message": "你已经提交", "data": {}}
@@ -641,8 +644,8 @@ def answer_or_check_paper(request):
             student_answer = {}
             PQContact_ids = questions.keys()
             for sa in StudentAnswer.objects.filter(
-                PQContact_id__in=PQContact_ids,
-                student_id=student_id
+                    PQContact_id__in=PQContact_ids,
+                    student_id=student_id
             ).values():
                 student_answer[sa["PQContact_id"]] = (
                     sa["answer"],
@@ -663,8 +666,8 @@ def answer_or_check_paper(request):
             for question_id in question_ids:
                 question = questions[question_id]
                 if (
-                    paper.status == Paper.Status.RELEASE
-                    and paper.end_time > timezone.now()
+                        paper.status == Paper.Status.RELEASE
+                        and paper.end_time > timezone.now()
                 ):
                     # 为了防止一份卷子有id相同的两个题
                     question.pop("answer") if "answer" in question.keys() else None
@@ -786,6 +789,8 @@ def synchronous_paper(request):
         )
 
 
+@login_exempt
+@csrf_exempt
 def save_answer(request):
     """
     功能: 保存学生的答案
@@ -807,7 +812,7 @@ def save_answer(request):
             body.get(param) for param in request_params
         ]
         if not (
-            answer_info and paper_id and cumulative_time and save_or_submit in [0, 1]
+                answer_info and paper_id and cumulative_time and save_or_submit in [0, 1]
         ):
             return JsonResponse(
                 {"result": False, "code": 400, "message": "请求参数不完整", "data": {}}
@@ -818,11 +823,18 @@ def save_answer(request):
         create_list = []
         for info in answer_info:
             PQContact_ids.append(info["question_id"])
+
+        PQContacts = {PQContact.id: PQContact for PQContact in
+                      PaperQuestionContact.objects.filter(id__in=PQContact_ids)}
+
+        for info in answer_info:
             create_list.append(
                 StudentAnswer(
                     student_id=student_id,
                     PQContact_id=info["question_id"],
-                    answer=info["stu_answers"],
+                    answer=info["stu_answers"] if (PQContacts[info["question_id"]].types == Question.Types.MULTIPLE and
+                                                   info["stu_answers"]) or PQContacts[
+                                                      info["question_id"]].types != Question.Types.MULTIPLE else "[]",
                     score=0,
                 )
             )
@@ -939,7 +951,8 @@ def get_student_answer_info(request):
             all_student_ids = [i.user_id for i in UserCourseContact.objects.filter(course_id=paper.course_id)]
 
             all_student_info = {user.id: user for user in Member.objects.filter(id__in=all_student_ids)}
-            answer_student_info = {int(user_paper.student_id): user_paper for user_paper in StudentPaperContact.objects.filter(paper_id=paper.id, course_id=paper.course_id)}
+            answer_student_info = {int(user_paper.student_id): user_paper for user_paper in
+                                   StudentPaperContact.objects.filter(paper_id=paper.id, course_id=paper.course_id)}
         except DatabaseError as e:
             logger.exception(e)
             return JsonResponse({
