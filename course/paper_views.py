@@ -147,6 +147,12 @@ def paper(request):
         try:
             # 得到查询参数的卷子信息
             papers = Paper.objects.filter(**query_param).values()
+            # 给卷子按时间排序
+            try:
+                papers = sorted(papers, key=lambda p: p['start_time'], reverse=True)
+            except TypeError as e:
+                logger.exception("函数: [paper]: 有paper没有设置时间{}".format(e))
+                return JsonResponse({"result": False, "code": 500, "message": "查询失败(请检查日志)", "data": {}})
             # 得到卷子的所属章节
             chapter_ids = [p['chapter_id'] for p in papers]
             chapters = {chapter.id: chapter.chapter_name for chapter in Chapter.objects.filter(id__in=chapter_ids)}
