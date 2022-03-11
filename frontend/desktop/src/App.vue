@@ -60,7 +60,7 @@
                     </bk-navigation-menu-item>
                 </bk-navigation-menu>
             </template>
-            <div class="monitor-navigation-content" id="a">
+            <div class="monitor-navigation-content">
                 <main class="main-content" v-bkloading="{ isLoading: mainContentLoading, opacity: 1 }">
                     <router-view :key="routerKey" v-show="!mainContentLoading" />
                 </main>
@@ -71,22 +71,43 @@
                 </div>
             </template>
         </bk-navigation>
+        <bk-dialog v-model="register.primary.visible"
+            theme="primary"
+            :mask-close="false"
+            ok-text="去认证"
+            :confirm-fn="toRegister"
+            :header-position="register.primary.headerPosition"
+            title="去认证">
+            您还没有进行身份认证，点击去认证按钮即可跳转至认证页面。
+        </bk-dialog>
         <app-auth ref="bkAuth"></app-auth>
     </div>
+
 </template>
 
 <script>
     import { mapGetters } from 'vuex'
 
     import { bus } from '@/common/bus'
+    import { bkDialog } from 'bk-magic-vue'
 
     export default {
         name: 'monitor-navigation',
+        components: {
+            bkDialog
+        },
         data () {
             return {
+                register: {
+                    primary: {
+                        visible: false,
+                        headerPosition: 'left'
+                    }
+                },
                 routerKey: +new Date(),
                 systemCls: 'mac',
-                nav: {
+                nav: '',
+                navTeacher: {
                     list: [
                         {
                             id: 'home',
@@ -142,6 +163,54 @@
                     submenuActive: false,
                     title: '课程管理系统'
                 },
+                navStudent: {
+                    list: [
+                        {
+                            id: 'home',
+                            name: '首页',
+                            icon: 'icon-home-shape',
+                            pathName: 'home',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'mycourse',
+                            name: '我的课程',
+                            icon: 'icon-tree-module-shape',
+                            pathName: 'my_course',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'answer_question_index',
+                            name: '答题页面',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'answer_question_index',
+                            children: [],
+                            group: true
+                        }
+                    ],
+                    id: 'home',
+                    toggle: true,
+                    submenuActive: false,
+                    title: '课程管理系统'
+                },
+                navNotCertified: {
+                    list: [
+                        {
+                            id: 'home',
+                            name: '首页',
+                            icon: 'icon-home-shape',
+                            pathName: 'home',
+                            children: [],
+                            group: true
+                        }
+                    ],
+                    id: 'home',
+                    toggle: true,
+                    submenuActive: false,
+                    title: '课程管理系统'
+                },
                 user: {
                     list: [
                         {
@@ -166,6 +235,7 @@
             }
         },
         created () {
+            this.getUserInfo()
             // 在页面加载时读取sessionStorage里的状态信息
             this.nav.id = sessionStorage.getItem('navId') ? JSON.parse(sessionStorage.getItem('navId')) : 'home'
             if (sessionStorage.getItem('courseId')) {
@@ -194,13 +264,8 @@
                     window.location.reload()
                 }, 0)
             })
-            // 更新当前导航栏状态
             bus.$on('updateNavId', id => {
                 self.nav.id = id
-            })
-            // 其他页面更新课程下拉选框
-            bus.$on('updateCourseList', () => {
-                self.getCourseList()
             })
         },
         methods: {
@@ -226,6 +291,25 @@
                         this.$store.commit('updateCourseId', res.data[0].course_id)
                     }
                 })
+            },
+            async getUserInfo () {
+                this.$http.get('/account/get_user_info/').then(res => {
+                    console.log('test', res.data)
+                    if (res.data.identity === 'TEACHER') {
+                        this.nav = this.navTeacher
+                    } else if (res.data.identity === 'STUDENT') {
+                        this.nav = this.navStudent
+                    } else if (res.data.identity === 'NOT_CERTIFIED') {
+                        this.nav = this.navNotCertified
+                        this.register.primary.visible = true
+                    }
+                })
+            },
+            toRegister () {
+                this.$router.push({
+                    name: 'person'
+                })
+                this.register.primary.visible = false
             }
         }
     }
