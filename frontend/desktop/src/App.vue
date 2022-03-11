@@ -236,8 +236,6 @@
         },
         created () {
             this.getUserInfo()
-            // 在页面加载时读取sessionStorage里的状态信息
-            this.nav.id = sessionStorage.getItem('navId') ? JSON.parse(sessionStorage.getItem('navId')) : 'home'
             if (sessionStorage.getItem('courseId')) {
                 this.$store.commit('updateCourseId', JSON.parse(sessionStorage.getItem('courseId')))
             }
@@ -308,6 +306,8 @@
                         this.nav = this.navNotCertified
                         this.register.primary.visible = true
                     }
+                    // 在页面加载时读取sessionStorage里的状态信息
+                    this.nav.id = sessionStorage.getItem('navId') ? JSON.parse(sessionStorage.getItem('navId')) : 'home'
                 })
             },
             toRegister () {
