@@ -669,6 +669,7 @@ def answer_or_check_paper(request):
             questions_list = []
             for question_id in question_ids:
                 question = questions[question_id]
+                question["question"] = "({}) {}".format(custom_types[int(title_id)], question["question"])
                 if (
                         paper.status == Paper.Status.RELEASE
                         and paper.end_time > timezone.now()
