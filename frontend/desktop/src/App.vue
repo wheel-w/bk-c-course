@@ -182,6 +182,14 @@
                             group: true
                         },
                         {
+                            id: 'classnumber',
+                            name: '课程成员',
+                            icon: 'icon-tree-module-shape',
+                            pathName: 'course_number',
+                            children: [],
+                            group: true
+                        },
+                        {
                             id: 'answer_question_index',
                             name: '答题页面',
                             icon: 'icon-tree-process-shape',
