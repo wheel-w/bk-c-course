@@ -84,6 +84,37 @@
         },
         computed: {
         },
+        watch: {
+            'Question.question': {
+                handler: function (newVal, oldVal) {
+                    if (newVal && this.answer.length > 0) {
+                        const str = newVal.split('')
+                        let count = 0
+                        let length = 1
+                        for (let i = 0; i < str.length - 1; i++) {
+                            if (str[i] === '_' && str[i + 1] === '_') {
+                                length = length + 1
+                                if (length === 7) {
+                                    count = count + 1
+                                }
+                            } else {
+                                if (length < 7 && length > 1) {
+                                    this.Question.question = oldVal
+                                    this.handleClose(this.answer[count])
+                                    count = count + 1
+                                }
+                                length = 1
+                            }
+                        }
+                        if (length < 7 && length > 1) {
+                            this.Question.question = oldVal
+                            this.handleClose(this.answer[count])
+                        }
+                    }
+                },
+                immediate: true
+            }
+        },
         created () {
             if (this.editable || this.readonly) {
                 this.exchange()
@@ -109,14 +140,14 @@
                 }
             },
             checkData () {
-                if (this.editable) {
+                if (!this.readonly) {
                     this.Question.answer = []
                 }
                 this.answer.forEach(element => {
                     this.Question.answer.push(element.text)
                 })
-                this.Question.answer = this.Question.answer.join(this.separator)
                 this.$refs.Question.validate().then(validator => {
+                    this.Question.answer = this.Question.answer.join(this.separator)
                     if (this.editable) {
                         this.$emit('updateQuestion', this.Question)
                     } else {
@@ -128,7 +159,6 @@
                     this.config.theme = 'error'
                     this.$bkMessage(this.config)
                 })
-                this.Question.answer = this.Question.answer.split(this.separator)
             },
             reset () {
                 this.Question.question = null

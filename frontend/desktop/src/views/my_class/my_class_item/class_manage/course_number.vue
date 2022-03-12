@@ -1,7 +1,7 @@
 <template>
     <div class="wrapper">
         <div class="wrapper1">
-            <div class="wrapper-head">
+            <div class="wrapper-head" v-if="isManage">
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addstudent.isshow = true">增加学生</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addexcel.isshow = true">导入成员</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="downtemplete">下载点名册模板</bk-button>
@@ -28,7 +28,7 @@
                             <span v-if="props.row.identify === 'NOT_CERTIFIED'">未认证</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="操作" width="150" align="center" header-align="center">
+                    <bk-table-column label="操作" width="150" align="center" header-align="center" v-if="isManage">
                         <template slot-scope="props">
                             <bk-button class="mr10" theme="primary" :disabled="props.row.identify === 'TEACHER'" text @click="beforRemove(props.row)">移除</bk-button>
                         </template>
@@ -100,21 +100,14 @@
                                 :required="true"
                                 :property="'name'"
                                 :error-display-type="'normal'">
-                                <bk-input v-model="formData.name" style="width: 250px;" placeholder="请输入课程名称"></bk-input>
+                                <bk-input v-model="formData.name" style="width: 250px;" placeholder="请输入姓名"></bk-input>
                             </bk-form-item>
                             <bk-form-item
                                 label="学号"
                                 :required="true"
                                 :property="'class_number'"
                                 :error-display-type="'normal'">
-                                <bk-input v-model="formData.class_number" style="width: 250px;" placeholder="请输入课程名称"></bk-input>
-                            </bk-form-item>
-                            <bk-form-item
-                                label="班级"
-                                :required="true"
-                                :property="'professional_class'"
-                                :error-display-type="'normal'">
-                                <bk-input v-model="formData.professional_class" style="width: 250px;" placeholder="请输入课程名称"></bk-input>
+                                <bk-input v-model="formData.class_number" style="width: 250px;" placeholder="请输入学号"></bk-input>
                             </bk-form-item>
                         </bk-form>
                         <bk-button :theme="'primary'" text style="margin-left:90px;margin-top:20px" @click="addType = false">学生已认证，点此添加</bk-button>
@@ -152,15 +145,16 @@
         data () {
             return {
                 addType: false,
-                value: '',
+                isManage: false, // 判断是否为管理员的表标识
+                CourseData: [], // 课程的详细信息
+                isHasTeacher: false, // 是否有老师
                 studentList: [], // 所有认证过的学生
                 addList: [], // 增加学生的id
                 student_id: [], // 删除学生的id
                 course_id: '', // 课程id
-                formData: { // 学号姓名增加
+                formData: { // 学号+姓名增加
                     name: '',
-                    class_number: '',
-                    professional_class: ''
+                    class_number: ''
                 },
                 studentInfo: {},
                 file: {}, // 文件
@@ -195,11 +189,20 @@
             '$store.state.currentCourseId' (newValue) {
                 this.course_id = this.$store.state.currentCourseId
                 this.getList()
+                // 判断当前用户是否为课程管理
+                this.judgeManage()
             }
         },
         created () {
             this.course_id = this.$store.state.currentCourseId
             this.getList()
+            this.$http.get('/course/find_courses/').then(res => { // 拿到所有课程信息
+                if (res.result) {
+                    this.CourseData = res.data
+                }
+            })
+            this.userInfo = this.$store.state.user
+            this.judgeManage()
         },
         methods: {
             getList () {
@@ -207,14 +210,14 @@
                 data.page_size = this.page.limit
                 data.course_id = this.course_id
                 data.page = this.page.current
+                // 拿到当前页的课程成员信息
                 this.$http.get('/course/search_course_student/', { params: data }).then(res => {
                     if (res.result) {
                         this.page.count = res.count
                         this.data = res.data
-                        // console.info(this.data)
                     } else {
                         this.$bkMessage({
-                            message: '页面加载出错，请刷新重试！',
+                            message: res.message,
                             delay: 1000,
                             theme: 'error',
                             offsetY: 60,
@@ -235,10 +238,29 @@
                     }
                 })
             },
+            // 判断身份是否为管理员
+            judgeManage () {
+                if (this.$store.state.user.identity === 'TEACHER') {
+                    this.isManage = true
+                } else {
+                    this.isManage = false
+                    const that = this
+                    this.CourseData.forEach(e => {
+                        if (this.$store.state.currentCourseId === e.course_id) {
+                            e.manage_student.forEach(re => {
+                                const number = re.substring(0, re.indexOf('('))
+                                if (number === this.userInfo.class_number) {
+                                    that.isManage = true
+                                }
+                            })
+                        }
+                    })
+                }
+            },
             // 增加学生
             addStudent () {
                 if (this.addType) {
-                    if (this.formData.name === '' || this.formData.class_number === '' || this.formData.professional_class === '') {
+                    if (this.formData.name === '' || this.formData.class_number === '') {
                         this.$bkMessage({
                             message: '请补全内容',
                             delay: 1000,
@@ -251,7 +273,7 @@
                         this.$http.post('/course/add_course_member/', this.formData).then(res => {
                             if (res.result) {
                                 this.$bkMessage({
-                                    message: '添加成功',
+                                    message: res.message,
                                     delay: 1000,
                                     theme: 'success',
                                     offsetY: 60,
@@ -260,9 +282,9 @@
                                 this.getList()
                             } else {
                                 this.$bkMessage({
-                                    message: '添加失败，请重新尝试',
+                                    message: res.message,
                                     delay: 1000,
-                                    theme: 'success',
+                                    theme: 'error',
                                     affsetY: 60,
                                     ellipsisLine: 2
                                 })
@@ -277,7 +299,7 @@
                         if (res.result) {
                             this.getList()
                             this.$bkMessage({
-                                message: '添加成功',
+                                message: res.message,
                                 delay: 1000,
                                 theme: 'success',
                                 offsetY: 60,
@@ -285,7 +307,7 @@
                             this.getList()
                         } else {
                             this.$bkMessage({
-                                message: '添加失败，请重新尝试',
+                                message: res.message,
                                 delay: 1000,
                                 theme: 'error',
                                 offsetY: 60,
@@ -297,7 +319,6 @@
             },
             // 导入学生
             addExcel (param) {
-                // console.info(param)
                 const data = new FormData()
                 data.append('excel_file', param.fileList[0].origin)
                 data.append('course_id', this.course_id)
@@ -334,13 +355,10 @@
             // 下载点名册模板
             downtemplete () {
                 const a = document.createElement('a')
-                // a.href = 'http://dev.paas-edu.bktencent.com:8000/course/download_student_excel_template/'
-                // a.click()
                 this.$http.get('/course/download_student_excel_template_url/').then(res => {
                     if (res.result) {
                         a.href = res.url
                         a.click()
-                        // window.open(res.url)
                     } else {
                         this.$bkMessage({
                             message: '点名册模板下载失败请重新尝试',
@@ -355,6 +373,9 @@
             handleSelect (selection) {
                 this.student_id = []
                 selection.forEach(e => {
+                    if (e.identify === 'TEACHER') {
+                        this.isHasTeacher = true
+                    }
                     this.student_id.push(e.id)
                 })
             },
@@ -369,12 +390,21 @@
                 this.$http.delete('/course/delete_student_course_contact/', { params: { course_id: this.course_id, student_id: JSON.stringify(e) } }).then(res => {
                     if (res.result) {
                         this.getList()
-                        this.$bkMessage({
-                            message: '删除成功',
-                            delay: 1000,
-                            theme: 'success',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
+                        if (this.isHasTeacher) {
+                            this.$bkMessage({
+                                message: '老师无法删除',
+                                delay: 1000,
+                                theme: 'warning',
+                                offsetY: 60,
+                                ellipsisLine: 2 })
+                        } else {
+                            this.$bkMessage({
+                                message: '删除成功',
+                                delay: 1000,
+                                theme: 'success',
+                                offsetY: 60,
+                                ellipsisLine: 2 })
+                        }
                     } else {
                         this.$bkMessage({
                             message: '删除失败',
