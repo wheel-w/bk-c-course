@@ -181,10 +181,11 @@ def paper(request):
                         # 获取那些学生没有答，那些学生答过(数量)
                         total_students_num = UserCourseContact.objects.filter(course_id=paper['course_id']).count()
                         query_param = {'paper_id': paper_id, 'course_id': paper['course_id']}
-                        # 如果答题时间未过
+                        # 如果答题时间未过, 只统计提交卷子的学生数量
                         if paper['end_time'] < timezone.now():
                             query_param['status'] = StudentPaperContact.Status.SUBMITTED
                         else:
+                            # 如果答题时间过了, 统计提交与保存的学生数量
                             query_param['status__in'] = [
                                 StudentPaperContact.Status.SUBMITTED,
                                 StudentPaperContact.Status.SAVED
