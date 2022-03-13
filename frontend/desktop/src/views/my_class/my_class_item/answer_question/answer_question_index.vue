@@ -120,7 +120,9 @@
             }
         },
         mounted () {
-            this.getExerciseList()
+            setTimeout(() => {
+                this.getExerciseList()
+            }, 50)
         },
         methods: {
             // 过滤状态和章节
