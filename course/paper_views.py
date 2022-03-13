@@ -163,17 +163,17 @@ def paper(request):
                 paper_info[paper['id']]['chapter_name'] = chapters[paper['chapter_id']] \
                     if paper['chapter_id'] != -1 else '全部章节'
 
-            # 如果是学生，查询卷子的作答情况
-            if identity == Member.Identity.STUDENT and paper_info:
-                SPContacts = {spc.paper_id: spc for spc in
-                              StudentPaperContact.objects.filter(student_id=request.user.id)}
-                for paper_id, paper in paper_info.items():
-                    paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
-                        status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
+            # 老师和学生都会查询卷子的作答情况(老师也可以去答卷)
+            SPContacts = {spc.paper_id: spc for spc in
+                          StudentPaperContact.objects.filter(student_id=request.user.id)}
+            for paper_id, paper in paper_info.items():
+                paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
+                    status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
 
-                    if paper['status'] == Paper.Status.MARKED:
-                        paper_info[paper_id]['score'] = SPContacts[paper_id]. \
-                            score if paper_id in SPContacts.keys() else 0
+                if paper['status'] == Paper.Status.MARKED:
+                    paper_info[paper_id]['score'] = SPContacts[paper_id]. \
+                        score if paper_id in SPContacts.keys() else 0
+
             # 如果是老师请求，而且卷子在答题之中或者未批改看查提交人数
             if identity == Member.Identity.TEACHER:
                 for paper_id, paper in paper_info.items():
