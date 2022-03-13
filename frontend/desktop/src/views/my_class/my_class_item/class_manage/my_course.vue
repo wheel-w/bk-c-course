@@ -31,7 +31,12 @@
                 <bk-table-column label="创建人" prop="create_people" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="课程简介" header-align="center" align="center">
                     <template slot-scope="props">
-                        <span @click="showDetail(props.row)" style="cursor : pointer;">{{props.row.course_introduction }}</span>
+                        <bk-popover placement="top" v-if="props.row.course_introduction !== 0">
+                            <span>{{props.row.course_introduction.slice(0,12) + (props.row.course_introduction.length > 12 ? '...' : '')}}</span>
+                            <div slot="content">
+                                <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.course_introduction}}</div>
+                            </div>
+                        </bk-popover>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="操作" width="150" align="center" header-align="center" v-if="userIdentify === 'TEACHER'">
@@ -132,17 +137,6 @@
                     <p>确定要删除{{course_id.length}}项内容吗？</p>
                 </div>
             </bk-dialog>
-            <!-- 显示详情 -->
-            <bk-dialog v-model="visible.introduction.isshow"
-                width="530"
-                position="'top'"
-                :mask-close="false"
-                :header-position="visible.addcourse.headerPosition"
-                title="课程简介">
-                <div class="dialog-body">
-                    {{formData3.course_introduction}}
-                </div>
-            </bk-dialog>
             <!-- 修改课程 -->
             <bk-dialog v-model="visible.altercourse.isshow"
                 width="530"
@@ -237,10 +231,6 @@
                         headerPosition: 'center'
                     },
                     altercourse: {
-                        isshow: false,
-                        headerPosition: 'center'
-                    },
-                    introduction: {
                         isshow: false,
                         headerPosition: 'center'
                     },
