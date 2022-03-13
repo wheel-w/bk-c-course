@@ -179,9 +179,17 @@ def paper(request):
                 for paper_id, paper in paper_info.items():
                     if (paper['status'] == Paper.Status.MARKED) or (paper['status'] == Paper.Status.RELEASE):
                         # 获取那些学生没有答，那些学生答过(数量)
-                        total_students_num = len(UserCourseContact.objects.filter(course_id=paper['course_id']))
-                        submitted_students_num = len(
-                            StudentPaperContact.objects.filter(paper_id=paper_id, course_id=paper['course_id']))
+                        total_students_num = UserCourseContact.objects.filter(course_id=paper['course_id']).count()
+                        query_param = {'paper_id': paper_id, 'course_id': paper['course_id']}
+                        # 如果答题时间未过
+                        if paper['end_time'] < timezone.now():
+                            query_param['status'] = StudentPaperContact.Status.SUBMITTED
+                        else:
+                            query_param['status__in'] = [
+                                StudentPaperContact.Status.SUBMITTED,
+                                StudentPaperContact.Status.SAVED
+                            ]
+                        submitted_students_num = StudentPaperContact.objects.filter(**query_param).count()
                         paper_info[paper_id]['total_students_num'] = total_students_num
                         paper_info[paper_id]['submitted_students_num'] = submitted_students_num
             [p.pop('question_order') for _, p in paper_info.items()]
@@ -669,7 +677,8 @@ def answer_or_check_paper(request):
             questions_list = []
             for question_id in question_ids:
                 question = questions[question_id]
-                question["question"] = "({}) {}".format(custom_types[int(title_id)], question["question"])
+                if request.is_wechat():
+                    question["question"] = "({}) {}".format(custom_types[int(title_id)], question["question"])
                 if (
                         paper.status == Paper.Status.RELEASE
                         and paper.end_time > timezone.now()
