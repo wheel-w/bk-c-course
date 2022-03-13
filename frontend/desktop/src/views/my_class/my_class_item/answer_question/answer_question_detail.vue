@@ -403,6 +403,7 @@
                 this.$http.get('/course/answer_or_check_paper/', { params: { paper_id: this.paper_id } }).then(res => {
                     this.questionTitle = res.data
                     console.log('questList', res.data)
+                    console.log('questTitle', this.questionTitle)
                     this.seconds = res.data.cumulative_time
                     for (const key in res.data) {
                         // 答题卡id排序
