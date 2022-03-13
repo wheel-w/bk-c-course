@@ -679,9 +679,12 @@ def verify_school_user(request):
                     }
                 )
 
-            result, user_info, message = identify_user(
-                username=username, password=password
-            )
+            try:
+                result, user_info, message = identify_user(
+                    username=username, password=password
+                )
+            except Exception as e:
+                logger.exception('函数: [verify_school_user]: 获取身份信息失败. 具体问题: {}'.format(e))
             if result:
                 user, _ = Member.objects.get_or_create(class_number=username)
                 if user and user.identity != Member.Identity.NOT_CERTIFIED:
