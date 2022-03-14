@@ -23,6 +23,8 @@
                         :outer-border="true"
                         :virtual-render="false"
                         :show-header="false"
+                        :highlight-current-row="false"
+                        :row-style="tableRowStyle"
                         @row-click="handleRowClick"
                         @row-dblclick="handleRowDbclick"
                         @selection-change="handleSelectChange"
@@ -39,7 +41,7 @@
                                     ref="myinput"
                                     class="input"
                                     v-model="props.row.chapter_name"
-                                    v-if="rowEditable(props.row.id)"
+                                    v-else
                                     style="display:inline-block;"
                                     @enter="handleEnter(props.row)"
                                     @blur="handleBlur(props.row)">
@@ -71,6 +73,10 @@
             chapters: {
                 type: Object,
                 default: () => ({})
+            },
+            chapterid: {
+                type: Number,
+                default: -1
             }
         },
         data () {
@@ -84,7 +90,7 @@
                     chapter: [
                         {
                             required: true,
-                            message: '章节不能为空！',
+                            message: '章节不能为空',
                             trigger: 'change'
                         }
                     ]
@@ -127,23 +133,16 @@
                 if (row.id === 'focus') {
                     row.id = null
                 }
-                if (row.chapter_name) {
-                    this.editable = false
-                } else {
-                    row.chapter_name = this.curChapter
-                    this.editable = false
-                }
+                this.editable = false
             },
             handleBlur (row) {
                 if (row.id === 'focus') {
                     row.id = null
                 }
-                if (row.chapter_name) {
-                    this.editable = false
-                } else {
+                if (!row.chapter_name || (this.repeated(this.chapterList, 'chapter_name', row.chapter_name) > 1)) {
                     row.chapter_name = this.curChapter
-                    this.editable = false
                 }
+                this.editable = false
             },
             handleHidden () {
                 this.editable = false
@@ -175,20 +174,26 @@
                 this.changed = false
             },
             appendChapter () {
-                this.$refs.appendChapter.validate().then(validator => {
-                    this.chapterList.push({
-                        id: null,
-                        chapter_name: this.append.appendText
-                    })
-                    this.append.appendText = null
-                    this.append.appendNumber = this.append.appendNumber + 1
-                }, validator => {
-                    this.config.theme = 'error'
-                    this.config.message = validator.content
+                if (this.repeated(this.chapterList, 'chapter_name', this.append.appendText) > 0) {
+                    this.config.theme = 'warning'
+                    this.config.message = '此章节已存在，不可重复添加'
                     this.$bkMessage(this.config)
-                })
-                this.$refs.appendInput.focus()
-                this.changed = true
+                } else {
+                    this.$refs.appendChapter.validate().then(validator => {
+                        this.chapterList.push({
+                            id: null,
+                            chapter_name: this.append.appendText
+                        })
+                        this.append.appendText = null
+                        this.append.appendNumber = this.append.appendNumber + 1
+                    }, validator => {
+                        this.config.theme = 'warning'
+                        this.config.message = validator.content
+                        this.$bkMessage(this.config)
+                    })
+                    this.$refs.appendInput.focus()
+                    this.changed = true
+                }
             },
             handleSelectChange (selection, row) {
                 this.selection = selection
@@ -206,14 +211,28 @@
                 }
                 this.chapterList.splice(this.chapterList.indexOf(chapter), 1)
             },
-            handleAppendBlur () {
-                // this.$refs.appendChapter.clearRrror()
-            },
             compare () {
                 for (let i = 0; i < this.chapterList.length; i++) {
                     if (this.chapterList[i].id !== this.chapters[i].id || this.chapterList[i].chapter_name !== this.chapters[i].chapter_name) {
                         this.changed = true
                     }
+                }
+            },
+            repeated (list, key, item) {
+                let repeated = 0
+                list.forEach(element => {
+                    if (element[key] === item) {
+                        repeated = repeated + 1
+                    }
+                })
+                return repeated
+            },
+            tableRowStyle ({ row, rowIndex }) {
+                if (row.id === this.chapterid) {
+                    const style = {
+                        'background-color': '#E1ECFF'
+                    }
+                    return style
                 }
             }
         }
