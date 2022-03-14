@@ -38,7 +38,9 @@
                             E：{{ childItem.option_E }}
                         </bk-checkbox>
                     </bk-checkbox-group>
-                    <bk-divider></bk-divider>
+                    <div v-if="childItem.types === 'SINGLE' || childItem.types === 'MULTIPLE'">
+                        <bk-divider></bk-divider>
+                    </div>
                     <div style="margin-top: 10px">
                         你的答案：<span>{{ childItem.student_answer }}</span>
                     </div>
