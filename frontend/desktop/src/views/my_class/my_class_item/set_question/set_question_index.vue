@@ -337,6 +337,7 @@
                     this.showQuestionList = filteredQuestionList
                     this.pagination.count = filteredQuestionList.length
                 } else {
+                    this.showQuestionList = this.questionList
                     this.pagination.count = this.questionList.length
                 }
             },
