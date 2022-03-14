@@ -64,11 +64,12 @@
             </div>
         </div>
 
-        <bk-button style="width: 120px;position: fixed; bottom: 220px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toPreStudent">上一个</bk-button>
-        <bk-button style="width: 120px;position: fixed; bottom: 170px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toNextStudent">下一个</bk-button>
-        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="'success'" type="submit" @click="checkAnswer" :disabled="studentInfo.status === 'MARKED'">确认批改</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="publishScore" :outline="true">发布成绩</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 270px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toPreStudent">上一个</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 220px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toNextStudent">下一个</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 170px; right: 6%;border-radius: 20px;" :theme="studentInfo.status === 'MARKED' ? 'warning' : 'success'" type="submit" @click="checkAnswer">{{ studentInfo.status === 'MARKED' ? '修改分数' : '确认批改' }}</bk-button>
 
-        <bk-button style="width: 120px;position: fixed; bottom: 270px; right: 6%;border-radius: 20px;" @click="gradeCard.visible = true" :theme="'success'" :outline="true">
+        <bk-button style="width: 120px;position: fixed; bottom: 320px; right: 6%;border-radius: 20px;" @click="gradeCard.visible = true" :theme="'success'" :outline="true">
             展开批改情况
         </bk-button>
         <bk-dialog v-model="gradeCard.visible"
@@ -136,6 +137,34 @@
             this.getQuestionList()
         },
         methods: {
+            // 更改使试卷状态发布分数
+            publishScore () {
+                if (new Date().getTime() > this.currentPaperEndTime) {
+                    // 如果全部批改完毕更改paper状态
+                    if (this.studentInfoList.every(item => {
+                        return item.status === 'MARKED'
+                    })) {
+                        this.$http.put('/course/paper/', { paper_id: this.currentPaperId, update_info: { status: 'MARKED' } })
+                        this.$bkMessage({
+                            message: '发布成功！',
+                            theme: 'success'
+                        })
+                        this.$router.replace({
+                            name: 'displaypaper'
+                        })
+                    } else {
+                        this.$bkMessage({
+                            message: '请批改完成所有试卷再提交哦！',
+                            theme: 'warning'
+                        })
+                    }
+                } else {
+                    this.$bkMessage({
+                        message: '请等待考试结束再发布成绩哦！',
+                        theme: 'warning'
+                    })
+                }
+            },
             // 获取题目列表和学生答题信息
             getQuestionList () {
                 this.$http.get('/course/get_student_answer_info/', { params: { paper_id: this.currentPaperId } }).then(res => {
@@ -144,12 +173,6 @@
                         this.studentInfoList = res.data.submitted.filter(item => {
                             return item.status === 'SUBMITTED' || item.status === 'MARKED' || item.status === 'SAVED'
                         })
-                        // 如果全部批改完毕更改paper状态
-                        if (this.studentInfoList.every(item => {
-                            return item.status === 'MARKED'
-                        })) {
-                            this.$http.put('/course/paper/', { paper_id: this.currentPaperId, update_info: { status: 'MARKED' } })
-                        }
                     } else {
                         this.studentInfoList = res.data.submitted.filter(item => {
                             return item.status === 'SUBMITTED' || item.status === 'MARKED'
@@ -206,12 +229,6 @@
                                 this.studentInfoList = res.data.submitted.filter(item => {
                                     return item.status === 'SUBMITTED' || item.status === 'MARKED' || item.status === 'SAVED'
                                 })
-                                // 如果全部批改完毕更改paper状态
-                                if (this.studentInfoList.every(item => {
-                                    return item.status === 'MARKED'
-                                })) {
-                                    this.$http.put('/course/paper/', { paper_id: this.currentPaperId, update_info: { status: 'MARKED' } })
-                                }
                             } else {
                                 this.studentInfoList = res.data.submitted.filter(item => {
                                     return item.status === 'SUBMITTED' || item.status === 'MARKED'

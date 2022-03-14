@@ -147,6 +147,12 @@ def paper(request):
         try:
             # 得到查询参数的卷子信息
             papers = Paper.objects.filter(**query_param).values()
+            # 给卷子按时间排序
+            try:
+                papers = sorted(papers, key=lambda p: p['start_time'], reverse=True)
+            except TypeError as e:
+                logger.exception("函数: [paper]: 有paper没有设置时间{}".format(e))
+                return JsonResponse({"result": False, "code": 500, "message": "查询失败(请检查日志)", "data": {}})
             # 得到卷子的所属章节
             chapter_ids = [p['chapter_id'] for p in papers]
             chapters = {chapter.id: chapter.chapter_name for chapter in Chapter.objects.filter(id__in=chapter_ids)}
@@ -663,6 +669,7 @@ def answer_or_check_paper(request):
             questions_list = []
             for question_id in question_ids:
                 question = questions[question_id]
+                question["question"] = "({}) {}".format(custom_types[int(title_id)], question["question"])
                 if (
                         paper.status == Paper.Status.RELEASE
                         and paper.end_time > timezone.now()
@@ -675,11 +682,12 @@ def answer_or_check_paper(request):
                     if question_id in student_answer.keys()
                     else None
                 )
-                question["student_answer"] = (
-                    student_answer[question_id][0]
-                    if question_id in student_answer.keys()
-                    else None
-                )
+
+                if question_id in student_answer.keys():
+                    question["student_answer"] = (student_answer[question_id][0])
+                else:
+                    question["student_answer"] = None if question["types"] != Question.Types.MULTIPLE else "[]"
+
                 if paper.status == Paper.Status.MARKED:
                     question["student_score"] = (
                         student_answer[question_id][1]
