@@ -57,6 +57,7 @@
     "@vue/babel-preset-jsx": "~1.2.4",
     "axios": "~0.18.0",
     "bk-magic-vue": "latest",
+    "circular-json": "^0.5.9",
     "cookie": "~0.4.0",
     "dayjs": "^1.10.8",
     "jsonp": "~0.2.1",

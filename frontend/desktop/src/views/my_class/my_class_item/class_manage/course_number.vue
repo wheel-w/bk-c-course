@@ -5,18 +5,19 @@
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addstudent.isshow = true">增加学生</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addexcel.isshow = true">导入成员</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="downtemplete">下载点名册模板</bk-button>
-                <bk-button :theme="'primary'" text class="mr10" @click="removeallBefor">批量删除</bk-button>
+                <bk-button :theme="'primary'" text class="mr10" @click="removeallBefore">批量删除</bk-button>
             </div>
             <div class="wrapper-body">
                 <bk-table style="margin-top: 15px;"
                     size="small"
                     :data="data"
+                    :key="component"
                     @selection-change="handleSelect"
                     @row-mouse-enter="handleRowMouseEnter"
                     @row-mouse-leave="handleRowMouseLeave"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange">
-                    <bk-table-column type="selection" width="60" align="center" header-align="center" :selectable="isTeacher"></bk-table-column>
+                    <bk-table-column v-if="isManage" type="selection" width="60" align="center" header-align="center" :selectable="isTeacher"></bk-table-column>
                     <bk-table-column type="index" label="序列" align="center" header-align="center" width="60"></bk-table-column>
                     <bk-table-column label="姓名" prop="name" align="center" header-align="center"></bk-table-column>
                     <bk-table-column label="学号" prop="class_number" align="center" header-align="center"></bk-table-column>
@@ -147,6 +148,7 @@
             return {
                 addType: false,
                 isManage: false, // 判断是否为管理员的表标识
+                component: 0,
                 CourseData: [], // 课程的详细信息
                 studentList: [], // 所有认证过的学生
                 addList: [], // 增加学生的id
@@ -162,7 +164,7 @@
                 page: {
                     current: 1,
                     limit: 10,
-                    count: 30,
+                    count: 0,
                     location: 'left',
                     align: 'right',
                     showLimit: true,
@@ -191,6 +193,7 @@
                 this.getList()
                 // 判断当前用户是否为课程管理
                 this.judgeManage()
+                this.component++
             }
         },
         created () {
@@ -199,10 +202,11 @@
             this.$http.get('/course/find_courses/').then(res => { // 拿到所有课程信息
                 if (res.result) {
                     this.CourseData = res.data
+                    this.userInfo = this.$store.state.user
+                    this.judgeManage()
+                    this.component++
                 }
             })
-            this.userInfo = this.$store.state.user
-            this.judgeManage()
         },
         methods: {
             getList () {
@@ -240,17 +244,20 @@
             },
             // 判断身份是否为管理员
             judgeManage () {
-                if (this.$store.state.user.identity === 'TEACHER') {
+                console.info('执行判断函数')
+                if (this.userInfo.identity === 'TEACHER') {
                     this.isManage = true
                 } else {
                     this.isManage = false
                     const that = this
                     this.CourseData.forEach(e => {
                         if (this.$store.state.currentCourseId === e.course_id) {
+                            console.info('找到当前课程')
                             e.manage_student.forEach(re => {
                                 const number = re.substring(0, re.indexOf('('))
                                 if (number === this.userInfo.class_number) {
                                     that.isManage = true
+                                    console.info('当前是否是管理员' + this.isManage)
                                 }
                             })
                         }
@@ -385,7 +392,7 @@
                 })
             },
             removeallBefore () {
-                if (this.student_id !== 0) {
+                if (this.student_id.length !== 0) {
                     this.visible.deleteall.isshow = true
                 }
             },

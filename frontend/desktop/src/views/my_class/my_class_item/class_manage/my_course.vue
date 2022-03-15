@@ -2,7 +2,7 @@
     <div class="wrapper">
         <div class="wrapper-head" v-if="userIdentify === 'TEACHER'">
             <bk-button theme="primary" class="mr10" :outline="true" @click="beforeAdd">创建课程</bk-button>
-            <bk-button theme="primary" :outline="true" @click="removeallBefor">批量删除</bk-button>
+            <bk-button theme="primary" :outline="true" @click="removeallBefore">批量删除</bk-button>
         </div>
         <div class="wrapper-body">
             <bk-table style="margin-top: 10px;"
@@ -14,7 +14,7 @@
                 @row-mouse-leave="handleRowMouseLeave"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange">
-                <bk-table-column type="selection" width="60" align="center" header-align="center"></bk-table-column>
+                <bk-table-column v-if="userIdentify === 'TEACHER'" type="selection" width="60" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="课程id" prop="course_id" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="课程名称" prop="course_name" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="任课老师" prop="teacher" align="center" header-align="center"></bk-table-column>
@@ -243,7 +243,7 @@
                 pagingConfigTwo: {
                     current: 1,
                     limit: 10,
-                    count: 30,
+                    count: 0,
                     location: 'left',
                     align: 'right',
                     showLimit: true,
@@ -370,7 +370,7 @@
                 })
             },
             removeallBefore () {
-                if (this.course_id !== 0) {
+                if (this.course_id.length !== 0) {
                     this.visible.deleteall.isshow = true
                 }
             },
