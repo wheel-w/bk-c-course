@@ -627,13 +627,6 @@ def answer_or_check_paper(request):
             SPContact = StudentPaperContact.objects.filter(
                 paper_id=paper_id, student_id=student_id
             )
-            if (
-                    SPContact
-                    and SPContact.get().status == StudentPaperContact.Status.SUBMITTED
-            ):
-                return JsonResponse(
-                    {"result": False, "code": 400, "message": "你已经提交", "data": {}}
-                )
             paper = Paper.objects.get(id=paper_id)
             if paper.status == Paper.Status.DRAFT:
                 return JsonResponse(
