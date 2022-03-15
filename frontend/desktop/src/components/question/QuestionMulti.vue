@@ -26,7 +26,7 @@
                                                 <bk-checkbox v-if="option !== 'A'" :value="'A'" style="margin-top:10px;margin-left:10px;display:inline-block;">
                                                     <p>{{'A.' + Question.option_A}}</p>
                                                 </bk-checkbox>
-                                                <bk-input v-else ref="optionA" behavior="simplicity" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" @blur="option = ''" style="width:100%;margin-bottom:6px">
+                                                <bk-input v-else ref="optionA" behavior="simplicity" v-model="Question.option_A" :readonly="readonly" placeholder="请输入选项A内容" size="large" @blur="option = ''" @enter="option = ''" style="width:100%;margin-bottom:6px">
                                                 </bk-input>
                                             </bk-form-item>
                                         </div>
@@ -37,7 +37,7 @@
                                                 <bk-checkbox v-if="option !== 'B'" :value="'B'" style="margin-top:10px;margin-left:10px;display:inline-block;">
                                                     <p>{{'B.' + Question.option_B}}</p>
                                                 </bk-checkbox>
-                                                <bk-input v-else ref="optionB" behavior="simplicity" v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" @blur="option = ''" style="width:100%;margin-bottom:6px">
+                                                <bk-input v-else ref="optionB" behavior="simplicity" v-model="Question.option_B" :readonly="readonly" placeholder="请输入选项B内容" size="large" @blur="option = ''" @enter="option = ''" style="width:100%;margin-bottom:6px">
                                                 </bk-input>
                                             </bk-form-item>
                                         </div>
@@ -50,7 +50,7 @@
                                                 <bk-checkbox v-if="option !== 'C'" :value="'C'" style="margin-top:10px;margin-left:10px;display:inline-block;">
                                                     <p>{{'C.' + Question.option_C}}</p>
                                                 </bk-checkbox>
-                                                <bk-input v-else ref="optionC" behavior="simplicity" v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" @blur="option = ''" style="width:100%;margin-bottom:6px">
+                                                <bk-input v-else ref="optionC" behavior="simplicity" v-model="Question.option_C" :readonly="readonly" placeholder="请输入选项C内容" size="large" @blur="option = ''" @enter="option = ''" style="width:100%;margin-bottom:6px">
                                                 </bk-input>
                                             </bk-form-item>
                                         </div>
@@ -61,7 +61,7 @@
                                                 <bk-checkbox v-if="option !== 'D'" :value="'D'" style="margin-top:10px;margin-left:10px;display:inline-block;">
                                                     <p>{{'D.' + Question.option_D}}</p>
                                                 </bk-checkbox>
-                                                <bk-input v-else ref="optionD" behavior="simplicity" v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" @blur="option = ''" style="width:100%;margin-bottom:6px">
+                                                <bk-input v-else ref="optionD" behavior="simplicity" v-model="Question.option_D" :readonly="readonly" placeholder="请输入选项D内容" size="large" @blur="option = ''" @enter="option = ''" style="width:100%;margin-bottom:6px">
                                                 </bk-input>
                                             </bk-form-item>
                                         </div>
@@ -72,9 +72,9 @@
                                         <div :class="optionStyle('E')" @dblclick="handleOptionDbclick('E')" @mouseover="mouseOver = 'E'" @mouseleave="mouseOver = ''">
                                             <bk-form-item :required="true" :rules="rules.option" :property="'option_E'" error-display-type="tooltips">
                                                 <bk-checkbox v-if="option !== 'E'" :value="'E'" style="margin-top:10px;margin-left:10px;display:inline-block;">
-                                                    <p>{{'E.' + Question.option_C}}</p>
+                                                    <p>{{'E.' + Question.option_E}}</p>
                                                 </bk-checkbox>
-                                                <bk-input v-if="option === 'E'" ref="optionE" behavior="simplicity" v-model="Question.option_E" :readonly="readonly" placeholder="请输入选项C内容" size="large" @blur="option = ''" style="width:100%;margin-bottom:6px">
+                                                <bk-input v-if="option === 'E'" ref="optionE" behavior="simplicity" v-model="Question.option_E" :readonly="readonly" placeholder="请输入选项C内容" size="large" @blur="option = ''" @enter="option = ''" style="width:100%;margin-bottom:6px">
                                                 </bk-input>
                                             </bk-form-item>
                                         </div>
