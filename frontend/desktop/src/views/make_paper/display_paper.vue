@@ -700,16 +700,15 @@
                     })
                 }
             },
-            bindQRCode: function (id) {
+            bindQRCode (id) {
                 // eslint-disable-next-line no-new
                 new QRCode(this.$refs.qrCodeUrl, {
-                    // text: 'https://paas-edu.bktencent.com/t/config-query',
-                    text: id,
+                    text: String(id),
                     width: 200,
                     height: 200,
                     colorDark: '#1768ef', // 二维码颜色
                     colorLight: '#ffffff', // 二维码背景色
-                    correctLevel: QRCode.CorrectLevel.L// 容错率，L/M/H
+                    correctLevel: QRCode.CorrectLevel.H// 容错率，L/M/H
                 })
             },
             saveQrCode () {

@@ -5,7 +5,7 @@
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addstudent.isshow = true">增加学生</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addexcel.isshow = true">导入成员</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="downtemplete">下载点名册模板</bk-button>
-                <bk-button :theme="'primary'" text class="mr10" @click="visible.deleteall.isshow = true">批量删除</bk-button>
+                <bk-button :theme="'primary'" text class="mr10" @click="removeallBefor">批量删除</bk-button>
             </div>
             <div class="wrapper-body">
                 <bk-table style="margin-top: 15px;"
@@ -16,11 +16,11 @@
                     @row-mouse-leave="handleRowMouseLeave"
                     @page-change="handlePageChange"
                     @page-limit-change="handlePageLimitChange">
-                    <bk-table-column type="selection" width="60" align="center" header-align="center"></bk-table-column>
+                    <bk-table-column type="selection" width="60" align="center" header-align="center" :selectable="isTeacher"></bk-table-column>
                     <bk-table-column type="index" label="序列" align="center" header-align="center" width="60"></bk-table-column>
                     <bk-table-column label="姓名" prop="name" align="center" header-align="center"></bk-table-column>
                     <bk-table-column label="学号" prop="class_number" align="center" header-align="center"></bk-table-column>
-                    <bk-table-column label="专业班级" prop="professional_class" align="center" header-align="center"></bk-table-column>
+                    <bk-table-column label="专业" prop="professional_class" align="center" header-align="center"></bk-table-column>
                     <bk-table-column label="身份" prop="identify" align="center" header-align="center">
                         <template slot-scope="props">
                             <span v-if="props.row.identify === 'STUDENT'">学生</span>
@@ -44,6 +44,7 @@
                         :align="page.align"
                         :show-limit="page.showLimit"
                         :limit-list="page.limitList"
+                        :show-total-count="true"
                         @change="pageChange"
                         @limit-change="limitChange">
                     </bk-pagination>
@@ -147,7 +148,6 @@
                 addType: false,
                 isManage: false, // 判断是否为管理员的表标识
                 CourseData: [], // 课程的详细信息
-                isHasTeacher: false, // 是否有老师
                 studentList: [], // 所有认证过的学生
                 addList: [], // 增加学生的id
                 student_id: [], // 删除学生的id
@@ -255,6 +255,14 @@
                             })
                         }
                     })
+                }
+            },
+            // 选项的禁用
+            isTeacher (e) {
+                if (e.identify === 'TEACHER') {
+                    return false
+                } else {
+                    return true
                 }
             },
             // 增加学生
@@ -373,11 +381,13 @@
             handleSelect (selection) {
                 this.student_id = []
                 selection.forEach(e => {
-                    if (e.identify === 'TEACHER') {
-                        this.isHasTeacher = true
-                    }
                     this.student_id.push(e.id)
                 })
+            },
+            removeallBefore () {
+                if (this.student_id !== 0) {
+                    this.visible.deleteall.isshow = true
+                }
             },
             // 删除单个学生
             beforRemove (e) {
@@ -390,21 +400,12 @@
                 this.$http.delete('/course/delete_student_course_contact/', { params: { course_id: this.course_id, student_id: JSON.stringify(e) } }).then(res => {
                     if (res.result) {
                         this.getList()
-                        if (this.isHasTeacher) {
-                            this.$bkMessage({
-                                message: '老师无法删除',
-                                delay: 1000,
-                                theme: 'warning',
-                                offsetY: 60,
-                                ellipsisLine: 2 })
-                        } else {
-                            this.$bkMessage({
-                                message: '删除成功',
-                                delay: 1000,
-                                theme: 'success',
-                                offsetY: 60,
-                                ellipsisLine: 2 })
-                        }
+                        this.$bkMessage({
+                            message: res.message,
+                            delay: 1000,
+                            theme: 'success',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
                     } else {
                         this.$bkMessage({
                             message: '删除失败',

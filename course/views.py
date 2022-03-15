@@ -92,10 +92,10 @@ def manage_course(request):
                 ),
                 manage_student=manage_student_str,
             )  # 将得到的数据加到course表
-            UserCourseContact.objects.create(
+            UserCourseContact.objects.update_or_create(
                 user_id=request.user.id, course_id=news_course_info.id
             )
-            UserCourseContact.objects.create(
+            UserCourseContact.objects.update_or_create(
                 user_id=teacher_id, course_id=news_course_info.id
             )
             for manage_student_id in manage_student_ids:
@@ -104,7 +104,11 @@ def manage_course(request):
                         user_id=manage_student_id, course_id=news_course_info.id
                     )
                 )
-            UserCourseContact.objects.bulk_create(manage_student_list)
+            with transaction.atomic():
+                UserCourseContact.objects.filter(
+                    user_id__in=manage_student_ids, course_id=news_course_info.id
+                ).delete()
+                UserCourseContact.objects.bulk_create(manage_student_list)
             return JsonResponse(
                 {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -464,7 +468,9 @@ def add_course_member(request):
     member_name = req.get("name")
     if Member.objects.filter(class_number=member_class_number).exists():
         user = Member.objects.get(class_number=member_class_number)
-        if UserCourseContact.objects.filter(course_id=course_id, user_id=user.id).exists():
+        if UserCourseContact.objects.filter(
+            course_id=course_id, user_id=user.id
+        ).exists():
             return JsonResponse(
                 {
                     "result": False,
@@ -474,7 +480,9 @@ def add_course_member(request):
                 },
             )
         else:
-            UserCourseContact.objects.update_or_create(course_id=course_id, user_id=user.id)
+            UserCourseContact.objects.update_or_create(
+                course_id=course_id, user_id=user.id
+            )
             return JsonResponse(
                 {
                     "result": True,
@@ -686,17 +694,16 @@ def verify_school_user(request):
                     }
                 )
 
-            result, user_info, message = identify_user(
-                username=username, password=password
-            )
+            try:
+                result, user_info, message = identify_user(
+                    username=username, password=password
+                )
+            except Exception as e:
+                logger.exception('函数: [verify_school_user]: 获取身份信息失败. 具体问题: {}'.format(e))
+                return JsonResponse({'result': False, 'code': 500, 'message': '认证失败(请检查日志)', 'data': {}})
+
             if result:
-                user, _ = Member.objects.get_or_create(class_number=username)
-                if user and user.identity != Member.Identity.NOT_CERTIFIED:
-                    return JsonResponse(
-                        {"result": False, "message": "改账号已被认证", "code": 400, "data": {}}
-                    )
                 kwargs = {
-                    "username": username + "X",
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
                     "professional_class": user_info["user_major"],
@@ -720,6 +727,9 @@ def verify_school_user(request):
                     )
                 else:
                     user = Member.objects.get(username=request.user.username)
+
+                if user.identity != Member.Identity.NOT_CERTIFIED:
+                    return JsonResponse({'result': False, 'message': '该账号已经被认证, 如果需要修改认证信息请联系管理员', 'code': 400, 'data': {}})
 
                 for attr_name, attr_value in kwargs.items():
                     setattr(user, attr_name, attr_value)

@@ -2,7 +2,7 @@
     <div class="wrapper">
         <div class="wrapper-head" v-if="userIdentify === 'TEACHER'">
             <bk-button theme="primary" class="mr10" :outline="true" @click="beforeAdd">创建课程</bk-button>
-            <bk-button theme="primary" :outline="true" @click="visible.deleteall.isshow = true">批量删除</bk-button>
+            <bk-button theme="primary" :outline="true" @click="removeallBefor">批量删除</bk-button>
         </div>
         <div class="wrapper-body">
             <bk-table style="margin-top: 10px;"
@@ -31,7 +31,12 @@
                 <bk-table-column label="创建人" prop="create_people" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="课程简介" header-align="center" align="center">
                     <template slot-scope="props">
-                        <span @click="showDetail(props.row)" style="cursor : pointer;">{{props.row.course_introduction }}</span>
+                        <bk-popover placement="top" v-if="props.row.course_introduction !== 0">
+                            <span>{{props.row.course_introduction.slice(0,12) + (props.row.course_introduction.length > 12 ? '...' : '')}}</span>
+                            <div slot="content">
+                                <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.course_introduction}}</div>
+                            </div>
+                        </bk-popover>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="操作" width="150" align="center" header-align="center" v-if="userIdentify === 'TEACHER'">
@@ -51,6 +56,7 @@
                     :align="pagingConfigTwo.align"
                     :show-limit="pagingConfigTwo.showLimit"
                     :limit-list="pagingConfigTwo.limitList"
+                    :show-total-count="true"
                     @change="pageChange"
                     @limit-change="limitChange">
                 </bk-pagination>
@@ -130,17 +136,6 @@
                 @confirm="removeCourse(course_id)">
                 <div class="dialog-body">
                     <p>确定要删除{{course_id.length}}项内容吗？</p>
-                </div>
-            </bk-dialog>
-            <!-- 显示详情 -->
-            <bk-dialog v-model="visible.introduction.isshow"
-                width="530"
-                position="'top'"
-                :mask-close="false"
-                :header-position="visible.addcourse.headerPosition"
-                title="课程简介">
-                <div class="dialog-body">
-                    {{formData3.course_introduction}}
                 </div>
             </bk-dialog>
             <!-- 修改课程 -->
@@ -237,10 +232,6 @@
                         headerPosition: 'center'
                     },
                     altercourse: {
-                        isshow: false,
-                        headerPosition: 'center'
-                    },
-                    introduction: {
                         isshow: false,
                         headerPosition: 'center'
                     },
@@ -377,6 +368,11 @@
                 selection.forEach(e => {
                     this.course_id.push(e.course_id)
                 })
+            },
+            removeallBefore () {
+                if (this.course_id !== 0) {
+                    this.visible.deleteall.isshow = true
+                }
             },
             // 删除单个课程
             removeBefor (e) {

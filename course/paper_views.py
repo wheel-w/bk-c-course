@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import logging
 from datetime import timedelta
@@ -163,25 +165,34 @@ def paper(request):
                 paper_info[paper['id']]['chapter_name'] = chapters[paper['chapter_id']] \
                     if paper['chapter_id'] != -1 else '全部章节'
 
-            # 如果是学生，查询卷子的作答情况
-            if identity == Member.Identity.STUDENT and paper_info:
-                SPContacts = {spc.paper_id: spc for spc in
-                              StudentPaperContact.objects.filter(student_id=request.user.id)}
-                for paper_id, paper in paper_info.items():
-                    paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
-                        status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
+            # 老师和学生都会查询卷子的作答情况(老师也可以去答卷)
+            SPContacts = {spc.paper_id: spc for spc in
+                          StudentPaperContact.objects.filter(student_id=request.user.id)}
+            for paper_id, paper in paper_info.items():
+                paper_info[paper_id]['student_status'] = SPContacts[paper_id]. \
+                    status if paper_id in SPContacts.keys() else StudentPaperContact.Status.NOT_ANSWER
 
-                    if paper['status'] == Paper.Status.MARKED:
-                        paper_info[paper_id]['score'] = SPContacts[paper_id]. \
-                            score if paper_id in SPContacts.keys() else 0
+                if paper['status'] == Paper.Status.MARKED:
+                    paper_info[paper_id]['score'] = SPContacts[paper_id]. \
+                        score if paper_id in SPContacts.keys() else 0
+
             # 如果是老师请求，而且卷子在答题之中或者未批改看查提交人数
             if identity == Member.Identity.TEACHER:
                 for paper_id, paper in paper_info.items():
                     if (paper['status'] == Paper.Status.MARKED) or (paper['status'] == Paper.Status.RELEASE):
                         # 获取那些学生没有答，那些学生答过(数量)
-                        total_students_num = len(UserCourseContact.objects.filter(course_id=paper['course_id']))
-                        submitted_students_num = len(
-                            StudentPaperContact.objects.filter(paper_id=paper_id, course_id=paper['course_id']))
+                        total_students_num = UserCourseContact.objects.filter(course_id=paper['course_id']).count()
+                        query_param = {'paper_id': paper_id, 'course_id': paper['course_id']}
+                        # 如果答题时间未过, 只统计提交卷子的学生数量
+                        if paper['end_time'] < timezone.now():
+                            query_param['status'] = StudentPaperContact.Status.SUBMITTED
+                        else:
+                            # 如果答题时间过了, 统计提交与保存的学生数量
+                            query_param['status__in'] = [
+                                StudentPaperContact.Status.SUBMITTED,
+                                StudentPaperContact.Status.SAVED
+                            ]
+                        submitted_students_num = StudentPaperContact.objects.filter(**query_param).count()
                         paper_info[paper_id]['total_students_num'] = total_students_num
                         paper_info[paper_id]['submitted_students_num'] = submitted_students_num
             [p.pop('question_order') for _, p in paper_info.items()]
@@ -618,13 +629,6 @@ def answer_or_check_paper(request):
             SPContact = StudentPaperContact.objects.filter(
                 paper_id=paper_id, student_id=student_id
             )
-            if (
-                    SPContact
-                    and SPContact.get().status == StudentPaperContact.Status.SUBMITTED
-            ):
-                return JsonResponse(
-                    {"result": False, "code": 400, "message": "你已经提交", "data": {}}
-                )
             paper = Paper.objects.get(id=paper_id)
             if paper.status == Paper.Status.DRAFT:
                 return JsonResponse(
@@ -669,6 +673,8 @@ def answer_or_check_paper(request):
             questions_list = []
             for question_id in question_ids:
                 question = questions[question_id]
+                if request.is_wechat():
+                    question["question"] = "({}) {}".format(custom_types[int(title_id)], question["question"])
                 if (
                         paper.status == Paper.Status.RELEASE
                         and paper.end_time > timezone.now()
