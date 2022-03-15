@@ -117,7 +117,7 @@
                     @on-click="clicknode">
                 </bk-tree>
                 <bk-button style="margin-left:10px;margin-right:10px" theme="primary" @click="previewsetting.visible = true">预览试卷</bk-button>
-                <bk-button theme="primary" :loading="loadingbutton" @click="savepaper">保存试卷</bk-button>
+                <bk-button theme="primary" :disabled="!saveble" :loading="loadingbutton" @click="savepaper">保存试卷</bk-button>
             </div>
         </div>
     </div>
@@ -130,6 +130,7 @@
     import QuestionShort from '../../components/question/QuestionShort.vue'
     import QuestionFill from '../../components/question/QuestionFill.vue'
     import QuestionTitleManage from '../../components/question-title/QuestionTitleManage.vue'
+    import CircularJSON from 'circular-json'
     export default {
         components: {
             QuestionRadio,
@@ -167,10 +168,12 @@
                         openedIcon: 'icon-folder-open',
                         closedIcon: 'icon-folder',
                         id: 0,
+                        Id: undefined,
                         children: [
                         ]
                     }
                 ],
+                paperinit: [],
                 questionlist: [],
                 existlist: [],
                 dragSort: true,
@@ -181,11 +184,6 @@
                 sidesliderSettings: {
                     isShow: false,
                     title: '大题信息'
-                },
-                pagination: {
-                    current: 1,
-                    count: undefined,
-                    limit: 15
                 },
                 questionparameter: {
                     questiontype: undefined,
@@ -235,12 +233,16 @@
                 moveoutbutton: true,
                 isdiabled: true,
                 loadingbutton: false,
+                // saveble: false,
                 questionTitleList: []
             }
         },
         computed: {
             CourseId: function () {
                 return this.$store.state.currentCourseId
+            },
+            saveble: function () {
+                return this.isModified(this.paperinit, this.papertree[0])
             }
         },
         watch: {
@@ -269,12 +271,61 @@
             }
         },
         created () {
-            this.getquestiontitle()
+            if (sessionStorage.getItem('paperinfo')) {
+                const paperinit = JSON.parse(sessionStorage.getItem('paperinit'))
+                const paperinfo = CircularJSON.parse(sessionStorage.getItem('paperinfo'))
+                this.paperinit = paperinit
+                this.papertree = paperinfo
+                this.existlist = JSON.parse(sessionStorage.getItem('existlist'))
+                this.getquetionlist()
+                sessionStorage.removeItem('paperinfo')
+                sessionStorage.removeItem('existlist')
+                sessionStorage.removeItem('paperinit')
+            } else {
+                this.getquestiontitle()
+            }
+            window.addEventListener('beforeunload', () => {
+                sessionStorage.setItem('paperinfo', CircularJSON.stringify(this.papertree))
+                sessionStorage.setItem('existlist', JSON.stringify(this.existlist))
+                sessionStorage.setItem('paperinit', JSON.stringify(this.paperinit))
+            })
         },
         methods: {
+            isModified (oldval, newval) {
+                const flag = { val: 0 }
+                if (oldval.length !== newval.children.length) { // 大题数量是否相同
+                    flag.val = 1
+                } else {
+                    for (let i = 0; i < oldval.length; i++) {
+                        if (oldval[i].Id !== newval.children[i].Id) { // 大题是否相同
+                            flag.val = 1
+                            break
+                        } else {
+                            if (oldval[i].children.length !== newval.children[i].children.length) { // 大题下的题目数量是否相同
+                                flag.val = 1
+                                break
+                            } else {
+                                for (let j = 0; j < oldval[i].children.length; j++) {
+                                    if (oldval[i].children[j].id !== newval.children[i].children[j].id) { // 大题下的题目是否相同
+                                        flag.val = 1
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (flag.val === 1) {
+                    return true
+                } else {
+                    return false
+                }
+            },
             clicknode (node) {
-                this.editQuestion.Question = node.dialogdata
-                this.editQuestion.visable = true
+                if (!node.children) {
+                    this.editQuestion.Question = node.dialogdata
+                    this.editQuestion.visable = true
+                }
             },
             handleRowClick (row, event, column, rowIndex, columnIndex) {
                 this.editQuestion.Question = row
@@ -301,14 +352,15 @@
                     this.$refs.tree.delNode(node.parent, node)
                 } else {
                     if (node.children.length > 2) { // 大题下面的题目多于2道时，才会提醒
+                        const that = this
                         this.$bkInfo({
                             type: 'warning',
                             title: '确认要删除？',
                             confirmFn: function () {
                                 node.children.forEach(item => {
-                                    this.delquestion(item.id)
+                                    that.delquestion(item.id)
                                 })
-                                this.$refs.tree.delNode(node.parent, node)
+                                that.$refs.tree.delNode(node.parent, node)
                             },
                             cancelFn: function () {
                                 node.expanded = true
@@ -325,6 +377,7 @@
             async delquestion (id) { // 将题目状态由已录入改成未录入
                 for (const i in this.questionlist) {
                     if (id === this.questionlist[i].QuestionId) {
+                        this.existlist.splice(this.existlist.indexOf(id), 1)
                         this.questionlist[i].status = '未录入'
                         break
                     }
@@ -436,6 +489,7 @@
                     for (const i in this.papertree[0].children) {
                         for (const t in this.papertree[0].children[i].children) {
                             if (this.papertree[0].children[i].children[t].id === this.Selections[j].QuestionId) {
+                                this.existlist.splice(this.existlist.indexOf(this.Selections[j].QuestionId), 1)
                                 this.papertree[0].children[i].children.splice(t, 1)
                                 this.Selections[j].status = '未录入'
                                 flag.value = 1
@@ -454,6 +508,7 @@
                 for (const i in this.papertree[0].children) {
                     if (this.questionparameter.questiontype === this.papertree[0].children[i].name) {
                         for (const k in this.Selections) {
+                            this.existlist.push(this.Selections[k].QuestionId)
                             this.Selections[k].status = '已录入'
                             if (this.Selections[k].question.length > 14) {
                                 const titledisplay = this.Selections[k].question.substr(0, 13) + '...'
@@ -520,7 +575,7 @@
                     await new Promise(resolve => {
                         setTimeout(() => {
                             resolve('成功')
-                        }, 1500)
+                        }, 1200)
                     })
                     const data = []
                     for (const i in this.papertree[0].children) {
@@ -653,14 +708,19 @@
             },
             async getpaperinfo () { // 获得试卷信息
                 this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: this.$route.query.paperid } }).then(res => {
+                    this.existlist = []
+                    this.papertree[0].children = []
+                    this.paperinit = []
+                    this.papertree[0].Id = this.$route.query.paperid
                     if (res.result === true) {
-                        const count = { val: 0 }
-                        this.existlist = []
-                        this.papertree[0].id = this.$route.query.paperid
                         for (const i in res.data) {
                             const tmp = []
+                            const inittmp = []
                             for (const j in res.data[i]) {
-                                this.$set(this.existlist, count.val++, res.data[i][j].question_id)
+                                this.existlist.push(res.data[i][j].question_id)
+                                inittmp.push({
+                                    id: res.data[i][j].question_id
+                                })
                                 if (res.data[i][j].question.length > 14) {
                                     const titledisplay = res.data[i][j].question.substr(0, 13) + '...'
                                     tmp.push({
@@ -704,6 +764,10 @@
                                     })
                                 }
                             }
+                            this.paperinit.push({
+                                Id: this.paperquestiontypeMap[i],
+                                children: inittmp
+                            })
                             this.papertree[0].children.push({
                                 name: i,
                                 title: i,
@@ -730,7 +794,7 @@
                         }
                     }
                 }).then(res => {
-                    this.getquetionlist() // 获得题目
+                    this.getquetionlist()
                 })
             },
             async updatepaper (data) { // 保存试卷请求
@@ -746,6 +810,20 @@
                             theme: 'error'
                         })
                     }
+                }).then(res => {
+                    this.paperinit = []
+                    this.papertree[0].children.forEach(item => {
+                        const tmp = []
+                        item.children.forEach(item0 => {
+                            tmp.push({
+                                id: item0.id
+                            })
+                        })
+                        this.paperinit.push({
+                            Id: item.Id,
+                            children: tmp
+                        })
+                    })
                 })
             },
             updateQuestionTitle (item, saved) {
@@ -777,7 +855,7 @@
 </script>
 
 <style>
-#a {
+.monitor-navigation-content {
     overflow-y: scroll;
     overflow-x:auto;
 }
@@ -832,7 +910,7 @@
     height: 23px;
 }
 #my .bk-select {
-    line-height: 32px;
+    line-height: 33px;
 }
 #my .radio-common {
     display: flex;

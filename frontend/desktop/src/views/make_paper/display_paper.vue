@@ -607,7 +607,7 @@
                         })
                     }, validator => {
                         this.$bkMessage({
-                            message: '信息有误',
+                            message: '请检查输入',
                             theme: 'warning'
                         })
                     })

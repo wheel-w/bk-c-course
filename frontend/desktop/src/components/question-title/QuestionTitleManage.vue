@@ -86,6 +86,22 @@
                             required: true,
                             message: '大题不能为空！',
                             trigger: 'change'
+                        },
+                        {
+                            validator: (val) => {
+                                const a = { val: 0 }
+                                this.questionTitleList.forEach(element => {
+                                    if (val === element.custom_type_name) {
+                                        a.val = 1
+                                        return false
+                                    }
+                                })
+                                if (a.val === 0) {
+                                    return true
+                                }
+                            },
+                            message: '该大题已存在',
+                            trigger: 'blur'
                         }
                     ]
                 },

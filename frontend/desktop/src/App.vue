@@ -60,7 +60,7 @@
                     </bk-navigation-menu-item>
                 </bk-navigation-menu>
             </template>
-            <div class="monitor-navigation-content">
+            <div class="monitor-navigation-content" id="a">
                 <main class="main-content" v-bkloading="{ isLoading: mainContentLoading, opacity: 1 }">
                     <router-view :key="routerKey" v-show="!mainContentLoading" />
                 </main>
