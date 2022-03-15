@@ -5,7 +5,7 @@
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addstudent.isshow = true">增加学生</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="visible.addexcel.isshow = true">导入成员</bk-button>
                 <bk-button :theme="'primary'" text class="mr10" @click="downtemplete">下载点名册模板</bk-button>
-                <bk-button :theme="'primary'" text class="mr10" @click="visible.deleteall.isshow = true">批量删除</bk-button>
+                <bk-button :theme="'primary'" text class="mr10" @click="removeallBefor">批量删除</bk-button>
             </div>
             <div class="wrapper-body">
                 <bk-table style="margin-top: 15px;"
@@ -44,6 +44,7 @@
                         :align="page.align"
                         :show-limit="page.showLimit"
                         :limit-list="page.limitList"
+                        :show-total-count="true"
                         @change="pageChange"
                         @limit-change="limitChange">
                     </bk-pagination>
@@ -382,6 +383,11 @@
                 selection.forEach(e => {
                     this.student_id.push(e.id)
                 })
+            },
+            removeallBefore () {
+                if (this.student_id !== 0) {
+                    this.visible.deleteall.isshow = true
+                }
             },
             // 删除单个学生
             beforRemove (e) {
