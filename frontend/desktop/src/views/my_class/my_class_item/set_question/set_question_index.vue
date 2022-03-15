@@ -15,7 +15,7 @@
                     :name="chapter.chapter_name">
                 </bk-option>
             </bk-select>
-            <chapter-manage :key="componentKey1" :chapters="chapterList" @updateChapter="updateChapter"></chapter-manage>
+            <chapter-manage :key="componentKey1" :chapters="chapterList" :chapterid="curChapterId" @updateChapter="updateChapter"></chapter-manage>
         </div>
         <div class="set_question" style="border-style:;height:480px;margin-bottom:30px;">
             <bk-tab :active.sync="active" type="border-card" label-height="50" :active-bar="activeBar2" @tab-change="handleTabChange">
@@ -23,7 +23,7 @@
                     v-for="(panel, index) in panels"
                     v-bind="panel"
                     :key="index"
-                    style="height:390px;">
+                    style="height:396px;">
                     <keep-alive :key="componentKey2">
                         <component :is="active" :chapterid="curChapterId" @createQuestion="createQuestion" @importQuestionExcel="getQuestionList()"></component>
                     </keep-alive>
@@ -34,7 +34,7 @@
             <component v-if="editQuestion.visable" :is="Dict[editQuestion.Question.types]" :info="editQuestion.Question" :editable="true" @updateQuestion="updateQuestion"></component>
         </bk-dialog>
         <div class="questions">
-            <bk-button theme="primary" @click="deleteQuestions" style="margin-bottom: 10px">批量删除</bk-button>
+            <bk-button theme="primary" :outline="true" @click="deleteQuestions" style="margin-bottom: 10px">批量删除</bk-button>
             <bk-table
                 :data="showQuestionList1"
                 :size="size"
@@ -52,7 +52,8 @@
                 <bk-table-column type="selection" :width="60" v-model="selection"></bk-table-column>
                 <bk-table-column
                     label="题目id"
-                    prop="question_id">
+                    prop="question_id"
+                    width="200">
                 </bk-table-column>
                 <bk-table-column
                     label="题目内容"
@@ -61,20 +62,21 @@
                 <bk-table-column
                     label="题目类型"
                     prop="types"
+                    width="200"
                     :filtered-value="curType"
                     :filters="[{ text: '单选题', value: 'SINGLE' }, { text: '多选题', value: 'MULTIPLE' }, { text: '判断题', value: 'JUDGE' }, { text: '填空题', value: 'COMPLETION' }, { text: '简答题', value: 'SHORT_ANSWER' }]"
                     :filter-method="filterType"
                     filter-placement="bottom-end"
                     :filter-multiple="true">
                     <template slot-scope="scope">
-                        <bk-tag theme="info">
+                        <bk-tag theme="info" type="filled">
                             {{questionType(scope.row.types)}}
                         </bk-tag>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="操作" width="150">
+                <bk-table-column label="操作" width="200">
                     <template slot-scope="props">
-                        <bk-button class="mr10" theme="primary" text @click="deleteQuestion(props.row)">删除</bk-button>
+                        <bk-button theme="primary" text @click="deleteQuestion(props.row)">删除</bk-button>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -262,17 +264,19 @@
                         this.$bkMessage(this.config)
                     }
                 } else if (method === 'delete') {
-                    this.$http.delete('/course/teacher_set_question/', { params: { course_id: this.courseId, question_id_list: JSON.stringify(item) } }).then(res => {
-                        if (res.result) {
-                            this.config.theme = 'success'
-                            this.config.message = '删除成功！'
-                        } else {
-                            this.config.theme = 'error'
-                            this.config.message = res.message
-                        }
-                        this.$bkMessage(this.config)
-                        this.getQuestionList()
-                    })
+                    if (item.length > 0) {
+                        this.$http.delete('/course/teacher_set_question/', { params: { course_id: this.courseId, question_id_list: JSON.stringify(item) } }).then(res => {
+                            if (res.result) {
+                                this.config.theme = 'success'
+                                this.config.message = '删除成功！'
+                            } else {
+                                this.config.theme = 'error'
+                                this.config.message = res.message
+                            }
+                            this.$bkMessage(this.config)
+                            this.getQuestionList()
+                        })
+                    }
                 } else if (method === 'update') {
                     this.$http.put('/course/teacher_set_question/', {
                         course_id: this.courseId,
@@ -333,6 +337,7 @@
                     this.showQuestionList = filteredQuestionList
                     this.pagination.count = filteredQuestionList.length
                 } else {
+                    this.showQuestionList = this.questionList
                     this.pagination.count = this.questionList.length
                 }
             },

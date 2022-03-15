@@ -1,5 +1,5 @@
 <template>
-    <div class="monitor-navigation" :class="systemCls">
+    <div class="monitor-navigation" :class="systemCls" v-title data-title="课程管理系统">
         <bk-navigation
             :header-title="nav.id"
             :side-title="nav.title"
@@ -135,7 +135,7 @@
                         },
                         {
                             id: 'set_question_index',
-                            name: '出题页面',
+                            name: '课程题库',
                             icon: 'icon-tree-process-shape',
                             pathName: 'set_question_index',
                             children: [],
@@ -143,7 +143,7 @@
                         },
                         {
                             id: 'answer_question_index',
-                            name: '答题页面',
+                            name: '测验与作业',
                             icon: 'icon-tree-process-shape',
                             pathName: 'answer_question_index',
                             children: [],
@@ -151,7 +151,7 @@
                         },
                         {
                             id: 'displaypaper',
-                            name: '出卷页面',
+                            name: '作业管理',
                             icon: 'icon-tree-process-shape',
                             pathName: 'displaypaper',
                             children: [],
