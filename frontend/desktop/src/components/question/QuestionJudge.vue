@@ -30,9 +30,6 @@
                     </bk-radio-group>
                 </bk-form-item>
             </div>
-            <div class="rightAnswer">
-                <p>正确答案：{{Question.answer === 'true' ? '正确' : '错误'}}</p>
-            </div>
             <div class="analysis">
                 <bk-switcher
                     theme="primary"
@@ -225,7 +222,7 @@
     margin-left: 1%;
 }
 .analysis {
-    width: 84%;
+    width: 83%;
     height: 125px;
     margin-left: 1%;
     .upload {

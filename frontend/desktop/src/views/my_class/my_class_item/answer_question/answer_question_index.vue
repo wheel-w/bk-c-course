@@ -10,14 +10,14 @@
                 @page-limit-change="handlePageLimitChange">
                 <bk-table-column type="index" label="序号" width="100"></bk-table-column>
                 <bk-table-column label="章节名称" prop="chapter_name" width="150" :filters="chapterStatusFilters" :filter-multiple="false"></bk-table-column>
-                <bk-table-column label="习题名称" width="200">
+                <bk-table-column label="习题名称" width="150">
                     <template slot-scope="props">
                         <div>
                             <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'SUBMITTED'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)" :disabled="props.row.status !== 'MARKED'">{{ props.row.paper_name }}</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'UNDERWAY'" theme="primary" text @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;">{{ props.row.paper_name }}</bk-button>
-                            <bk-button v-else radius="10px" text disabled>{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'SAVED'" theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'REALMARKED'" theme="primary" text @click="toAnalyze(props.row.id, true, true)">{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'FINISHED' || props.row.student_status === 'REALSUBMITTED'" theme="primary" text @click="toAnalyze(props.row.id, true, false)">{{ props.row.paper_name }}</bk-button>
                         </div>
                     </template>
                 </bk-table-column>
@@ -25,26 +25,26 @@
                 <bk-table-column label="截止时间" prop="end_time" width="200"></bk-table-column>
                 <bk-table-column label="我的分数" prop="score" width="100">
                     <template slot-scope="props">
-                        {{ props.row.status === 'MARKED' ? props.row.score : '———' }}
+                        {{ props.row.student_status === 'REALMARKED' ? props.row.score : '———' }}
                     </template>
                 </bk-table-column>
                 <bk-table-column label="习题状态" width="150" prop="student_status" :filters="statusFilters" :filter-multiple="true">
                     <template slot-scope="props">
-                        <bk-tag v-if="props.row.student_status === 'NOTSTART'" theme="info" radius="10px" type="filled">未开始</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'SUBMITTED'" theme="warning" radius="10px" type="filled">待批改</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'MARKED'" theme="danger" radius="10px" type="filled">已结束</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'UNDERWAY'" theme="success" radius="10px" type="filled">进行中</bk-tag>
-                        <bk-tag v-else radius="10px" type="filled">未提交</bk-tag>
+                        <bk-tag v-if="props.row.student_status === 'NOTSTART'" theme="filled" radius="10px" type="filled">未开始</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'REALSUBMITTED'" theme="warning" radius="10px" type="filled">已提交</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'REALMARKED'" theme="info" radius="10px" type="filled">已批改</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'UNDERWAY' || props.row.student_status === 'SAVED'" theme="success" radius="10px" type="filled">进行中</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'FINISHED'" theme="danger" radius="10px" type="filled">已结束</bk-tag>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="操作">
                     <template slot-scope="props">
                         <div>
                             <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>暂未开始</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'SUBMITTED'" theme="primary" text disabled>待批改</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'MARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)" :disabled="props.row.status !== 'MARKED'">查看解析</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'UNDERWAY'" theme="primary" text @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;">开始答题</bk-button>
-                            <bk-button v-else theme="primary" text disabled>未提交</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'SAVED'" theme="primary" text @click="toAnswer(props.row.id, false)">继续答题</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'REALMARKED'" theme="primary" text @click="toAnalyze(props.row.id, true, true)">查看解析</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'FINISHED' || props.row.student_status === 'REALSUBMITTED'" theme="primary" text @click="toAnalyze(props.row.id, true, false)">查看作答情况</bk-button>
                         </div>
                     </template>
                 </bk-table-column>
@@ -68,24 +68,24 @@
                 // 试卷状态过滤器
                 statusFilters: [
                     {
-                        text: '未开始',
-                        value: 'NOTSTART'
-                    },
-                    {
-                        text: '待批改',
-                        value: 'SUBMITTED'
-                    },
-                    {
-                        text: '已结束',
-                        value: 'MARKED'
-                    },
-                    {
                         text: '进行中',
                         value: 'UNDERWAY'
                     },
                     {
-                        text: '未提交',
-                        value: 'NOTSUBMITTED'
+                        text: '已提交',
+                        value: 'REALSUBMITTED'
+                    },
+                    {
+                        text: '已批改',
+                        value: 'REALMARKED'
+                    },
+                    {
+                        text: '已结束',
+                        value: 'FINISHED'
+                    },
+                    {
+                        text: '未开始',
+                        value: 'NOTSTART'
                     }
                 ],
                 // 习题章节过滤器
@@ -120,7 +120,9 @@
             }
         },
         mounted () {
-            this.getExerciseList()
+            setTimeout(() => {
+                this.getExerciseList()
+            }, 50)
         },
         methods: {
             // 过滤状态和章节
@@ -163,12 +165,13 @@
                 })
             },
             // 跳转试卷分析页面
-            toAnalyze (id, isAccomplish) {
+            toAnalyze (id, isAccomplish, isMarked) {
                 this.$router.push({
                     name: 'answer_question_detail',
                     query: {
                         id,
-                        isAccomplish
+                        isAccomplish,
+                        isMarked
                     }
                 })
             },
@@ -205,37 +208,48 @@
 
                 this.$http.get('/course/paper/', { params: { course_id: this.$store.state.currentCourseId } }).then(res => {
                     const exerciseList = res.data
+                    // 进行中的卷子
                     const underWayList = []
-                    const notStartList = []
-                    const waitMarkedList = []
+                    // 已提交的卷子
+                    const submittedList = []
+                    // 已批改的卷子
+                    const markedList = []
+                    // 已结束的卷子
                     const finishedList = []
-                    const notSubmittedList = []
+                    // 未开始的卷子
+                    const notStartList = []
 
+                    // 更新试卷状态
                     for (const item of exerciseList) {
                         if (new Date().getTime() < Date.parse(item.start_time)) {
                             item.student_status = 'NOTSTART'
                             notStartList.push(item)
-                        } else if (item.student_status === 'SUBMITTED') {
-                            waitMarkedList.push(item)
-                        } else if (item.student_status === 'MARKED') {
-                            finishedList.push(item)
+                        } else if ((item.student_status === 'SUBMITTED' || item.student_status === 'MARKED') && new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {
+                            item.student_status = 'REALSUBMITTED'
+                            submittedList.push(item)
+                        } else if (item.student_status === 'MARKED' && item.status === 'MARKED' && new Date().getTime() > Date.parse(item.end_time)) {
+                            item.student_status = 'REALMARKED'
+                            markedList.push(item)
                         } else if (new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {
-                            item.student_status = 'UNDERWAY'
+                            item.student_status = item.student_status === 'SAVED' ? 'SAVED' : 'UNDERWAY'
                             underWayList.push(item)
-                        } else {
-                            item.student_status = 'NOTSUBMITTED'
-                            notSubmittedList.push(item)
+                        } else if (new Date().getTime() > Date.parse(item.end_time)) {
+                            item.student_status = 'FINISHED'
+                            finishedList.push(item)
                         }
+                        // 章节过滤器
                         this.chapterStatusFilters.push({
                             text: item.chapter_name,
                             value: item.chapter_id
                         })
                     }
+                    // 按照顺序形成试题列表
                     this.exerciseList.push(...underWayList)
-                    this.exerciseList.push(...notStartList)
-                    this.exerciseList.push(...waitMarkedList)
+                    this.exerciseList.push(...submittedList)
+                    this.exerciseList.push(...markedList)
                     this.exerciseList.push(...finishedList)
-                    this.exerciseList.push(...notSubmittedList)
+                    this.exerciseList.push(...notStartList)
+                    // 去除草稿试卷
                     this.exerciseList = this.exerciseList.filter(item => {
                         return item.status !== 'DRAFT'
                     })

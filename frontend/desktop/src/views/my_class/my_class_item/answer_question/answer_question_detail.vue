@@ -1,6 +1,6 @@
 <template>
     <div class="myWrapper" v-if="$route.query.isAccomplish" ref="top">
-        <div class="header">
+        <div class="header" v-if="$route.query.isMarked">
             <h2>总分：{{ totalScore === null ? '————' : totalScore }}</h2>
         </div>
         <div v-for="(item,index) in totalQuestion" :key="index">
@@ -38,19 +38,21 @@
                             E：{{ childItem.option_E }}
                         </bk-checkbox>
                     </bk-checkbox-group>
-                    <bk-divider></bk-divider>
+                    <div v-if="childItem.types === 'SINGLE' || childItem.types === 'MULTIPLE'">
+                        <bk-divider></bk-divider>
+                    </div>
                     <div style="margin-top: 10px">
                         你的答案：<span>{{ childItem.student_answer }}</span>
                     </div>
-                    <div style="margin-top: 10px">
+                    <div style="margin-top: 10px" v-if="$route.query.isMarked">
                         正确答案为：
                         <span v-if="childItem.types === 'JUDGE'">{{ item.answer === 'false' ? 'F' : 'T' }}</span>
                         <span v-else>{{ childItem.answer }}</span>
                     </div>
-                    <div style="margin-top: 10px">
+                    <div style="margin-top: 10px" v-if="$route.query.isMarked">
                         解析：<span>{{ childItem.explain === null ? '暂无解析' : childItem.explain}}</span>
                     </div>
-                    <div style="margin-top: 10px">
+                    <div style="margin-top: 10px" v-if="$route.query.isMarked">
                         得分：{{ childItem.student_score }}
                     </div>
                 </bk-card>
@@ -345,9 +347,11 @@
                 })
             },
             toAnswerQuestionIndex () {
-                this.$router.push({
-                    name: 'answer_question_index'
-                })
+                setTimeout(() => {
+                    this.$router.push({
+                        name: 'answer_question_index'
+                    })
+                }, 100)
             },
             lastQuestion () {
                 const ul = document.querySelector('.question_lists')
@@ -403,6 +407,7 @@
                 this.$http.get('/course/answer_or_check_paper/', { params: { paper_id: this.paper_id } }).then(res => {
                     this.questionTitle = res.data
                     console.log('questList', res.data)
+                    console.log('questTitle', this.questionTitle)
                     this.seconds = res.data.cumulative_time
                     for (const key in res.data) {
                         // 答题卡id排序

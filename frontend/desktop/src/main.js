@@ -23,6 +23,11 @@ Vue.prototype.dayjs = dayjs
 Vue.component('app-exception', Exception)
 Vue.component('app-auth', AuthComponent)
 Vue.use(VueCookies)
+Vue.directive('title', {
+    inserted: function (el, binding) {
+        document.title = el.dataset.title
+    }
+})
 auth.requestCurrentUser().then(user => {
     injectCSRFTokenToHeaders()
     if (user.isAuthenticated) {
