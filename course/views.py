@@ -703,13 +703,7 @@ def verify_school_user(request):
                 return JsonResponse({'result': False, 'code': 500, 'message': '认证失败(请检查日志)', 'data': {}})
 
             if result:
-                user, _ = Member.objects.get_or_create(class_number=username)
-                if user and user.identity != Member.Identity.NOT_CERTIFIED:
-                    return JsonResponse(
-                        {"result": False, "message": "改账号已被认证", "code": 400, "data": {}}
-                    )
                 kwargs = {
-                    "username": username + "X",
                     "class_number": user_info["user_name"],
                     "name": user_info["user_real_name"],
                     "professional_class": user_info["user_major"],
@@ -733,6 +727,9 @@ def verify_school_user(request):
                     )
                 else:
                     user = Member.objects.get(username=request.user.username)
+
+                if user.identity != Member.Identity.NOT_CERTIFIED:
+                    return JsonResponse({'result': False, 'message': '该账号已经被认证, 如果需要修改认证信息请联系管理员', 'code': 400, 'data': {}})
 
                 for attr_name, attr_value in kwargs.items():
                     setattr(user, attr_name, attr_value)
