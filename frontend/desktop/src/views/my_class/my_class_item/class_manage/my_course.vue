@@ -2,7 +2,7 @@
     <div class="wrapper">
         <div class="wrapper-head" v-if="userIdentify === 'TEACHER'">
             <bk-button theme="primary" class="mr10" :outline="true" @click="beforeAdd">创建课程</bk-button>
-            <bk-button theme="primary" :outline="true" @click="visible.deleteall.isshow = true">批量删除</bk-button>
+            <bk-button theme="primary" :outline="true" @click="removeallBefor">批量删除</bk-button>
         </div>
         <div class="wrapper-body">
             <bk-table style="margin-top: 10px;"
@@ -56,6 +56,7 @@
                     :align="pagingConfigTwo.align"
                     :show-limit="pagingConfigTwo.showLimit"
                     :limit-list="pagingConfigTwo.limitList"
+                    :show-total-count="true"
                     @change="pageChange"
                     @limit-change="limitChange">
                 </bk-pagination>
@@ -367,6 +368,11 @@
                 selection.forEach(e => {
                     this.course_id.push(e.course_id)
                 })
+            },
+            removeallBefore () {
+                if (this.course_id !== 0) {
+                    this.visible.deleteall.isshow = true
+                }
             },
             // 删除单个课程
             removeBefor (e) {
