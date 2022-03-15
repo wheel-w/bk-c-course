@@ -405,23 +405,34 @@
             },
             getQuestionList () {
                 this.$http.get('/course/answer_or_check_paper/', { params: { paper_id: this.paper_id } }).then(res => {
-                    this.questionTitle = res.data
-                    console.log('questList', res.data)
-                    console.log('questTitle', this.questionTitle)
+                    this.questionTitle['选择题'] = res.data['选择题']
+                    this.questionTitle['多选题'] = res.data['多选题']
+                    this.questionTitle['判断题'] = res.data['判断题']
+                    this.questionTitle['填空题'] = res.data['填空题']
+                    this.questionTitle['简答题'] = res.data['简答题']
+                    for (const item in this.questionTitle) {
+                        if (!res.data[item]) {
+                            console.log(item)
+                            delete this.questionTitle[item]
+                        }
+                    }
                     this.seconds = res.data.cumulative_time
                     for (const key in res.data) {
-                        // 答题卡id排序
-                        res.data[key].sort(function (a, b) {
-                            return a.question_id - b.question_id
-                        })
                         for (const item in res.data[key]) {
                             this.questionList.push(res.data[key][item])
                         }
                     }
                     // 题目id排序
                     this.questionList.sort(function (a, b) {
-                        return a.question_id - b.question_id
+                        return a.id - b.id
                     })
+                    for (const key in res.data) {
+                        // 答题卡id排序
+                        res.data[key].sort(function (a, b) {
+                            return a.id - b.id
+                        })
+                    }
+                    console.log('question_list', this.questionList)
                 })
             },
             submitButtonDisabled () {
