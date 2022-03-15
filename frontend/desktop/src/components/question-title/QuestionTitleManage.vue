@@ -6,11 +6,11 @@
         <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="handleHidden" @shown="handleShown">
             <div slot="header">大题管理</div>
             <div class="p20" slot="content">
-                <bk-form :model="append" ref="appendChapter" :label-width="0">
-                    <div class="appendChapter">
+                <bk-form :model="append" ref="appendQuestionTitle" :label-width="0">
+                    <div class="appendQuestionTitle">
                         <bk-form-item :required="true" :rules="rules.questionTitle" :property="'appendText'" :icon-offset="135">
-                            <bk-input ref="appendInput" :clearable="false" v-model="append.appendText" style="width:70%;" @blur="handleAppendBlur" @enter="appendChapter"></bk-input>
-                            <bk-button :theme="'primary'" :title="'主要按钮'" class="mr10" @click="appendChapter" style="float:right;">
+                            <bk-input ref="appendInput" :clearable="false" v-model="append.appendText" style="width:70%;" @blur="handleAppendBlur" @enter="appendQuestionTitle"></bk-input>
+                            <bk-button :theme="'primary'" :title="'主要按钮'" class="mr10" @click="appendQuestionTitle" style="float:right;">
                                 新增大题
                             </bk-button>
                         </bk-form-item>
@@ -32,7 +32,7 @@
                             prop="custom_type_name"
                             sortable
                             width=""
-                            @row-dblclick="handleRowDbclickChapter">
+                            @row-dblclick="handleRowDbclickQuestionTitle">
                             <template slot-scope="props">
                                 <p v-if="!rowEditable(props.row.custom_type_id)">{{props.row.custom_type_name}}</p>
                                 <bk-input
@@ -79,22 +79,6 @@
                             required: true,
                             message: '大题不能为空！',
                             trigger: 'change'
-                        },
-                        {
-                            validator: (val) => {
-                                const a = { val: 0 }
-                                this.questionTitleList.forEach(element => {
-                                    if (val === element.custom_type_name) {
-                                        a.val = 1
-                                        return false
-                                    }
-                                })
-                                if (a.val === 0) {
-                                    return true
-                                }
-                            },
-                            message: '该大题已存在',
-                            trigger: 'blur'
                         }
                     ]
                 },
@@ -176,9 +160,13 @@
                 this.saved = false
                 this.changed = false
             },
-            appendChapter () {
-                if (this.repeated(this.questionTitleList, 'custom_type_name', this.curQuestionTitle) > 0) {
-                    this.$refs.appendChapter.validate().then(validator => {
+            appendQuestionTitle () {
+                if (this.repeated(this.questionTitleList, 'custom_type_name', this.append.appendText) > 0) {
+                    this.config.theme = 'warning'
+                    this.config.message = '此大题已存在，不可重复添加'
+                    this.$bkMessage(this.config)
+                } else {
+                    this.$refs.appendQuestionTitle.validate().then(validator => {
                         this.questionTitleList.push({
                             custom_type_id: null,
                             custom_type_name: this.append.appendText
@@ -192,16 +180,12 @@
                     })
                     this.$refs.appendInput.focus()
                     this.changed = true
-                } else {
-                    this.config.theme = 'warning'
-                    this.config.message = '此大题已存在，不可重复添加'
-                    this.$bkMessage(this.config)
                 }
             },
             handleSelectChange (selection, row) {
                 this.selection = selection
             },
-            // deleteChapter (questionTitle) {
+            // deleteQuestionTitle (questionTitle) {
             //     if (questionTitle.custom_type_id === null || questionTitle.custom_type_id === 'focus') {
             //         this.append.appendNumber = this.append.appendNumber - 1
             //         if (this.append.appendNumber !== 0) {
@@ -215,7 +199,7 @@
             //     this.questionTitleList.splice(this.questionTitleList.indexOf(questionTitle), 1)
             // },
             handleAppendBlur () {
-                // this.$refs.appendChapter.clearRrror()
+                // this.$refs.appendQuestionTitle.clearRrror()
             },
             compare () {
                 for (let i = 0; i < this.questionTitleList.length; i++) {
@@ -237,13 +221,13 @@
     }
 </script>
 <style lang="postcss" scoped>
-.appendChapter {
+.appendQuestionTitle {
     margin-bottom: 10px;
 }
 .questionTitles {
     margin-bottom: 10px;
 }
-.deleteChapter {
+.deleteQuestionTitle {
     display: inline-block;
 }
 .saveChange {
