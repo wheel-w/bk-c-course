@@ -14,10 +14,10 @@
                     <template slot-scope="props">
                         <div>
                             <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'REALSUBMITTED'" theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'REALMARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)">{{ props.row.paper_name }}</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'UNDERWAY'" theme="primary" text @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;">{{ props.row.paper_name }}</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'FINISHED'" theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'SAVED'" theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'REALMARKED'" theme="primary" text @click="toAnalyze(props.row.id, true, true)">{{ props.row.paper_name }}</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'FINISHED' || props.row.student_status === 'REALSUBMITTED'" theme="primary" text @click="toAnalyze(props.row.id, true, false)">{{ props.row.paper_name }}</bk-button>
                         </div>
                     </template>
                 </bk-table-column>
@@ -33,7 +33,7 @@
                         <bk-tag v-if="props.row.student_status === 'NOTSTART'" theme="filled" radius="10px" type="filled">未开始</bk-tag>
                         <bk-tag v-else-if="props.row.student_status === 'REALSUBMITTED'" theme="warning" radius="10px" type="filled">已提交</bk-tag>
                         <bk-tag v-else-if="props.row.student_status === 'REALMARKED'" theme="info" radius="10px" type="filled">已批改</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'UNDERWAY'" theme="success" radius="10px" type="filled">进行中</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'UNDERWAY' || props.row.student_status === 'SAVED'" theme="success" radius="10px" type="filled">进行中</bk-tag>
                         <bk-tag v-else-if="props.row.student_status === 'FINISHED'" theme="danger" radius="10px" type="filled">已结束</bk-tag>
                     </template>
                 </bk-table-column>
@@ -41,10 +41,10 @@
                     <template slot-scope="props">
                         <div>
                             <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>暂未开始</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'REALSUBMITTED'" theme="primary" text @click="toAnswer(props.row.id, false)">查看作答情况</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'REALMARKED'" theme="primary" text @click="toAnalyze(props.row.id, true)">查看解析</bk-button>
                             <bk-button v-else-if="props.row.student_status === 'UNDERWAY'" theme="primary" text @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;">开始答题</bk-button>
-                            <bk-button v-else-if="props.row.student_status === 'FINISHED'" theme="primary" text @click="toAnswer(props.row.id, false)">查看作答情况</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'SAVED'" theme="primary" text @click="toAnswer(props.row.id, false)">继续答题</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'REALMARKED'" theme="primary" text @click="toAnalyze(props.row.id, true, true)">查看解析</bk-button>
+                            <bk-button v-else-if="props.row.student_status === 'FINISHED' || props.row.student_status === 'REALSUBMITTED'" theme="primary" text @click="toAnalyze(props.row.id, true, false)">查看作答情况</bk-button>
                         </div>
                     </template>
                 </bk-table-column>
@@ -165,12 +165,13 @@
                 })
             },
             // 跳转试卷分析页面
-            toAnalyze (id, isAccomplish) {
+            toAnalyze (id, isAccomplish, isMarked) {
                 this.$router.push({
                     name: 'answer_question_detail',
                     query: {
                         id,
-                        isAccomplish
+                        isAccomplish,
+                        isMarked
                     }
                 })
             },
@@ -230,7 +231,7 @@
                             item.student_status = 'REALMARKED'
                             markedList.push(item)
                         } else if (new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {
-                            item.student_status = 'UNDERWAY'
+                            item.student_status = item.student_status === 'SAVED' ? 'SAVED' : 'UNDERWAY'
                             underWayList.push(item)
                         } else if (new Date().getTime() > Date.parse(item.end_time)) {
                             item.student_status = 'FINISHED'

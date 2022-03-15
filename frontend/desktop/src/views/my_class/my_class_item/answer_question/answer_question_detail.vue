@@ -1,6 +1,6 @@
 <template>
     <div class="myWrapper" v-if="$route.query.isAccomplish" ref="top">
-        <div class="header">
+        <div class="header" v-if="$route.query.isMarked">
             <h2>总分：{{ totalScore === null ? '————' : totalScore }}</h2>
         </div>
         <div v-for="(item,index) in totalQuestion" :key="index">
@@ -44,15 +44,15 @@
                     <div style="margin-top: 10px">
                         你的答案：<span>{{ childItem.student_answer }}</span>
                     </div>
-                    <div style="margin-top: 10px">
+                    <div style="margin-top: 10px" v-if="$route.query.isMarked">
                         正确答案为：
                         <span v-if="childItem.types === 'JUDGE'">{{ item.answer === 'false' ? 'F' : 'T' }}</span>
                         <span v-else>{{ childItem.answer }}</span>
                     </div>
-                    <div style="margin-top: 10px">
+                    <div style="margin-top: 10px" v-if="$route.query.isMarked">
                         解析：<span>{{ childItem.explain === null ? '暂无解析' : childItem.explain}}</span>
                     </div>
-                    <div style="margin-top: 10px">
+                    <div style="margin-top: 10px" v-if="$route.query.isMarked">
                         得分：{{ childItem.student_score }}
                     </div>
                 </bk-card>
@@ -347,9 +347,11 @@
                 })
             },
             toAnswerQuestionIndex () {
-                this.$router.push({
-                    name: 'answer_question_index'
-                })
+                setTimeout(() => {
+                    this.$router.push({
+                        name: 'answer_question_index'
+                    })
+                }, 100)
             },
             lastQuestion () {
                 const ul = document.querySelector('.question_lists')
