@@ -92,10 +92,10 @@ def manage_course(request):
                 ),
                 manage_student=manage_student_str,
             )  # 将得到的数据加到course表
-            UserCourseContact.objects.create(
+            UserCourseContact.objects.update_or_create(
                 user_id=request.user.id, course_id=news_course_info.id
             )
-            UserCourseContact.objects.create(
+            UserCourseContact.objects.update_or_create(
                 user_id=teacher_id, course_id=news_course_info.id
             )
             for manage_student_id in manage_student_ids:
@@ -104,7 +104,11 @@ def manage_course(request):
                         user_id=manage_student_id, course_id=news_course_info.id
                     )
                 )
-            UserCourseContact.objects.bulk_create(manage_student_list)
+            with transaction.atomic():
+                UserCourseContact.objects.filter(
+                    user_id__in=manage_student_ids, course_id=news_course_info.id
+                ).delete()
+                UserCourseContact.objects.bulk_create(manage_student_list)
             return JsonResponse(
                 {"result": True, "message": "增加成功", "code": 201, "data": []},
                 json_dumps_params={"ensure_ascii": False},
@@ -464,7 +468,9 @@ def add_course_member(request):
     member_name = req.get("name")
     if Member.objects.filter(class_number=member_class_number).exists():
         user = Member.objects.get(class_number=member_class_number)
-        if UserCourseContact.objects.filter(course_id=course_id, user_id=user.id).exists():
+        if UserCourseContact.objects.filter(
+            course_id=course_id, user_id=user.id
+        ).exists():
             return JsonResponse(
                 {
                     "result": False,
@@ -474,7 +480,9 @@ def add_course_member(request):
                 },
             )
         else:
-            UserCourseContact.objects.update_or_create(course_id=course_id, user_id=user.id)
+            UserCourseContact.objects.update_or_create(
+                course_id=course_id, user_id=user.id
+            )
             return JsonResponse(
                 {
                     "result": True,

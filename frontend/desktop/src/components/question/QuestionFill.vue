@@ -23,7 +23,6 @@
                 </bk-form-item>
             </div>
             <div class="rightAnswer">
-                <p style="display:inline-block;">正确答案:</p>
                 <bk-tag
                     theme="info"
                     :key="tag"
@@ -216,7 +215,7 @@
 </script>
 <style lang="postcss" scoped>
 .question {
-    height: 230px;
+    height: 220px;
     margin-left:1%;
     .question1 {
         height: 90px;
@@ -238,10 +237,11 @@
     }
 }
 .rightAnswer {
-    margin-left: 1%;
+    height: 10px;
+    margin-bottom: 20px;
 }
 .analysis {
-    width: 84%;
+    width: 83%;
     height: 125px;
     margin-left: 1%;
     .upload {

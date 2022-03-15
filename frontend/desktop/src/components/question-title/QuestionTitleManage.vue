@@ -46,13 +46,6 @@
                                 </bk-input>
                             </template>
                         </bk-table-column>
-                        <!-- <bk-table-column
-                            label="操作"
-                            align="right">
-                            <template slot-scope="props">
-                                <bk-button class="mr10" theme="default" icon="delete" :outline="true" size="small" @click="deleteChapter(props.row)"></bk-button>
-                            </template>
-                        </bk-table-column> -->
                     </bk-table>
                 </div>
                 <div class="saveChange">
@@ -92,7 +85,7 @@
                 show: false,
                 editable: false,
                 curRow: null,
-                curChapter: null,
+                curQuestionTitle: null,
                 changed: false,
                 saved: false,
                 append: {
@@ -117,7 +110,7 @@
                     row.custom_type_id = 'focus'
                 }
                 this.curRow = row.custom_type_id
-                this.curChapter = row.custom_type_name
+                this.curQuestionTitle = row.custom_type_name
                 this.editable = !this.editable
                 this.$nextTick(() => {
                     this.$refs.myinput.focus()
@@ -127,23 +120,16 @@
                 if (row.custom_type_id === 'focus') {
                     row.custom_type_id = null
                 }
-                if (row.custom_type_name) {
-                    this.editable = false
-                } else {
-                    row.custom_type_name = this.curChapter
-                    this.editable = false
-                }
+                this.editable = false
             },
             handleBlur (row) {
                 if (row.custom_type_id === 'focus') {
                     row.custom_type_id = null
                 }
-                if (row.custom_type_name) {
-                    this.editable = false
-                } else {
-                    row.custom_type_name = this.curChapter
-                    this.editable = false
+                if (!row.custom_type_name || (this.repeated(this.questionTitleList, 'custom_type_name', row.custom_type_name) > 1)) {
+                    row.custom_type_name = this.curQuestionTitle
                 }
+                this.editable = false
             },
             handleHidden () {
                 this.editable = false
@@ -175,20 +161,26 @@
                 this.changed = false
             },
             appendChapter () {
-                this.$refs.appendChapter.validate().then(validator => {
-                    this.questionTitleList.push({
-                        custom_type_id: null,
-                        custom_type_name: this.append.appendText
+                if (this.repeated(this.questionTitleList, 'custom_type_name', this.curQuestionTitle) > 0) {
+                    this.$refs.appendChapter.validate().then(validator => {
+                        this.questionTitleList.push({
+                            custom_type_id: null,
+                            custom_type_name: this.append.appendText
+                        })
+                        this.append.appendText = null
+                        this.append.appendNumber = this.append.appendNumber + 1
+                    }, validator => {
+                        this.config.theme = 'error'
+                        this.config.message = validator.content
+                        this.$bkMessage(this.config)
                     })
-                    this.append.appendText = null
-                    this.append.appendNumber = this.append.appendNumber + 1
-                }, validator => {
-                    this.config.theme = 'error'
-                    this.config.message = validator.content
+                    this.$refs.appendInput.focus()
+                    this.changed = true
+                } else {
+                    this.config.theme = 'warning'
+                    this.config.message = '此大题已存在，不可重复添加'
                     this.$bkMessage(this.config)
-                })
-                this.$refs.appendInput.focus()
-                this.changed = true
+                }
             },
             handleSelectChange (selection, row) {
                 this.selection = selection
@@ -215,6 +207,15 @@
                         this.changed = true
                     }
                 }
+            },
+            repeated (list, key, item) {
+                let repeated = 0
+                list.forEach(element => {
+                    if (element[key] === item) {
+                        repeated = repeated + 1
+                    }
+                })
+                return repeated
             }
         }
     }
