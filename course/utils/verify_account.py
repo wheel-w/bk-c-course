@@ -12,10 +12,7 @@ def base64_api(img):
     b64 = base64_data.decode()
     data = {"username": name, "password": password, "image": b64}
     result = json.loads(requests.post("http://api.ttshitu.com/base64", json=data).text)
-    if result['success']:
-        return result["data"]["result"]
-    else:
-        return result["message"]
+    return result
 
 
 def get_information(cookies, username, name):
@@ -50,8 +47,7 @@ def get_information(cookies, username, name):
 def identify_user(username, password):
     global base_url
 
-    # base_url = "http://202.200.112.200/"
-    base_url = "http://xfz.xaut.edu.cn/(kghpch55sipvlx55jgkbvz55)/default2.aspx"
+    base_url = os.environ.get('BKAPP_CODE_XAUT_OFFICIAL_WEB')
     headers = {
         'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 '
@@ -62,15 +58,15 @@ def identify_user(username, password):
 
     login_url = base_url
     res = requests.get(login_url, allow_redirects=False)
-    # login_url = login_url + res.headers['location']
-    # login_url = login_url.replace('Default', 'default2')
-    # login_url = login_url.replace(r'/(', '(')
     checkcode_url = login_url.replace(r'/default2.aspx', r'/CheckCode.aspx?')
-    # base_url = login_url.replace(r'/default2.aspx', r'/')
 
     cookies = res.cookies
     checkcode = requests.get(checkcode_url, cookies=cookies, headers=headers)  # 伪装成浏览器
-    code = base64_api(checkcode.content)
+    result = base64_api(checkcode.content)
+    if result["success"]:
+        code = result["data"]["result"]
+    else:
+        raise Exception("获取学分制主页登录的验证码失败. base64返回报错信息: {}".format(result["message"]))
     post_data = {
         '__VIEWSTATE': 'dDwtNTE2MjI4MTQ7Oz4v9xUqkOgkwu+22N3B4gSg7V/qCg==',
         'txtUserName': username,
