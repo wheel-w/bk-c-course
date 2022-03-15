@@ -29,8 +29,8 @@ export default {
         assetsPublicPath: '/',
         proxyTable: {
             '/bk_api': {  //代理地址
-                // target: 'http://dev.paas-edu.bktencent.com:8000',  //需要代理的地址， 实际生产环境需要访问的地址
-                target: 'https://paas-edu.bktencent.com/t/config-query',
+                target: 'http://dev.paas-edu.bktencent.com:8000',  //需要代理的地址， 实际生产环境需要访问的地址
+                // target: 'https://paas-edu.bktencent.com/t/config-query',
                 changeOrigin: true,  //是否跨域
                 secure: true, // https请求需开启此配置
                 pathRewrite: {
