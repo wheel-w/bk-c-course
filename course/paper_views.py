@@ -4,6 +4,7 @@ import json
 import logging
 from datetime import timedelta
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
@@ -247,12 +248,12 @@ def paper(request):
     user_info = "{}({})".format(request.user.class_number, request.user.name)
     try:
         course = Course.objects.get(id=json.loads(request.body).get('course_id'))
-    except DatabaseError as e:
+    except ObjectDoesNotExist as e:
         logger.exception("函数[Paper]: 访问数据库得不到对应的课程 {}".format(e))
         return JsonResponse(
             {"result": False, "code": 500, "message": "操作失败(请检查日志)", "data": {}}
         )
-    if course.create_people == user_info or course.teacher == user_info:
+    if not (course.create_people == user_info or course.teacher == user_info):
         return JsonResponse(
             {"result": False, "code": 403, "message": "您没有操作权限！", "data": {}}
         )
