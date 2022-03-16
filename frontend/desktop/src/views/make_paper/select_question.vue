@@ -707,7 +707,7 @@
                 })
             },
             async getpaperinfo () { // 获得试卷信息
-                this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: this.$route.query.paperid } }).then(res => {
+                this.$http.get('/course/manage_paper_question_contact/', { params: { course_id: this.CourseId, paper_id: this.$route.query.paperid } }).then(res => {
                     this.existlist = []
                     this.papertree[0].children = []
                     this.paperinit = []
@@ -798,11 +798,24 @@
                 })
             },
             async updatepaper (data) { // 保存试卷请求
-                this.$http.post('/course/manage_paper_question_contact/', { paper_id: this.$route.query.paperid, paper_info: data }).then(res => {
+                this.$http.post('/course/manage_paper_question_contact/', { course_id: this.CourseId, paper_id: this.$route.query.paperid, paper_info: data }).then(res => {
                     if (res.result === true) {
                         this.$bkMessage({
                             message: res.message,
                             theme: 'success'
+                        })
+                        this.paperinit = []
+                        this.papertree[0].children.forEach(item => {
+                            const tmp = []
+                            item.children.forEach(item0 => {
+                                tmp.push({
+                                    id: item0.id
+                                })
+                            })
+                            this.paperinit.push({
+                                Id: item.Id,
+                                children: tmp
+                            })
                         })
                     } else {
                         this.$bkMessage({
@@ -810,20 +823,6 @@
                             theme: 'error'
                         })
                     }
-                }).then(res => {
-                    this.paperinit = []
-                    this.papertree[0].children.forEach(item => {
-                        const tmp = []
-                        item.children.forEach(item0 => {
-                            tmp.push({
-                                id: item0.id
-                            })
-                        })
-                        this.paperinit.push({
-                            Id: item.Id,
-                            children: tmp
-                        })
-                    })
                 })
             },
             updateQuestionTitle (item, saved) {
