@@ -286,12 +286,12 @@
                 if (item.pathName === 'exit') {
                     const HOST = `${window.location.protocol}//${window.location.host}`
                     const SITE_URL = window.PROJECT_CONFIG.SITE_URL
-                    const BK_URL = window.PROJECT_CONFIG.BK_URL
+                    const BK_PAAS_HOST = window.PROJECT_CONFIG.BK_PAAS_HOST
                     const APP_CODE = window.PROJECT_CONFIG.APP_CODE
                     let path = `${SITE_URL}/&app_code=${APP_CODE}`
                     path = path.replace(new RegExp('/+', 'gm'), '/')
                     this.$store.commit('updateCourseId', 0)
-                    window.location.href = `${BK_URL}/login/?c_url=${HOST}${path}`
+                    window.location.href = `${BK_PAAS_HOST}/login/?c_url=${HOST}${path}`
                 }
                 this.$router.push({
                     name: item.pathName
