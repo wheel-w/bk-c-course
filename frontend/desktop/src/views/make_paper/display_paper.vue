@@ -517,7 +517,7 @@
                     }
                     this.$http.post('/course/paper/', data).then(res => {
                         if (res.result === true) {
-                            this.$http.put('/course/paper/', { paper_id: res.data.paper_id, update_info: timedate }).then(res2 => {
+                            this.$http.put('/course/paper/', { course_id: this.CourseId, paper_id: res.data.paper_id, update_info: timedate }).then(res2 => {
                                 if (res2.result === false) {
                                     this.$bkMessage({
                                         message: res2.message,
@@ -541,6 +541,11 @@
                                     }
                                 })
                             }
+                        } else {
+                            this.$bkMessage({
+                                message: res.message,
+                                theme: 'error'
+                            })
                         }
                     })
                 }, validator => {
@@ -592,9 +597,7 @@
                             start_time: this.selectdata.start,
                             end_time: this.selectdata.end
                         }
-                        this.selectdata.start = undefined
-                        this.selectdata.end = undefined
-                        this.$http.put('/course/paper/', { paper_id: this.selectdata.paperid, update_info: info }).then(res => {
+                        this.$http.put('/course/paper/', { course_id: this.CourseId, paper_id: this.selectdata.paperid, update_info: info }).then(res => {
                             if (res.result === true) {
                                 this.$bkMessage({
                                     message: '保存成功',
@@ -602,7 +605,14 @@
                                 })
                                 this.getpaperlist()
                                 this.editdialog.custom.visible = false
+                                this.selectdata.start = undefined
+                                this.selectdata.end = undefined
                                 this.edit = true
+                            } else {
+                                this.$bkMessage({
+                                    message: res.message,
+                                    theme: 'error'
+                                })
                             }
                         })
                     }, validator => {
@@ -632,7 +642,7 @@
                 const info = {
                     status: 'DRAFT'
                 }
-                this.$http.put('/course/paper/', { paper_id: id, update_info: info }).then(res => {
+                this.$http.put('/course/paper/', { course_id: this.CourseId, paper_id: id, update_info: info }).then(res => {
                     if (res.result === true) {
                         this.$bkMessage({
                             message: '取消成功！',
@@ -660,7 +670,7 @@
                     const info = {
                         status: 'RELEASE'
                     }
-                    this.$http.put('/course/paper/', { paper_id: row.id, update_info: info }).then(res => {
+                    this.$http.put('/course/paper/', { course_id: this.CourseId, paper_id: row.id, update_info: info }).then(res => {
                         if (res.result === true) {
                             this.$bkMessage({
                                 message: '发布成功！',
