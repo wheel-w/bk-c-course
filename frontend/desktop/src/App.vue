@@ -284,10 +284,14 @@
             handleSelect (id, item) {
                 this.nav.id = id
                 if (item.pathName === 'exit') {
-                    const url = window.PROJECT_CONFIG.SITE_URL
-                    const appCode = url.split('/')[url.split('/').length - 2]
+                    const HOST = `${window.location.protocol}//${window.location.host}`
+                    const SITE_URL = window.PROJECT_CONFIG.SITE_URL
+                    const BK_URL = window.PROJECT_CONFIG.BK_URL
+                    const APP_CODE = window.PROJECT_CONFIG.APP_CODE
+                    let path = `${SITE_URL}/&app_code=${APP_CODE}`
+                    path = path.replace(new RegExp('/+', 'gm'), '/')
                     this.$store.commit('updateCourseId', 0)
-                    window.location.href = 'https://paas-edu.bktencent.com/login/?c_url=' + url + '&app_code=' + appCode
+                    window.location.href = `${BK_URL}/login/?c_url=${HOST}${path}`
                 }
                 this.$router.push({
                     name: item.pathName
