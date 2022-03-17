@@ -4,6 +4,7 @@ import json
 import logging
 from datetime import timedelta
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
@@ -18,14 +19,45 @@ from .models import (
     Question,
     StudentAnswer,
     StudentPaperContact,
-    UserCourseContact, Chapter,
+    UserCourseContact, Chapter, Course,
 )
-from .views import is_teacher
 
 logger = logging.getLogger("root")
 
 
-@is_teacher
+def authority_manage(function, *args, **kwargs):
+    def inner(request):
+        method = request.method
+        if method == 'GET':
+            course_id = request.GET.get('course_id')
+        else:
+            course_id = json.loads(request.body).get('course_id')
+
+        if not course_id:
+            return JsonResponse(
+                {'result': False, 'code': 403, 'message': '请求参数不完整', 'data': []}
+            )
+
+        user_info = "{}({})".format(request.user.class_number, request.user.name)
+        try:
+            if Member.objects.get(username=request.user.username).identity != Member.Identity.TEACHER:
+                return JsonResponse(
+                    {'result': False, 'code': 403, 'message': '您没有操作权限！', 'data': []}
+                )
+            course = Course.objects.get(id=course_id)
+            if course.create_people == user_info or course.teacher == user_info:
+                return function(request, *args, **kwargs)
+            else:
+                return JsonResponse(
+                    {'result': False, 'code': 403, 'message': '您没有操作权限！', 'data': []}
+                )
+        except DatabaseError as e:
+            logger.exception("函数[authority_manage]: {}".format(e))
+            return JsonResponse({'result': False, 'code': 500, 'message': '操作失败(请检查日志)', 'data': {}})
+    return inner
+
+
+@authority_manage
 def question_title(request):
     method = request.method
 
@@ -176,7 +208,7 @@ def paper(request):
                     paper_info[paper_id]['score'] = SPContacts[paper_id]. \
                         score if paper_id in SPContacts.keys() else 0
 
-            # 如果是老师请求，而且卷子在答题之中或者未批改看查提交人数
+            # 如果是老师请求
             if identity == Member.Identity.TEACHER:
                 for paper_id, paper in paper_info.items():
                     if (paper['status'] == Paper.Status.MARKED) or (paper['status'] == Paper.Status.RELEASE):
@@ -190,7 +222,8 @@ def paper(request):
                             # 如果答题时间过了, 统计提交与保存的学生数量
                             query_param['status__in'] = [
                                 StudentPaperContact.Status.SUBMITTED,
-                                StudentPaperContact.Status.SAVED
+                                StudentPaperContact.Status.SAVED,
+                                StudentPaperContact.Status.MARKED
                             ]
                         submitted_students_num = StudentPaperContact.objects.filter(**query_param).count()
                         paper_info[paper_id]['total_students_num'] = total_students_num
@@ -212,7 +245,15 @@ def paper(request):
         )
 
     # 以下的方法只可以以老师的身份请求
-    if request.user.identity != Member.Identity.TEACHER:
+    user_info = "{}({})".format(request.user.class_number, request.user.name)
+    try:
+        course = Course.objects.get(id=json.loads(request.body).get('course_id'))
+    except ObjectDoesNotExist as e:
+        logger.exception("函数[Paper]: 访问数据库得不到对应的课程 {}".format(e))
+        return JsonResponse(
+            {"result": False, "code": 500, "message": "操作失败(请检查日志)", "data": {}}
+        )
+    if not (course.create_people == user_info or course.teacher == user_info):
         return JsonResponse(
             {"result": False, "code": 403, "message": "您没有操作权限！", "data": {}}
         )
@@ -372,7 +413,7 @@ def paper(request):
         return JsonResponse({"result": False, "code": 405, "message": "请求方法错误"})
 
 
-@is_teacher
+@authority_manage
 def manage_paper_question_contact(request):
     if request.method == "GET":
         """
@@ -534,7 +575,7 @@ def manage_paper_question_contact(request):
         )
 
 
-@is_teacher
+@authority_manage
 def mark_or_check_paper(request):
     """
     功能: 老师批改卷子或看查学生答题情况的请求试卷内容
@@ -752,7 +793,7 @@ def get_paper_status(request):
         return JsonResponse({"result": False, "code": 405, "message": "请求方法错误"})
 
 
-@is_teacher
+@authority_manage
 def synchronous_paper(request):
     if request.method == "PUT":
         """
@@ -902,8 +943,7 @@ def save_answer(request):
         )
 
 
-# 老师手动批阅卷子，保存学生的分数
-@is_teacher
+@authority_manage
 def teacher_correct_paper(request):
     if request.method == "POST":
         req = json.loads(request.body)  # 需要传StudentAnswer表的id和学生的分数以及卷子id
@@ -948,7 +988,7 @@ def teacher_correct_paper(request):
         )
 
 
-@is_teacher
+@authority_manage
 def get_student_answer_info(request):
     """
     功能: 看查这份卷子的那些学生作答了，那些没有作答
@@ -1012,7 +1052,7 @@ def get_student_answer_info(request):
         )
 
 
-@is_teacher
+@authority_manage
 def check_students_score(request):
     """
     功能: 老师根据卷子获得本张卷子的所有人的答题情况

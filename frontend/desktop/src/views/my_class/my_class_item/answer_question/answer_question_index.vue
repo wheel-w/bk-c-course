@@ -9,8 +9,8 @@
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange">
                 <bk-table-column type="index" label="序号" width="100"></bk-table-column>
-                <bk-table-column label="章节名称" prop="chapter_name" width="150" :filters="chapterStatusFilters" :filter-multiple="false"></bk-table-column>
-                <bk-table-column label="习题名称" width="150">
+                <bk-table-column label="章节名称" prop="chapter_name" :filters="chapterStatusFilters" :filter-multiple="false"></bk-table-column>
+                <bk-table-column label="习题名称">
                     <template slot-scope="props">
                         <div>
                             <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>
@@ -23,7 +23,7 @@
                 </bk-table-column>
                 <bk-table-column label="开始时间" prop="start_time" width="200"></bk-table-column>
                 <bk-table-column label="截止时间" prop="end_time" width="200"></bk-table-column>
-                <bk-table-column label="我的分数" prop="score" width="100">
+                <bk-table-column label="我的分数" prop="score" width="130">
                     <template slot-scope="props">
                         {{ props.row.student_status === 'REALMARKED' ? props.row.score : '———' }}
                     </template>
@@ -227,7 +227,7 @@
                         } else if ((item.student_status === 'SUBMITTED' || item.student_status === 'MARKED') && new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {
                             item.student_status = 'REALSUBMITTED'
                             submittedList.push(item)
-                        } else if (item.student_status === 'MARKED' && item.status === 'MARKED' && new Date().getTime() > Date.parse(item.end_time)) {
+                        } else if (item.status === 'MARKED' && new Date().getTime() > Date.parse(item.end_time)) {
                             item.student_status = 'REALMARKED'
                             markedList.push(item)
                         } else if (new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {

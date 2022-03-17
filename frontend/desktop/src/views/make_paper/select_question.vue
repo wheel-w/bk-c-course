@@ -277,6 +277,7 @@
                 this.paperinit = paperinit
                 this.papertree = paperinfo
                 this.existlist = JSON.parse(sessionStorage.getItem('existlist'))
+                this.getquestiontitle2()
                 this.getquetionlist()
                 sessionStorage.removeItem('paperinfo')
                 sessionStorage.removeItem('existlist')
@@ -685,6 +686,25 @@
                     })
                 })
             },
+            async getquestiontitle2 () {
+                this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
+                    if (res.result === true) {
+                        this.paperquestiontype = []
+                        this.questionTitleList = []
+                        for (const i in res.data.custom_types) {
+                            this.$set(this.paperquestiontypeMap, res.data.custom_types[i].custom_type_name, res.data.custom_types[i].id)
+                            this.paperquestiontype.push({
+                                name: res.data.custom_types[i].custom_type_name,
+                                id: res.data.custom_types[i].id
+                            })
+                            this.questionTitleList.push({
+                                custom_type_name: res.data.custom_types[i].custom_type_name,
+                                custom_type_id: res.data.custom_types[i].id
+                            })
+                        }
+                    }
+                })
+            },
             async getquestiontitle () { // 获得大题名字
                 this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
                     if (res.result === true) {
@@ -707,7 +727,7 @@
                 })
             },
             async getpaperinfo () { // 获得试卷信息
-                this.$http.get('/course/manage_paper_question_contact/', { params: { paper_id: this.$route.query.paperid } }).then(res => {
+                this.$http.get('/course/manage_paper_question_contact/', { params: { course_id: this.CourseId, paper_id: this.$route.query.paperid } }).then(res => {
                     this.existlist = []
                     this.papertree[0].children = []
                     this.paperinit = []
@@ -798,11 +818,24 @@
                 })
             },
             async updatepaper (data) { // 保存试卷请求
-                this.$http.post('/course/manage_paper_question_contact/', { paper_id: this.$route.query.paperid, paper_info: data }).then(res => {
+                this.$http.post('/course/manage_paper_question_contact/', { course_id: this.CourseId, paper_id: this.$route.query.paperid, paper_info: data }).then(res => {
                     if (res.result === true) {
                         this.$bkMessage({
                             message: res.message,
                             theme: 'success'
+                        })
+                        this.paperinit = []
+                        this.papertree[0].children.forEach(item => {
+                            const tmp = []
+                            item.children.forEach(item0 => {
+                                tmp.push({
+                                    id: item0.id
+                                })
+                            })
+                            this.paperinit.push({
+                                Id: item.Id,
+                                children: tmp
+                            })
                         })
                     } else {
                         this.$bkMessage({
@@ -810,20 +843,6 @@
                             theme: 'error'
                         })
                     }
-                }).then(res => {
-                    this.paperinit = []
-                    this.papertree[0].children.forEach(item => {
-                        const tmp = []
-                        item.children.forEach(item0 => {
-                            tmp.push({
-                                id: item0.id
-                            })
-                        })
-                        this.paperinit.push({
-                            Id: item.Id,
-                            children: tmp
-                        })
-                    })
                 })
             },
             updateQuestionTitle (item, saved) {
