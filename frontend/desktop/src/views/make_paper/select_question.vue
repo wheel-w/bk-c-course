@@ -277,6 +277,7 @@
                 this.paperinit = paperinit
                 this.papertree = paperinfo
                 this.existlist = JSON.parse(sessionStorage.getItem('existlist'))
+                this.getquestiontitle2()
                 this.getquetionlist()
                 sessionStorage.removeItem('paperinfo')
                 sessionStorage.removeItem('existlist')
@@ -683,6 +684,25 @@
                             })
                         })
                     })
+                })
+            },
+            async getquestiontitle2 () {
+                this.$http.get('/course/question_title/', { params: { course_id: this.CourseId } }).then(res => {
+                    if (res.result === true) {
+                        this.paperquestiontype = []
+                        this.questionTitleList = []
+                        for (const i in res.data.custom_types) {
+                            this.$set(this.paperquestiontypeMap, res.data.custom_types[i].custom_type_name, res.data.custom_types[i].id)
+                            this.paperquestiontype.push({
+                                name: res.data.custom_types[i].custom_type_name,
+                                id: res.data.custom_types[i].id
+                            })
+                            this.questionTitleList.push({
+                                custom_type_name: res.data.custom_types[i].custom_type_name,
+                                custom_type_id: res.data.custom_types[i].id
+                            })
+                        }
+                    }
                 })
             },
             async getquestiontitle () { // 获得大题名字
