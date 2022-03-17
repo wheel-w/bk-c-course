@@ -53,7 +53,7 @@
                         解析：<span>{{ childItem.explain === null ? '暂无解析' : childItem.explain}}</span>
                     </div>
                     <div style="margin-top: 10px" v-if="$route.query.isMarked">
-                        得分：{{ childItem.student_score }}
+                        得分：{{ childItem.student_score === null ? 0 : childItem.student_score }}
                     </div>
                 </bk-card>
             </div>
