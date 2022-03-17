@@ -8,7 +8,7 @@
             :confirm-fn="saveQrCode"
             :header-position="viewQrCode.primary.headerPosition"
             @cancel="$refs.qrCodeUrl.innerHTML = ''">
-            <div id="qrCodeBox">
+            <div id="qrCodeBox" class="qrCodeBox">
                 <div class="qrcode" id="qrCode" ref="qrCodeUrl"></div><br>
                 <bk-tag theme="info">请扫描上方二维码答题</bk-tag>
             </div>
@@ -806,7 +806,7 @@
                     text: String(id),
                     width: 200,
                     height: 200,
-                    colorDark: '#1768ef', // 二维码颜色
+                    colorDark: '#000000', // 二维码颜色
                     colorLight: '#ffffff', // 二维码背景色
                     correctLevel: QRCode.CorrectLevel.H// 容错率，L/M/H
                 })
@@ -840,8 +840,50 @@
 #qrCodeBox{
     height: 280px;
     margin: 0 auto;
-    border: 1px solid;
-    border-radius: 10px;
+}
+.qrCodeBox {
+    width: 300px;
+    height: 280px;
+    position: relative;
+    border: 1px solid #0b7ffe;
+}
+
+.qrCodeBox::before,
+.qrCodeBox::after {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    animation: qrCodeBoxAni 1500ms infinite linear;
+}
+
+.qrCodeBox::before {
+    top: -10px;
+    left: -10px;
+    border-top: 1px solid #0b7ffe;
+    border-left: 1px solid #0b7ffe;
+}
+
+.qrCodeBox::after {
+    right: -10px;
+    bottom: -10px;
+    border-bottom: 1px solid #0b7ffe;
+    border-right: 1px solid #0b7ffe;
+}
+
+@keyframes qrCodeBoxAni{
+    0% {
+        width: 30px;
+        height: 30px;
+    }
+    50% {
+        width: calc(100% + 9px);
+        height: calc(100% + 9px);
+    }
+    100% {
+        width: 30px;
+        height: 30px;
+    }
 }
 .qrcode{
     width: 200px;
