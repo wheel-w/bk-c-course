@@ -152,7 +152,11 @@
             :position="publishScoreControl.position"
             title="发布成绩"
             @confirm="changePaperStatus">
-            该试卷应提交的人数为：{{ publishScoreControl.row.sum }}，当前提交人数为：{{ publishScoreControl.row.submited }}，您确定要发布分数吗？
+            该试卷应提交的人数为：{{ publishScoreControl.row.sum }}
+            <br>
+            当前提交人数为：{{ publishScoreControl.row.submited }}
+            <br>
+            您确定要发布成绩吗？
         </bk-dialog>
     </div>
 </template>
@@ -584,7 +588,6 @@
                                 tmp.paperstatus = '已批阅'
                             }
                             this.$set(this.paperlist, i, tmp)
-                            console.log(this.paperlist)
                         }
                     }
                 })
