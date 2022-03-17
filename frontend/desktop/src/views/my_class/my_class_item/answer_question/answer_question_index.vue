@@ -227,7 +227,7 @@
                         } else if ((item.student_status === 'SUBMITTED' || item.student_status === 'MARKED') && new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {
                             item.student_status = 'REALSUBMITTED'
                             submittedList.push(item)
-                        } else if (item.student_status === 'MARKED' && item.status === 'MARKED' && new Date().getTime() > Date.parse(item.end_time)) {
+                        } else if (item.status === 'MARKED' && new Date().getTime() > Date.parse(item.end_time)) {
                             item.student_status = 'REALMARKED'
                             markedList.push(item)
                         } else if (new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {

@@ -64,12 +64,11 @@
             </div>
         </div>
 
-        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="publishScore" :outline="true">发布成绩</bk-button>
-        <bk-button style="width: 120px;position: fixed; bottom: 270px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toPreStudent">上一个</bk-button>
-        <bk-button style="width: 120px;position: fixed; bottom: 220px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toNextStudent">下一个</bk-button>
-        <bk-button style="width: 120px;position: fixed; bottom: 170px; right: 6%;border-radius: 20px;" :theme="studentInfo.status === 'MARKED' ? 'warning' : 'success'" type="submit" @click="checkAnswer">{{ studentInfo.status === 'MARKED' ? '修改分数' : '确认批改' }}</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 220px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toPreStudent">上一个</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 170px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toNextStudent">下一个</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="studentInfo.status === 'MARKED' ? 'warning' : 'success'" type="submit" @click="checkAnswer">{{ studentInfo.status === 'MARKED' ? '修改分数' : '确认批改' }}</bk-button>
 
-        <bk-button style="width: 120px;position: fixed; bottom: 320px; right: 6%;border-radius: 20px;" @click="gradeCard.visible = true" :theme="'success'" :outline="true">
+        <bk-button style="width: 120px;position: fixed; bottom: 270px; right: 6%;border-radius: 20px;" @click="gradeCard.visible = true" :theme="'success'" :outline="true">
             展开批改情况
         </bk-button>
         <bk-dialog v-model="gradeCard.visible"
@@ -127,7 +126,7 @@
             // 监听当前课程id的变化
             '$store.state.currentCourseId' () {
                 this.$router.replace({
-                    name: 'answer_question_index'
+                    name: 'displaypaper'
                 })
             }
         },
@@ -137,37 +136,25 @@
             this.getQuestionList()
         },
         methods: {
-            // 更改使试卷状态发布分数
-            publishScore () {
-                if (new Date().getTime() > this.currentPaperEndTime) {
-                    // 如果全部批改完毕更改paper状态
-                    if (this.studentInfoList.every(item => {
-                        return item.status === 'MARKED'
-                    })) {
-                        this.$http.put('/course/paper/', { paper_id: this.currentPaperId, update_info: { status: 'MARKED' } })
-                        this.$bkMessage({
-                            message: '发布成功！',
-                            theme: 'success'
-                        })
-                        this.$router.replace({
-                            name: 'displaypaper'
-                        })
-                    } else {
-                        this.$bkMessage({
-                            message: '请批改完成所有试卷再提交哦！',
-                            theme: 'warning'
-                        })
+            // 获取当前学生做答题目列表
+            async getStudentQuestionStation () {
+                this.$http.get('/course/mark_or_check_paper/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId, student_id: this.studentInfo.student_id } }).then(res => {
+                    this.currentConcatId = res.data.StudentPaperContact_id
+                    this.totalQuestion = res.data
+                    delete this.totalQuestion['StudentPaperContact_id']
+                    delete this.totalQuestion['total_score']
+                    for (const item in this.totalQuestion) {
+                        for (const childItem of this.totalQuestion[item]) {
+                            if (childItem.student_answer === null) {
+                                childItem.student_answer = '未作答'
+                            }
+                        }
                     }
-                } else {
-                    this.$bkMessage({
-                        message: '请等待考试结束再发布成绩哦！',
-                        theme: 'warning'
-                    })
-                }
+                })
             },
-            // 获取题目列表和学生答题信息
+            // 学生答题信息和学生做答题目列表
             getQuestionList () {
-                this.$http.get('/course/get_student_answer_info/', { params: { paper_id: this.currentPaperId } }).then(res => {
+                this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId } }).then(res => {
                     // 根据卷子结束时间添加要批改的学生列表
                     if (new Date().getTime() > this.currentPaperEndTime) {
                         this.studentInfoList = res.data.submitted.filter(item => {
@@ -185,26 +172,15 @@
                     }
                     this.studentInfo = this.studentInfoList[0]
                     this.currentStudentIndex = 0
-                    this.$http.get('/course/mark_or_check_paper/', { params: { paper_id: this.currentPaperId, student_id: this.studentInfo.student_id } }).then(res => {
-                        this.currentConcatId = res.data.StudentPaperContact_id
-                        this.totalQuestion = res.data
-                        delete this.totalQuestion['StudentPaperContact_id']
-                        delete this.totalQuestion['total_score']
-                        for (const item in this.totalQuestion) {
-                            for (const childItem of this.totalQuestion[item]) {
-                                if (childItem.student_answer === null) {
-                                    childItem.student_answer = '未作答'
-                                }
-                            }
-                        }
-                    })
+                    this.getStudentQuestionStation()
                 })
             },
             // 发起批改试卷请求
             async checkAnswer () {
                 this.uploadData = {
                     student_answer_list: [],
-                    student_paper_contact_id: this.currentConcatId
+                    student_paper_contact_id: this.currentConcatId,
+                    course_id: this.$store.state.currentCourseId
                 }
                 for (const item in this.totalQuestion) {
                     for (const childItem of this.totalQuestion[item]) {
@@ -223,7 +199,7 @@
                             theme: 'success'
                         })
                         // 更新批改状态
-                        this.$http.get('/course/get_student_answer_info/', { params: { paper_id: this.currentPaperId } }).then(res => {
+                        this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId } }).then(res => {
                             // 根据卷子结束时间添加要批改的学生列表
                             if (new Date().getTime() > this.currentPaperEndTime) {
                                 this.studentInfoList = res.data.submitted.filter(item => {
@@ -250,12 +226,7 @@
                 } else {
                     this.currentStudentIndex++
                     this.studentInfo = this.studentInfoList[this.currentStudentIndex]
-                    this.$http.get('/course/mark_or_check_paper/', { params: { paper_id: this.currentPaperId, student_id: this.studentInfo.student_id } }).then(res => {
-                        this.currentConcatId = res.data.StudentPaperContact_id
-                        this.totalQuestion = res.data
-                        delete this.totalQuestion['StudentPaperContact_id']
-                        delete this.totalQuestion['total_score']
-                    })
+                    this.getStudentQuestionStation()
                     this.toTop()
                 }
             },
@@ -269,12 +240,7 @@
                 } else {
                     this.currentStudentIndex--
                     this.studentInfo = this.studentInfoList[this.currentStudentIndex]
-                    this.$http.get('/course/mark_or_check_paper/', { params: { paper_id: this.currentPaperId, student_id: this.studentInfo.student_id } }).then(res => {
-                        this.currentConcatId = res.data.StudentPaperContact_id
-                        this.totalQuestion = res.data
-                        delete this.totalQuestion['StudentPaperContact_id']
-                        delete this.totalQuestion['total_score']
-                    })
+                    this.getStudentQuestionStation()
                     this.toTop()
                 }
             },
@@ -282,12 +248,7 @@
             async chooseStudent (index) {
                 this.currentStudentIndex = index
                 this.studentInfo = this.studentInfoList[this.currentStudentIndex]
-                this.$http.get('/course/mark_or_check_paper/', { params: { paper_id: this.currentPaperId, student_id: this.studentInfo.student_id } }).then(res => {
-                    this.currentConcatId = res.data.StudentPaperContact_id
-                    this.totalQuestion = res.data
-                    delete this.totalQuestion['StudentPaperContact_id']
-                    delete this.totalQuestion['total_score']
-                })
+                this.getStudentQuestionStation()
                 this.toTop()
                 this.gradeCard.visible = false
             },
