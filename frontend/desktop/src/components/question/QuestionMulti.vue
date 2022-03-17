@@ -187,13 +187,13 @@
             },
             checkData () {
                 this.$refs.Question.validate().then(validator => {
+                    this.Question.answer = this.Question.answer.join('')
                     if (this.editable) {
                         this.$emit('updateQuestion', this.Question)
                     } else {
-                        this.Question.answer = this.Question.answer.join('')
                         this.$emit('createQuestion', this.Question)
-                        this.Question.answer = this.Question.answer.split('')
                     }
+                    this.Question.answer = this.Question.answer.split('')
                 }, validator => {
                     this.config.message = validator.content
                     this.config.theme = 'error'
