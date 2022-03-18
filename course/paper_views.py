@@ -164,14 +164,14 @@ def paper(request):
         if not question_id:
             if identity == Member.Identity.TEACHER:
                 query_param = {"teacher": str(Member.objects.get(id=request.user.id))}
-            if identity == Member.Identity.STUDENT and not request.GET.get("course_id"):
-                return JsonResponse(
-                    {"result": False, "code": 403, "message": "请求参数不完整", "data": {}}
-                )
-            if identity == Member.Identity.STUDENT:
-                query_param = {"status__in": ["RELEASE", "MARKED"]}
             if request.GET.get("course_id"):
                 query_param["course_id"] = request.GET.get("course_id")
+            else:
+                return JsonResponse({
+                    'result': False, 'code': 400, 'message': '请求参数不完整', 'data':{}
+                })
+            if identity == Member.Identity.STUDENT:
+                query_param = {"status__in": ["RELEASE", "MARKED"]}
         else:
             query_param["id__in"] = [
                 pq.paper_id
@@ -212,12 +212,15 @@ def paper(request):
             if identity == Member.Identity.TEACHER:
                 for paper_id, paper in paper_info.items():
                     if (paper['status'] == Paper.Status.MARKED) or (paper['status'] == Paper.Status.RELEASE):
-                        # 获取那些学生没有答，那些学生答过(数量)
+                        # 获取那些学生没有答，那些学生答过(数量)(包括老师)
                         total_students_num = UserCourseContact.objects.filter(course_id=paper['course_id']).count()
                         query_param = {'paper_id': paper_id, 'course_id': paper['course_id']}
                         # 如果答题时间未过, 只统计提交卷子的学生数量
                         if paper['end_time'] < timezone.now():
-                            query_param['status'] = StudentPaperContact.Status.SUBMITTED
+                            query_param['status__in'] = [
+                                StudentPaperContact.Status.SUBMITTED,
+                                StudentPaperContact.Status.MARKED
+                            ]
                         else:
                             # 如果答题时间过了, 统计提交与保存的学生数量
                             query_param['status__in'] = [
@@ -747,6 +750,7 @@ def answer_or_check_paper(request):
         return_data["cumulative_time"] = (
             int(SPContact.get().cumulative_time.total_seconds()) if SPContact else 0
         )
+        return_data['status'] = SPContact.get().status if SPContact else StudentPaperContact.Status.NOT_ANSWER
         return JsonResponse(
             {"result": True, "code": 200, "message": "查询成功", "data": return_data}
         )

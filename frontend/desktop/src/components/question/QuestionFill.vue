@@ -95,6 +95,8 @@
                                 length = length + 1
                                 if (length === 7) {
                                     count = count + 1
+                                    length = 1
+                                    i = i + 1
                                 }
                             } else {
                                 if (length < 7 && length > 1) {
