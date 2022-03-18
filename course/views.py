@@ -588,7 +588,7 @@ def search_course_student(request):
         if not user_ids:
             return JsonResponse(
                 {
-                    "result": False,
+                    "result": True,
                     "message": "该课程暂无学生",
                     "code": 406,
                     "data": [],
@@ -607,7 +607,7 @@ def search_course_student(request):
             student_info["professional_class"] = user_object.professional_class
             student_info["identify"] = user_object.identity
             student_list.append(student_info.copy())
-        student_list.reverse()  # 逆序输出
+        student_list.sort(key=lambda x: x['identify'], reverse=True)  # 对课程成员展示排序
         page_size = request.GET.get("page_size", 10)
         paginator = Paginator(student_list, page_size)  # 分页器对象，10是每页展示的数据条数
         page = request.GET.get("page", "1")  # 获取当前页码，默认为第一页

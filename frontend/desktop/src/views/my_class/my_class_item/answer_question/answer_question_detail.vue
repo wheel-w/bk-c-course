@@ -287,9 +287,7 @@
                     this.answer_info.push({ question_id: e.id, stu_answers: e.student_answer
                     })
                 })
-                console.log('answer_info', this.answer_info)
-                this.$http.post('course/save_answer/', { paper_id: this.paper_id, answer_info: this.answer_info, save_or_submit: 1, cumulative_time: this.seconds }).then(res => {
-                    console.log(res)
+                this.$http.post('/course/save_answer/', { paper_id: this.paper_id, answer_info: this.answer_info, save_or_submit: 1, cumulative_time: this.seconds }).then(res => {
                     if (res.result === true) {
                         this.$bkMessage({
                             message: '保存成功',
@@ -330,9 +328,7 @@
                     this.answer_info.push({ question_id: e.id, stu_answers: e.student_answer
                     })
                 })
-                console.log('answer_info', this.answer_info)
-                this.$http.post('course/save_answer/', { paper_id: this.paper_id, answer_info: this.answer_info, save_or_submit: 0, cumulative_time: this.seconds }).then(res => {
-                    console.log(res)
+                this.$http.post('/course/save_answer/', { paper_id: this.paper_id, answer_info: this.answer_info, save_or_submit: 0, cumulative_time: this.seconds }).then(res => {
                     if (res.result === true) {
                         this.$bkMessage({
                             message: '提交成功',
@@ -392,7 +388,6 @@
             },
             getPaperStatus () {
                 this.$http.get('/course/get_paper_status/', { params: { paper_id: this.paper_id } }).then(res => {
-                    console.log('paper_status', res)
                     if (res.data.paper_status === 'RELEASE' || res.data.paper_status === 'DRAFT') {
                         this.getQuestionList()
                     } else if (res.data.paper_status !== 'RELEASE') {
@@ -413,14 +408,15 @@
                     this.questionTitle['简答题'] = res.data['简答题']
                     for (const item in this.questionTitle) {
                         if (!res.data[item]) {
-                            console.log(item)
                             delete this.questionTitle[item]
                         }
                     }
                     this.seconds = res.data.cumulative_time
                     for (const key in res.data) {
-                        for (const item in res.data[key]) {
-                            this.questionList.push(res.data[key][item])
+                        if (key !== 'cumulative_time' && key !== 'status') {
+                            for (const item in res.data[key]) {
+                                this.questionList.push(res.data[key][item])
+                            }
                         }
                     }
                     // 题目id排序
@@ -433,7 +429,6 @@
                             return a.id - b.id
                         })
                     }
-                    console.log('question_list', this.questionList)
                 })
             },
             submitButtonDisabled () {
