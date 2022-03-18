@@ -164,14 +164,14 @@ def paper(request):
         if not question_id:
             if identity == Member.Identity.TEACHER:
                 query_param = {"teacher": str(Member.objects.get(id=request.user.id))}
-            if identity == Member.Identity.STUDENT and not request.GET.get("course_id"):
-                return JsonResponse(
-                    {"result": False, "code": 403, "message": "请求参数不完整", "data": {}}
-                )
-            if identity == Member.Identity.STUDENT:
-                query_param = {"status__in": ["RELEASE", "MARKED"]}
             if request.GET.get("course_id"):
                 query_param["course_id"] = request.GET.get("course_id")
+            else:
+                return JsonResponse({
+                    'result': False, 'code': 400, 'message': '请求参数不完整', 'data':{}
+                })
+            if identity == Member.Identity.STUDENT:
+                query_param = {"status__in": ["RELEASE", "MARKED"]}
         else:
             query_param["id__in"] = [
                 pq.paper_id
@@ -213,7 +213,10 @@ def paper(request):
                 for paper_id, paper in paper_info.items():
                     if (paper['status'] == Paper.Status.MARKED) or (paper['status'] == Paper.Status.RELEASE):
                         # 获取那些学生没有答，那些学生答过(数量), (人数除过老师)
-                        total_students_num = UserCourseContact.objects.filter(course_id=paper['course_id']).count() - 1
+                        course = Course.objects.get(id=query_param['course_id'])
+                        teacher_number = 2 if course.create_people == course.teacher else 1
+                        total_students_num = UserCourseContact.objects.filter(course_id=paper['course_id']).count() \
+                                             - teacher_number
                         query_param = {'paper_id': paper_id, 'course_id': paper['course_id']}
                         # 如果答题时间未过, 只统计提交卷子的学生数量
                         if paper['end_time'] < timezone.now():
