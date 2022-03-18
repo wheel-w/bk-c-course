@@ -214,7 +214,7 @@ def paper(request):
                     if (paper['status'] == Paper.Status.MARKED) or (paper['status'] == Paper.Status.RELEASE):
                         # 获取那些学生没有答，那些学生答过(数量), (人数除过老师)
                         course = Course.objects.get(id=query_param['course_id'])
-                        teacher_number = 2 if course.create_people == course.teacher else 1
+                        teacher_number = 1 if course.create_people == course.teacher else 2
                         total_students_num = UserCourseContact.objects.filter(course_id=paper['course_id']).count() \
                                              - teacher_number
                         query_param = {'paper_id': paper_id, 'course_id': paper['course_id']}
