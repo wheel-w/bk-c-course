@@ -105,7 +105,7 @@
                         placeholder="请输入答案解析内容"
                         v-model="Question.explain"
                         v-if="explainOpen"
-                        style="width:100%;display:block;margin-top:10px">
+                        style="width:100%;display:block;margin-top:5px">
                     </bk-input>
                 </bk-form-item>
             </div>
@@ -253,7 +253,7 @@
     }
 }
 .options {
-    height: 190px;
+    height: 199px;
     width: 84%;
     padding-left: 1%;
     .optionAC {
