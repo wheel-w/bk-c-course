@@ -234,6 +234,7 @@
                     this.totalScore = res.data.total_score
                     delete this.totalQuestion['total_score']
                     delete this.totalQuestion['cumulative_time']
+                    delete this.totalQuestion['status']
                     for (const item in this.totalQuestion) {
                         for (const childItem of this.totalQuestion[item]) {
                             if (childItem.student_answer === null) {

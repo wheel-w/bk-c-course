@@ -66,7 +66,7 @@
 
         <bk-button style="width: 120px;position: fixed; bottom: 220px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toPreStudent">上一个</bk-button>
         <bk-button style="width: 120px;position: fixed; bottom: 170px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toNextStudent">下一个</bk-button>
-        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="studentInfo.status === 'MARKED' ? 'warning' : 'success'" type="submit" @click="checkAnswer">{{ studentInfo.status === 'MARKED' ? '修改分数' : '确认批改' }}</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="studentInfo.status === 'MARKED' ? 'warning' : 'success'" type="submit" @click="checkAnswer">{{ studentInfo.status === 'MARKED' ? '重新批改' : '确认批改' }}</bk-button>
 
         <bk-button style="width: 120px;position: fixed; bottom: 270px; right: 6%;border-radius: 20px;" @click="gradeCard.visible = true" :theme="'success'" :outline="true">
             展开批改情况
@@ -77,8 +77,17 @@
             title="批改卡"
             :show-footer="false">
             <div class="gradeCardContent">
-                <div v-for="(item,index) in studentInfoList" :key="item.student_id">
-                    <bk-button style="margin-left: 10px; margin-bottom: 10px; width: 110px; height: 40px; font-size: 18px; border-radius: 5px; overflow: hidden; text-overflow: clip;" :theme="item.status === 'MARKED' ? 'success' : 'default'" @click="chooseStudent(index)">{{ item.name === null ? item.student_id : item.name }}</bk-button>
+                <h3>已提交</h3>
+                <div style="display: flex;flex-wrap: wrap;">
+                    <div v-for="(item,index) in studentInfoList" :key="item.student_id">
+                        <bk-button style="margin-left: 10px; margin-bottom: 10px; width: 110px; height: 40px; font-size: 18px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis;" :theme="item.status === 'MARKED' ? 'success' : 'default'" @click="chooseStudent(index)">{{ item.name === null ? item.student_id : item.name }}</bk-button>
+                    </div>
+                </div>
+                <h3>未提交</h3>
+                <div style="display: flex;flex-wrap: wrap;">
+                    <div v-for="item in notSubmittedStudentList" :key="item.student_id">
+                        <bk-button style="margin-left: 10px; margin-bottom: 10px; width: 110px; height: 40px; font-size: 18px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis;" theme="danger" disabled>{{ item.name === null ? item.student_id : item.name }}</bk-button>
+                    </div>
                 </div>
             </div>
         </bk-dialog>
@@ -102,6 +111,7 @@
                 currentStudentIndex: 0, // 当前学生index
                 studentInfo: {}, // 当前批改学生信息
                 studentInfoList: [], // 所有提交试卷的学生信息
+                notSubmittedStudentList: [], // 所以未提交试卷的学生信息
                 gradeCard: {
                     visible: false,
                     position: {
@@ -155,6 +165,7 @@
             // 学生答题信息和学生做答题目列表
             getQuestionList () {
                 this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId } }).then(res => {
+                    this.notSubmittedStudentList = res.data.not_submitted
                     // 根据卷子结束时间添加要批改的学生列表
                     if (new Date().getTime() > this.currentPaperEndTime) {
                         this.studentInfoList = res.data.submitted.filter(item => {
@@ -200,6 +211,7 @@
                         })
                         // 更新批改状态
                         this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId } }).then(res => {
+                            this.notSubmittedStudentList = res.data.not_submitted
                             // 根据卷子结束时间添加要批改的学生列表
                             if (new Date().getTime() > this.currentPaperEndTime) {
                                 this.studentInfoList = res.data.submitted.filter(item => {
@@ -289,7 +301,7 @@
 .gradeCardContent {
     height: 500px;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     overflow-y: auto;
 }
 </style>
