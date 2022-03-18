@@ -69,6 +69,7 @@
                 position="'top'"
                 :mask-close="false"
                 :header-position="visible.addcourse.headerPosition"
+                :confirm-fn="Check"
                 @confirm="addCourse"
                 title="创建课程">
                 <bk-form :model="formData" :rules="rules" ref="validateForm">
@@ -114,6 +115,10 @@
                         <bk-input type="textarea" style="width: 250px;" v-model="formData.course_introduction" placeholder="在这里输入课程简介"></bk-input>
                     </bk-form-item>
                 </bk-form>
+                <div slot="footer">
+                    <bk-button theme="primary" class="mr10" @click="addCourse">创建</bk-button>
+                    <bk-button theme="primary" class="mr10" @click="visible.addcourse.isshow = false">取消</bk-button>
+                </div>
             </bk-dialog>
             <!-- 删除课程 -->
             <bk-dialog v-model="visible.deletcourse.isshow"
@@ -351,6 +356,7 @@
                             this.formData.manage_student = []
                             this.formData.manage_student_ids = []
                             this.formData.course_introduction = ''
+                            this.visible.addcourse.isshow = false
                         } else {
                             this.$bkMessage({
                                 message: '创建失败，请重试',
@@ -358,6 +364,7 @@
                                 theme: 'error',
                                 offsetY: 60,
                                 ellipsisLine: 2 })
+                            this.visible.addcourse.isshow = false
                         }
                     })
                 }
