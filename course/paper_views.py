@@ -217,7 +217,10 @@ def paper(request):
                         query_param = {'paper_id': paper_id, 'course_id': paper['course_id']}
                         # 如果答题时间未过, 只统计提交卷子的学生数量
                         if paper['end_time'] < timezone.now():
-                            query_param['status'] = StudentPaperContact.Status.SUBMITTED
+                            query_param['status__in'] = [
+                                StudentPaperContact.Status.SUBMITTED,
+                                StudentPaperContact.Status.MARKED
+                            ]
                         else:
                             # 如果答题时间过了, 统计提交与保存的学生数量
                             query_param['status__in'] = [
