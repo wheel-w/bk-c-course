@@ -290,6 +290,9 @@
                     const APP_CODE = window.PROJECT_CONFIG.APP_CODE
                     let path = `${SITE_URL}/&app_code=${APP_CODE}`
                     path = path.replace(new RegExp('/+', 'gm'), '/')
+                    sessionStorage.removeItem('navId')
+                    sessionStorage.removeItem('courseId')
+                    this.nav.id = 'home'
                     this.$store.commit('updateCourseId', 0)
                     window.location.href = `${BK_PAAS_HOST}/login/?c_url=${HOST}${path}`
                 }

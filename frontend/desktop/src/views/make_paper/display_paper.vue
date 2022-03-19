@@ -129,18 +129,21 @@
                 prop="rate"></bk-table-column>
             <bk-table-column align="center" label="操作" width="280">
                 <template slot-scope="props">
-                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '草稿'" :disabled="props.row.paperstatus !== '草稿'" @click="publishpaper(props.row)">发布</bk-button>
-                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus !== '草稿'" :disabled="props.row.paperstatus === '已批阅'" @click="cancel(props.row)">取消</bk-button>
+                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '草稿'" @click="publishpaper(props.row)">发布</bk-button>
+                    <bk-button class="mr10" theme="primary" text v-else :disabled="props.row.paperstatus === '已批阅'" @click="cancel(props.row)">取消</bk-button>
                     <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="modifiypaper(props.row)">选题</bk-button>
-                    <bk-button class="mr10" theme="primary" text :disabled="props.row.isend" @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
-                    <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '已发布'" @click="markpaper(props.row)">批改</bk-button>
-                    <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '已发布'" @click="publishScore(props.row)">发布成绩</bk-button>
+                    <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus === '草稿'" @click="markpaper(props.row)">批改</bk-button>
+                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '已批阅'" @click="cancleScore(props.row)">撤回成绩</bk-button>
+                    <bk-button class="mr10" theme="primary" text v-else :disabled="props.row.paperstatus === '草稿'" @click="publishScore(props.row)">发布成绩</bk-button>
                     <bk-popover class="dot-menu" placement="bottom-left" theme="dot-menu light" trigger="click"
                         :arrow="false" offset="15" :distance="0">
                         <span class="dot-menu-trigger"></span>
                         <ul class="dot-menu-list" slot="content">
                             <li class="dot-menu-item">
-                                <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="openedit(props.row)">修改</bk-button>
+                                <bk-button class="mr10" theme="primary" text @click="openedit(props.row)">修改</bk-button>
+                            </li>
+                            <li class="dot-menu-item">
+                                <bk-button class="mr10" theme="primary" text :disabled="props.row.isend" @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
                             </li>
                         </ul>
                     </bk-popover>
@@ -148,15 +151,14 @@
             </bk-table-column>
         </bk-table>
         <bk-dialog v-model="publishScoreControl.visible"
-            width="720"
+            width="400"
+            :header-position="publishScoreControl.headerPosition"
             :position="publishScoreControl.position"
-            title="发布成绩"
+            :title="publishScoreControl.isPubilsh ? '发布成绩' : '撤回成绩'"
             @confirm="changePaperStatus">
-            该试卷应提交的人数为：{{ publishScoreControl.row.sum }}
-            <br>
-            当前提交人数为：{{ publishScoreControl.row.submited }}
-            <br>
-            您确定要发布成绩吗？
+            <span style="font-size: 17px">
+                {{ publishScoreControl.isPubilsh ? '您确定要发布成绩吗？' : '您确定要撤回成绩吗？' }}
+            </span>
         </bk-dialog>
     </div>
 </template>
@@ -167,7 +169,9 @@
         data () {
             return {
                 publishScoreControl: {
+                    isPubilsh: true,
                     visible: false,
+                    headerPosition: 'left',
                     position: {
                         top: 200
                     },
@@ -398,34 +402,23 @@
             this.getchapterlist()
         },
         methods: {
+            // 撤回成绩
+            cancleScore (row) {
+                this.publishScoreControl.isPubilsh = false
+                this.publishScoreControl.visible = true
+                this.publishScoreControl.row = row
+            },
+            // 改变试卷状态
             async changePaperStatus () {
-                this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.publishScoreControl.row.id } }).then(res => {
-                    let studentInfoList = []
-                    studentInfoList = res.data.submitted.filter(item => {
-                        return item.status === 'SUBMITTED' || item.status === 'MARKED' || item.status === 'SAVED'
-                    })
-
-                    // 为空时候代表卷子无需批改直接出成绩
-                    if (studentInfoList.length === 0) {
-                        this.$http.put('/course/paper/', { course_id: this.$store.state.currentCourseId, paper_id: this.publishScoreControl.row.id, update_info: { status: 'MARKED' } }).then(res => {
-                            if (res.code === 200) {
-                                this.$bkMessage({
-                                    message: '发布成功！',
-                                    theme: 'success'
-                                })
-                                this.getpaperlist()
-                            } else {
-                                this.$bkMessage({
-                                    message: res.message,
-                                    theme: 'warning'
-                                })
-                            }
+                if (this.publishScoreControl.isPubilsh) {
+                    this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.publishScoreControl.row.id } }).then(res => {
+                        let studentInfoList = []
+                        studentInfoList = res.data.submitted.filter(item => {
+                            return item.status === 'SUBMITTED' || item.status === 'MARKED' || item.status === 'SAVED'
                         })
-                    } else {
-                        // 如果全部批改完毕更改paper状态
-                        if (studentInfoList.every(item => {
-                            return item.status === 'MARKED'
-                        })) {
+
+                        // 为空时候代表卷子无需批改直接出成绩
+                        if (studentInfoList.length === 0) {
                             this.$http.put('/course/paper/', { course_id: this.$store.state.currentCourseId, paper_id: this.publishScoreControl.row.id, update_info: { status: 'MARKED' } }).then(res => {
                                 if (res.code === 200) {
                                     this.$bkMessage({
@@ -441,17 +434,53 @@
                                 }
                             })
                         } else {
+                            // 如果全部批改完毕更改paper状态
+                            if (studentInfoList.every(item => {
+                                return item.status === 'MARKED'
+                            })) {
+                                this.$http.put('/course/paper/', { course_id: this.$store.state.currentCourseId, paper_id: this.publishScoreControl.row.id, update_info: { status: 'MARKED' } }).then(res => {
+                                    if (res.code === 200) {
+                                        this.$bkMessage({
+                                            message: '发布成功！',
+                                            theme: 'success'
+                                        })
+                                        this.getpaperlist()
+                                    } else {
+                                        this.$bkMessage({
+                                            message: res.message,
+                                            theme: 'warning'
+                                        })
+                                    }
+                                })
+                            } else {
+                                this.$bkMessage({
+                                    message: '请批改完成所有试卷再提交哦！',
+                                    theme: 'warning'
+                                })
+                            }
+                        }
+                    })
+                } else {
+                    this.$http.put('/course/paper/', { course_id: this.$store.state.currentCourseId, paper_id: this.publishScoreControl.row.id, update_info: { status: 'RELEASE' } }).then(res => {
+                        if (res.code === 200) {
                             this.$bkMessage({
-                                message: '请批改完成所有试卷再提交哦！',
+                                message: '撤回成功！',
+                                theme: 'success'
+                            })
+                            this.getpaperlist()
+                        } else {
+                            this.$bkMessage({
+                                message: res.message,
                                 theme: 'warning'
                             })
                         }
-                    }
-                })
+                    })
+                }
             },
-            // 更改使试卷状态发布分数
+            // 发布成绩
             publishScore (row) {
                 if (new Date().getTime() > Date.parse(row.endtime)) {
+                    this.publishScoreControl.isPubilsh = true
                     this.publishScoreControl.visible = true
                     this.publishScoreControl.row = row
                 } else {
