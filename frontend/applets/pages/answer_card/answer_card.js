@@ -6,6 +6,7 @@ Page({
   onLoad: function (options) {
     let that = this
     let stu = app.globalData.stu
+    console.log(stu)
     let total = app.globalData.total
     let questionList = []
     if(stu==undefined){
@@ -24,20 +25,13 @@ Page({
   
         let item = {}
         item.index = i
-        if(stu[0].stu_answers.length==0){
-          item.done = false
-        }
-        else{
-          item.done = true
-        }
-        if(i>=1){
-          if(stu[i]==undefined){
+          if((stu[i]==undefined)||(stu[i].stu_answers=='[]'||(stu[i].stu_answers==''))||(stu[i].stu_answers==null)){
             item.done = false
           }
           else{
             item.done = true
           }
-        }
+        // }
         questionList.push(item)
       }
       that.setData({

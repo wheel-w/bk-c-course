@@ -56,7 +56,15 @@ Page({
   scanCode() {
     wx.scanCode({
       success(res) {
+        console.log(res)
         app.globalData.paper_id = res.result
+        if(wx.getStorageSync('paper_id')==res.result){
+          app.globalData.tit = true
+        }
+        else{
+          app.globalData.tit = false
+        }
+        wx.setStorageSync('paper_id', app.globalData.paper_id)
         wx.navigateTo({
           url: '/pages/answer_questions/answer_questions',
         })

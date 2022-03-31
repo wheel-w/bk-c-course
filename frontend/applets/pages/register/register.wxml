@@ -1,7 +1,5 @@
 <view class="image_size">
-<!-- <image src='/images/id_logo.png' bindload="imageLoad" style="width:60%; height:{{images[index].height}}rpx "></image> -->
   <image src='/images/id_logo.png' bindload="imageLoad" style="width:30%; height:200rpx "></image>
-<!-- <image src='/images/demo1.png' bindload="imageLoad" style="width:40%; height:250rpx "></image> -->
 </view>
 <view class="center">
   <text class="text-black text-bold">校园身份验证</text>

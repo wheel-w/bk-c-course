@@ -1,25 +1,18 @@
 App({
   globalData: {
-    url : 'https://paas-edu.bktencent.com/t/config-query/'
-  },
-  onLoad(){
-    // app.globalData.url = 'https://paas-edu.bktencent.com/t/config-query/'
+    url : 'https://apps.paas-edu.bktencent.com/stag--bk-course-manage/set_question_index/'
 
   },
+  onLoad(){
+  },
   onLaunch() {
-    // 展示本地存储能力
-    // const logs = wx.getStorageSync('logs') || []
-    // logs.unshift(Date.now())
-    // wx.setStorageSync('logs', logs)
     // 登录
     wx.login({
       success: res => {
         if(res.code){
-          // var url ='https://paas-edu.bktencent.com/t/config-query/'+'config-query/account/get_user_info/'
           // 将code发送到后端
           wx.request({
-            url: 'https://paas-edu.bktencent.com/t/config-query/account/get_user_info/',
-            // url: url,
+            url: 'https://apps.paas-edu.bktencent.com/stag--bk-course-manage/account/get_user_info/',
             data: {
               'code': res.code,
             },
@@ -29,14 +22,9 @@ App({
             success(res){
               console.log(res.data)
               wx.setStorageSync('name', res.data.data.name)
-              // if(res.data.data.identity=='NOT_CERTIFIED'){
-              //   console.log('成功')
-              // }
               if(res.data.data.identity!='NOT_CERTIFIED'){
                 let state = res.data.data.state;
-                // console.log(res.data.data.state)
                 wx.setStorageSync('states', state)
-                
                wx.setStorage({
                 key:'username',
                 data: res.data.username,

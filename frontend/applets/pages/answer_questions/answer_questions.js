@@ -6,6 +6,10 @@ Page({
     minute: '0' + 0,   // 分
     second: '0' + 0,   // 秒
     time: '0',
+    submited:false,
+    questions_bank:'',
+    newStu:'',
+    newQuestions_bank:'',
     paper_end_time:'',
     paper_status:'',
     stu:[{
@@ -21,7 +25,6 @@ Page({
     swi:0,
     subject:null,
     questions:null,//存题
-    ddl:0,
     a:[],
     b:[],
     can_submit:false,
@@ -45,6 +48,7 @@ Page({
           paper_id: paper_id
         },
         success: res => {
+          console.log(res.data)
           this.setData({
             paper_status: res.data.data.paper_status,
             paper_end_time: res.data.data.paper_end_time,
@@ -59,11 +63,13 @@ Page({
   },
   useImage() {
     this.getImgUrl().then(res => {
+      console.log(res.data)
       var now_time = util .formatTime ( new Date ());
       var n1 = new Date(now_time)
       var n2 = new Date(res.data.data.paper_end_time)
-      //<=c才对
       if((res.data.data.paper_status=="RELEASE")&&(n1-n2<=0)){
+        if(((wx.getStorageSync('stu')=='')&&(wx.getStorageSync('questions')==''))||(app.globalData.tit==false)||(wx.getStorageSync('no_read')==false)){
+        console.log('不读缓存')
         var header;
         var url = app.globalData.url+'course/answer_or_check_paper/'
         let paper_id=app.globalData.paper_id
@@ -71,108 +77,326 @@ Page({
           'content-type':'application/x-www-form-urlencoded',
           'state':wx.getStorageSync("states")
         }
-          wx.request({
-            url: url,
-            method:'GET',
-            header: header,
-            data:{
-              paper_id: paper_id
-            },
-            success: res => {
-            let a1 = 0
-            let b1 = 0
-            let c1 = 0
-            if(res.data.data.cumulative_time!=0){
-            if(res.data.data.cumulative_time/3600>0){
-              a1 = Math.floor(res.data.data.cumulative_time/3600)
-              if (b1 < 10) {
-                // 少于10补零
-                a1 = '0' + a1
-            } 
-            }
-            if(res.data.data.cumulative_time-3600*a1>0){
-              b1=Math.floor((res.data.data.cumulative_time-3600*a1)/60)
-              if (b1 < 10) {
-                // 少于10补零
-                b1 = '0' + b1
-            } 
-            }
-            if(res.data.data.cumulative_time-3600*a1-60*b1>0){
-              c1=Math.floor(res.data.data.cumulative_time-3600*a1-60*b1)
-              if (c1 < 10) {
-                // 少于10补零
-                c1 = '0' + c1
-            } 
-            }
+        wx.request({
+          url: url,
+          method:'GET',
+          header: header,
+          data:{
+            paper_id: paper_id
+          },
+        success: res => {
+          console.log(res.data)
+          if(res.data.data.status=='SUBMITTED'){
             this.setData({
-              hours: a1,   // 时
-              minute: b1,   // 分
-              second: c1,   // 秒
-              time: res.data.data.cumulative_time,
+              submited: true
             })
           }
-              if((wx.getStorageSync('stu')=='')&&(wx.getStorageSync('questions')=='')){
-              let datas = res.data.data
-              var a = []
-              var b = []
-              var c = []
-              for(var index in datas){
-                if(index!='cumulative_time'){
-                  a.push(datas[index])
-                  b.push(index)
-                  c.push(datas[index].length)
-                }
-              }
-              var questions_bank = []
-              var x = []
-              for(var i=0; i<=999; i++){
-                if(a[i]==undefined){
-                  break
-                }
-                questions_bank = questions_bank.concat(a[i])
-                x.push(a[i].length)
-              }
-              wx.setStorageSync('questions_bank', questions_bank)
-              let questions = questions_bank//数组暂存题目
-              var total_length = 0
-              for(var k=0;k<questions.length;k++){
-                total_length = total_length+k
-              }
-              app.globalData.questions = questions_bank
-              let subject= questions[0]//第一题
-              app.globalData.total = questions.length//题目总数
+          else{
+            this.setData({
+              submited: false
+            })
+          }
+          let datas = res.data.data
+          var a = []
+          for(var index in datas){
+            if((index!='cumulative_time')&&(index!='status')){
+              a.push(datas[index])
+            }
+          }
+          //拼题目
+          var questions_bank = []
+          for(var i=0; i<a.length; i++){
+            if(a[i]==undefined){
+              break
+            }
+            questions_bank = questions_bank.concat(a[i])
+          }
+          console.log(questions_bank)
+          this.setData({
+            newQuestions_bank: questions_bank
+          })
+          //拼做过的stu和questions_bank的答案
+          for (var i = 0; i<questions_bank.length; ++i) {  
+            // console.log(i)
+            var replace1 = 'newStu['+i+'].stu_answers'
+            var replace2 = 'newStu['+i+'].question_id'
+            var replaceA = 'newQuestions_bank['+i+'].A'
+            var replaceB = 'newQuestions_bank['+i+'].B'
+            var replaceC = 'newQuestions_bank['+i+'].C'
+            var replaceD = 'newQuestions_bank['+i+'].D'
+            var replaceE = 'newQuestions_bank['+i+'].E'
+            this.setData({
+              [replace1]: questions_bank[i].student_answer,
+              [replace2]: questions_bank[i].id,
+            })
+              // console.log(questions_bank[i].types)
+            if(questions_bank[i].types=='JUDGE'){
               this.setData({
-                a: a,
-                b: b,
-                questions: questions,
-                subject: subject,
-                total: app.globalData.total,
-                total_length: total_length
+                [replaceA]: false,
+                [replaceB]: false,
               })
-      
+              // console.log('进入单选',questions_bank[i])
+              if (questions_bank[i].student_answer == '正确'){
+
+                this.setData({
+                  [replaceA]: true,
+                  [replaceB]: false,
+                })
             }
             else{
-              var questions_bank = wx.getStorageSync('questions_bank')
-              let questions = wx.getStorageSync('questions')//数组暂存题目
-              var total_length = 0
-              for(var k=0;k<questions.length;k++){
-                total_length = total_length+k
-              }
-              app.globalData.questions = questions_bank
-              let subject= questions[0]//第一题
-              app.globalData.total = questions.length//题目总数
               this.setData({
-                questions: questions,
-                subject: subject,
-                total: app.globalData.total,
-                stu: wx.getStorageSync('stu'),
-                total_length: total_length
+                [replaceA]: false,
+                [replaceB]: true,
               })
             }
+            if((questions_bank[i].student_answer == null)||(questions_bank[i].student_answer == '')||(questions_bank[i].student_answer == '[]')){
+              this.setData({
+                [replaceA]: false,
+                [replaceB]: false,
+              })
+            }
+            }
+            if(questions_bank[i].types=='SINGLE'){
+              this.setData({
+                [replaceA]: false,
+                [replaceB]: false,
+                [replaceC]: false,
+                [replaceD]: false,
+              })
+              // console.log('进入单选',questions_bank[i])
+              if (questions_bank[i].student_answer == 'A'){
+
+                this.setData({
+                  [replaceA]: true,
+                  [replaceB]: false,
+                  [replaceC]: false,
+                  [replaceD]: false,
+                })
+            }
+            if (questions_bank[i].student_answer == 'B'){
+
+              this.setData({
+                [replaceA]: false,
+                [replaceB]: true,
+                [replaceC]: false,
+                [replaceD]: false,
+              })
           }
+          if (questions_bank[i].student_answer == 'C'){
+            this.setData({
+              [replaceA]: false,
+              [replaceB]: false,
+              [replaceC]: true,
+              [replaceD]: false,
+            })
+        }
+        if (questions_bank[i].student_answer == 'D'){
+          this.setData({
+            [replaceA]: false,
+            [replaceB]: false,
+            [replaceC]: false,
+            [replaceD]: true,
+          })
+      }
+            }
+            if(questions_bank[i].types=='MULTIPLE'){
+              // console.log('进入多选',questions_bank[i])
+              this.setData({
+                [replaceA]: false,
+                [replaceB]: false,
+                [replaceC]: false,
+                [replaceD]: false,
+                [replaceE]: false,
+              })
+              // console.log(questions_bank[3].student_answer)
+              var str = questions_bank[i].student_answer
+              var arr = str
+              // var arr =  eval('(' + str + ')');
+              // var arr = JSON.parse(str);
+              // console.log(arr)
+              // console.log(arr)
+              for (var j = 0; j <=20; j++) {
+                // console.log(questions_bank[j])
+                // console.log(questions_bank[j].student_answer)
+                if(arr[j]=='A'){
+                  this.setData({
+                    [replaceA]: true,
+                  })
+                }
+                if(arr[j]=='B'){
+                  this.setData({
+                    [replaceB]: true,
+                  })
+                }
+                if(arr[j]=='C'){
+                  this.setData({
+                    [replaceC]: true,
+                  })
+                }
+                if(arr[j]=='D'){
+                  this.setData({
+                    [replaceD]: true,
+                  })
+                }
+                if(arr[j]=='E'){
+                  this.setData({
+                    [replaceE]: true,
+                  })
+                }
+              }
+            }
+        }
+          console.log(this.data.newStu)
+          console.log(this.data.newQuestions_bank)
+        //时间规格化
+          let a1 = 0
+          let b1 = 0
+          let c1 = 0
+          if(res.data.data.cumulative_time!=0){
+          if(res.data.data.cumulative_time/3600>0){
+            a1 = Math.floor(res.data.data.cumulative_time/3600)
+            if (b1 < 10) {
+              // 少于10补零
+              a1 = '0' + a1
+          } 
+          }
+          if(res.data.data.cumulative_time-3600*a1>0){
+            b1=Math.floor((res.data.data.cumulative_time-3600*a1)/60)
+            if (b1 < 10) {
+              // 少于10补零
+              b1 = '0' + b1
+          } 
+          }
+          if(res.data.data.cumulative_time-3600*a1-60*b1>0){
+            c1=Math.floor(res.data.data.cumulative_time-3600*a1-60*b1)
+            if (c1 < 10) {
+              // 少于10补零
+              c1 = '0' + c1
+          } 
+          }
+          this.setData({
+            hours: a1,   // 时
+            minute: b1,   // 分
+            second: c1,   // 秒
+            time: res.data.data.cumulative_time,
+          })
+        }
+          var questions_bank = this.data.newQuestions_bank
+          wx.setStorageSync('questions_bank', questions_bank)
+          let questions = this.data.newQuestions_bank//数组暂存题目
+          console.log(questions)
+          // let questions = questions_bank//数组暂存题目
+          var total_length = 0
+          for(var k=0;k<questions.length;k++){
+            total_length = total_length+k
+          }
+          app.globalData.questions = this.data.newQuestions_bank
+          let subject= questions[0]//第一题
+          app.globalData.total = questions.length//题目总数
+          this.setData({
+            questions: questions,
+            subject: subject,
+            total: app.globalData.total,
+            total_length: total_length,
+            stu: this.data.newStu
+          })
+          app.globalData.stu= this.data.stu
+          var ans= 0
+          console.log(this.data.stu)
+          for(var index in this.data.stu){
+            if((this.data.stu[index].stu_answers!='[]')&&(this.data.stu[index].stu_answers!='')&&(this.data.stu[index].stu_answers!=null)){
+              ans = ans+parseInt(index)
+            }
+          }
+          console.log(ans)
+          console.log(this.data.stu)
+          console.log(this.data.total_length)
+          if((ans==this.data.total_length)&&(this.data.stu[0].stu_answers!='[]')&&(this.data.stu[0].stu_answers)!=''){
+            this.setData({
+              can_submit : true
+            })
+          }
+          
+
+      }
           })
           }
+          else{
+            console.log('读缓存')
+            console.log(wx.getStorageSync('paper_id'))
+            var questions_bank = wx.getStorageSync('questions_bank')
+            console.log(questions_bank)
+            let questions = wx.getStorageSync('questions')//数组暂存题目
+            console.log(questions)
+            var total_length = 0
+            for(var k=0;k<questions.length;k++){
+              total_length = total_length+k
+            }
+            app.globalData.questions = questions_bank
+            let subject= questions[0]//第一题
+            app.globalData.total = questions.length//题目总数
+            this.setData({
+              questions: questions,
+              subject: subject,
+              total: app.globalData.total,
+              stu: wx.getStorageSync('stu'),
+              total_length: total_length,
+              time: wx.getStorageSync('time'),
+              can_submit: wx.getStorageSync('can_submit')
+            })
+            app.globalData.stu = wx.getStorageSync('stu')
+          //时间规格化
+          let a1 = 0
+          let b1 = 0
+          let c1 = 0
+          var time = wx.getStorageSync('time')
+          if(time!=0){
+          if(time/3600>0){
+            a1 = Math.floor(time/3600)
+            if (b1 < 10) {
+              // 少于10补零
+              a1 = '0' + a1
+          } 
+          }
+          if(time-3600*a1>0){
+            b1=Math.floor((time-3600*a1)/60)
+            if (b1 < 10) {
+              // 少于10补零
+              b1 = '0' + b1
+          } 
+          }
+          if(time-3600*a1-60*b1>0){
+            c1=Math.floor(time-3600*a1-60*b1)
+            if (c1 < 10) {
+              // 少于10补零
+              c1 = '0' + c1
+          } 
+          }
+          this.setData({
+            hours: a1,   // 时
+            minute: b1,   // 分
+            second: c1,   // 秒
+          })
+        }
+          }
+      }
       else{
+        if(res.data.data.paper_statu!="RELEASE"){
+          wx.showModal({
+            title:'获取失败',
+            content:'试卷未发布',
+            showCancel:false,
+            cancelColor: 'cancelColor',
+            success (res) {
+              if(res.confirm==true){
+                wx.navigateTo({
+                  url: '/pages/home/home',
+                })
+              }
+            }
+          })
+        }
+        else{
         wx.showModal({
           title:'获取失败',
           content:'答题时间已过',
@@ -187,6 +411,7 @@ Page({
           }
         })
       }
+      }
     }).catch(res =>{
 
     }) 
@@ -196,10 +421,8 @@ Page({
     for (var i = 0; i < this.data.stu2.length; ++i) {  
       if((this.data.stu2[i]==undefined)||(this.data.stu2[i]==null)){
         var replace1 = 'stu2['+i+'].stu_answers'
-        var replace2 = 'stu2['+i+'].question_id'
         this.setData({
           [replace1]: null,
-          [replace2]: null,
         })
       }
     }
@@ -207,13 +430,10 @@ Page({
   onLoad(){
   this.useImage() 
   this.setInterval()
-  if(wx.getStorageSync('stu')!=''){
-    app.globalData.stu = wx.getStorageSync('stu')
-  }
-  if(wx.getStorageSync('can_submit')!=''){
-      this.setData({
-        can_submit: wx.getStorageSync('can_submit')
-      })
+  if(this.data.submited==true){
+    this.setData({
+      can_submit :false
+    })
   }
   },
   judgeClick(e){
@@ -241,10 +461,13 @@ Page({
     })
     app.globalData.stu = this.data.stu
     var ans= 0
+    console.log(this.data.stu)
     for(var index in this.data.stu){
-      ans = ans+parseInt(index)
+      if((this.data.stu[index].stu_answers!='[]')&&(this.data.stu[index].stu_answers!='')&&(this.data.stu[index].stu_answers!=null)){
+        ans = ans+parseInt(index)
+      }
     }
-    if((this.data.stu[0].question_id!='')&&(ans==this.data.total_length)){
+    if((ans==this.data.total_length)&&(this.data.stu[0].stu_answers!='[]')&&(this.data.stu[0].stu_answers)!=''){
       this.setData({
         can_submit : true
       })
@@ -295,10 +518,13 @@ Page({
     })
     app.globalData.stu= this.data.stu
     var ans= 0
+    console.log(this.data.stu)
     for(var index in this.data.stu){
-      ans = ans+parseInt(index)
+      if((this.data.stu[index].stu_answers!='[]')&&(this.data.stu[index].stu_answers!='')&&(this.data.stu[index].stu_answers!=null)){
+        ans = ans+parseInt(index)
+      }
     }
-    if((this.data.stu[0].question_id!='')&&(ans==this.data.total_length)){
+      if((ans==this.data.total_length)&&(this.data.stu[0].stu_answers!='[]')&&(this.data.stu[0].stu_answers)!=''){
       this.setData({
         can_submit : true
       })
@@ -352,14 +578,19 @@ Page({
     this.setData({
       [replace1]: e.detail.value,
       [replace2]: cid,
-      // [replace3]: true,
     })
     app.globalData.stu = this.data.stu
     var ans= 0
+    console.log(this.data.stu)
     for(var index in this.data.stu){
-      ans = ans+parseInt(index)
+      console.log(index)
+      if((this.data.stu[index].stu_answers!='[]')&&(this.data.stu[index].stu_answers!='')&&(this.data.stu[index].stu_answers!=null)){
+        ans = ans+parseInt(index)
+      }
     }
-    if((this.data.stu[0].question_id!='')&&(ans==this.data.total_length)){
+    console.log(this.data.stu[0].stu_answers!='[]')
+    console.log(this.data.stu[0].stu_answers!='')
+    if((ans==this.data.total_length)&&(this.data.stu[0].stu_answers!='[]')&&(this.data.stu[0].stu_answers)!=''){
       this.setData({
         can_submit : true
       })
@@ -377,10 +608,15 @@ Page({
     })
     app.globalData.stu = this.data.stu
     var ans= 0
+    console.log(this.data.stu)
     for(var index in this.data.stu){
-      ans = ans+parseInt(index)
+      if((this.data.stu[index].stu_answers!='[]')&&(this.data.stu[index].stu_answers!='')&&(this.data.stu[index].stu_answers!=null)){
+        ans = ans+parseInt(index)
+      }
     }
-    if((this.data.stu[0].question_id!='')&&(ans==this.data.total_length)){
+    console.log(ans)
+    console.log(this.data.total_length)
+    if(ans==this.data.total_length){
       this.setData({
         can_submit : true
       })
@@ -483,6 +719,9 @@ Page({
     })
   },
   submit(){
+    var no_read = false
+    wx.setStorageSync('no_read', no_read)
+    var url = app.globalData.url+'config-query/course/save_answer/'
     var header;
     let paper_id=app.globalData.paper_id
     header = {
@@ -490,16 +729,19 @@ Page({
       'state':wx.getStorageSync("states")
     }
     wx.request({
-      url: 'https://paas-edu.bktencent.com/t/config-query/course/save_answer/',
+      url: url,
       method:'POST',
       header: header,
       data:{
+        cumulative_time: parseInt(this.data.time),
         paper_id: paper_id,
         answer_info: this.data.stu,
         save_or_submit: 0,
       },
       success: res => {
+        console.log(res.data)
         wx.showToast({
+
           title: '提交成功',
           icon: 'success',
           duration:2000, 
@@ -523,20 +765,24 @@ Page({
       })
       return
     }
-    if(this.data.stu[0].question_id=='')
+    if(this.data.stu[0].stu_answers=='')
     {
       this.setData({
         'stu[0].stu_answers' : null,
-        'stu[0].question_id' : null
+        // 'stu[0].question_id' : null
       })
     }
     this.subImg()
     wx.setStorageSync('questions', this.data.questions)
+    console.log(this.data.questions)
     wx.setStorageSync('stu', this.data.stu)
+    console.log(this.data.stu)
     wx.setStorageSync('can_submit', this.data.can_submit)
+    wx.setStorageSync('time', this.data.time)
     var header;
     var url = app.globalData.url+'config-query/course/save_answer/'
     let paper_id=app.globalData.paper_id
+    console.log(this.data.stu2)
     header = {
       'content-type': 'application/json', // 默认值
       'state':wx.getStorageSync("states")

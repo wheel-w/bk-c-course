@@ -37,7 +37,6 @@ Page({
   },
   //注册
   register() {
-    // console.log(this.data.name)
     let name = this.data.name
     var url = app.globalData.url+'config-query/course/authenticate'
     let password = this.data.password
@@ -47,7 +46,6 @@ Page({
       'state':wx.getStorageSync("states")
     }
     wx.request({
-      // url: 'https://paas-edu.bktencent.com/t/config-query/course/authenticate',
       url: url,
       method:'POST',
       data: {
@@ -55,18 +53,7 @@ Page({
         'password': password
       },
       header: header,
-      // 加载中代码，未测试
-      // if(header){
-      //   wx.showLoading({
-      //     title: '加载中',
-      //     mask: true
-      //   })
-      //   setTimeout(function () {
-      //     wx.hideLoading()
-      //   }, 2000)
-      // },
       success(res) {
-        // console.log('成功')
       if(res.data.result){
         wx.showToast({
           title: res.data.message,
