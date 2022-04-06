@@ -1,4 +1,3 @@
-.gitignore
 __pycache__
 .idea
 node_modules
