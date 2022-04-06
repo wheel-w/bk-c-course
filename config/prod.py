@@ -44,4 +44,3 @@ DATABASES.update(
         },
     }
 )
-
