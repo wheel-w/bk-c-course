@@ -1,0 +1,21 @@
+name: eslint
+
+on:
+  push:
+    branches: [master,delopy]
+  pull_request:
+    branches: [master,delopy]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Packages
+      run: |
+        cd frontend
+        npm install
+    - name: Run ESLint
+      run: |
+        cd frontend
+        npx eslint --ext .vue,.js src
