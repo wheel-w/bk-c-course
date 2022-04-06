@@ -26,7 +26,8 @@ def get_information(cookies, username, name):
         'Accept':
             'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8'
     }
-    information_url = base_url.replace('default2.aspx', '') + 'xsgrxx.aspx?xh=' + username + '&xm=' + name + '&gnmkdm=N121501'
+    information_url = base_url.replace('default2.aspx',
+                                       '') + 'xsgrxx.aspx?xh=' + username + '&xm=' + name + '&gnmkdm=N121501'
     data = requests.get(information_url, cookies=cookies, headers=headers)
     data.encoding = data.apparent_encoding
     dom_tree = etree.HTML(data.text)

@@ -54,6 +54,7 @@ def authority_manage(function, *args, **kwargs):
         except DatabaseError as e:
             logger.exception("函数[authority_manage]: {}".format(e))
             return JsonResponse({'result': False, 'code': 500, 'message': '操作失败(请检查日志)', 'data': {}})
+
     return inner
 
 
@@ -168,7 +169,7 @@ def paper(request):
                 query_param["course_id"] = request.GET.get("course_id")
             else:
                 return JsonResponse({
-                    'result': False, 'code': 400, 'message': '请求参数不完整', 'data':{}
+                    'result': False, 'code': 400, 'message': '请求参数不完整', 'data': {}
                 })
             if identity == Member.Identity.STUDENT:
                 query_param = {"status__in": ["RELEASE", "MARKED"]}
@@ -883,13 +884,13 @@ def save_answer(request):
 
         try:
             for info in answer_info:
+                flag = (PQContacts[info["question_id"]].types == Question.Types.MULTIPLE
+                        and info["stu_answers"]) or PQContacts[info["question_id"]].types != Question.Types.MULTIPLE
                 create_list.append(
                     StudentAnswer(
                         student_id=student_id,
                         PQContact_id=info["question_id"],
-                        answer=info["stu_answers"] if (PQContacts[info["question_id"]].types == Question.Types.MULTIPLE and
-                                                       info["stu_answers"]) or PQContacts[
-                                                          info["question_id"]].types != Question.Types.MULTIPLE else "[]",
+                        answer=info["stu_answers"] if flag else "[]",
                         score=0,
                     )
                 )
