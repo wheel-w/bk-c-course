@@ -5,6 +5,7 @@
             :side-title="nav.title"
             :default-open="true"
             :navigation-type="'left-right'"
+            :theme-color="'#7090D9'"
             :need-menu="true">
             <template slot="header">
                 <div class="monitor-navigation-header">
@@ -41,6 +42,15 @@
                     ref="menu"
                     @select="handleSelect"
                     :default-active="nav.id"
+                    :item-default-bg-color="'#7690D9'"
+                    :item-hover-bg-color="'#5E7AC5'"
+                    :item-active-bg-color="'#5E7AC5'"
+                    :item-default-color="'#F0F3FD'"
+                    :item-hover-color="'#FAFBFD'"
+                    :item-active-color="'#FAFBFD'"
+                    :item-default-icon-color="'#F0F3FD'"
+                    :item-hover-icon-color="'#FAFBFD'"
+                    :item-active-icon-color="'#FAFBFD'"
                     :toggle-active="nav.toggle">
                     <bk-navigation-menu-item
                         v-for="item in nav.list"
@@ -106,7 +116,62 @@
                 },
                 routerKey: +new Date(),
                 systemCls: 'mac',
-                nav: {},
+                nav: {
+                    list: [
+                        {
+                            id: 'home',
+                            name: '首页',
+                            icon: 'icon-home-shape',
+                            pathName: 'home',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'mycourse',
+                            name: '我的课程',
+                            icon: 'icon-tree-module-shape',
+                            pathName: 'my_course',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'classnumber',
+                            name: '课程成员',
+                            icon: 'icon-tree-module-shape',
+                            pathName: 'course_number',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'set_question_index',
+                            name: '课程题库',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'set_question_index',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'answer_question_index',
+                            name: '测验与作业',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'answer_question_index',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'displaypaper',
+                            name: '作业管理',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'displaypaper',
+                            children: [],
+                            group: true
+                        }
+                    ],
+                    id: 'home',
+                    toggle: true,
+                    submenuActive: false,
+                    title: '课程管理系统'
+                },
                 navTeacher: {
                     list: [
                         {
@@ -243,7 +308,7 @@
             }
         },
         created () {
-            this.getUserInfo()
+            // this.getUserInfo()
             if (sessionStorage.getItem('courseId')) {
                 this.$store.commit('updateCourseId', JSON.parse(sessionStorage.getItem('courseId')))
             }
@@ -337,18 +402,23 @@
 <style lang="postcss">
     @import './css/reset.css';
     @import './css/app.css';
+
     .monitor-navigation-header {
         -webkit-box-flex: 1;
         -ms-flex: 1;
         flex: 1;
         overflow: hidden;
         height: 100%;
+        width: 100%;
         display: -webkit-box;
         display: -ms-flexbox;
         display: flex;
         -webkit-box-align: center;
         -ms-flex-align: center;
         align-items: center;
+        padding: 0;
+        margin: 0;
+        background-image: url("./images/header_bg.png");
         font-size: 14px;
         .header-nav {
             display: -webkit-box;
@@ -455,11 +525,13 @@
             -webkit-box-pack: center;
             -ms-flex-pack: center;
             justify-content: center;
-            color: #96A2B9;
+            /*color: #96A2B9;*/
+            color: #63656e;
             margin-left: 8px;
+            margin-right: 30px;
             &:hover {
                 cursor: pointer;
-                color: #d3d9e4;
+                color: #000000;
             }
             .bk-icon {
                 margin-left: 5px;
@@ -584,5 +656,32 @@
         border-radius: 0;
         -webkit-box-shadow: none;
         box-shadow: none;
+    }
+    .bk-navigation-wrapper .navigation-nav .nav-slider-footer .footer-icon.is-left {
+        color: #f6f6f6 !important;
+    }
+    .bk-navigation-title{
+        background-color: #5c7ac4;
+    }
+    .bk-navigation-title span{
+        color: #FFFFFF !important;
+    }
+    .bk-navigator-title .title-desc{
+        background-image: url("./images/header_bg.png");
+    }
+
+    .navigation-menu-item{
+        background-color: #89a3ef;
+        border-radius: 20px;
+    }
+    .navigation-menu{
+        width: 85%;
+        margin: 20px auto;
+    }
+    .container-header{
+        padding: 0 !important;
+    }
+    .nav-slider{
+        background-image: url("./images/nav_bg.png");
     }
 </style>
