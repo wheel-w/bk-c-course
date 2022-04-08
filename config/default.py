@@ -37,6 +37,7 @@ INSTALLED_APPS += (  # noqa
     "course",
     "home_application",
     "mako_application",
+    "userManager.apps.UsermanagerConfig",
 )
 
 # 这里是默认的中间件，大部分情况下，不需要改动
