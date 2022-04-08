@@ -14,8 +14,8 @@ specific language governing permissions and limitations under the License.
 from rest_framework import viewsets
 from rest_framework.renderers import BrowsableAPIRenderer
 
+from common.drf.renderers import BKJSONRenderer
 from project.models import Project
-from project.renderers import BKJSONRenderer
 from project.serializer import ProjectSerializer
 
 
