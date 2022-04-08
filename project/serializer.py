@@ -11,14 +11,12 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from django.contrib import admin
+from rest_framework import serializers
 
-from .models import Project
-
-
-class ProjectAdmin(admin.ModelAdmin):
-    list_filter = ("id", "name", "property", "category")
-    list_display = ("id", "name", "property", "category", "organization", "creator")
+from project.models import Project
 
 
-admin.site.register(Project, ProjectAdmin)
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = "__all__"

@@ -28,6 +28,8 @@ INSTALLED_APPS = (
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "drf_yasg",
+    "rest_framework",
     # account app
     "blueapps.account",
 )
@@ -35,6 +37,7 @@ INSTALLED_APPS = (
 # 请在这里加入你的自定义 APP
 INSTALLED_APPS += (  # noqa
     "course",
+    "project",
     "home_application",
     "mako_application",
 )
