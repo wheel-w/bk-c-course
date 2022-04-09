@@ -35,6 +35,10 @@ INSTALLED_APPS = (
 # 请在这里加入你的自定义 APP
 INSTALLED_APPS += (  # noqa
     "course",
+    "project",
+    "common",
+    "drf_yasg",
+    "rest_framework",
     "home_application",
     "mako_application",
 )
@@ -129,6 +133,14 @@ LANGUAGES = (
     ("en", "English"),
     ("zh-hans", "简体中文"),
 )
+
+REST_FRAMEWORK = {
+    # drf提供的渲染类
+    "DEFAULT_RENDERER_CLASSES": [
+        "common.drf.renderers.StandardResponseRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+}
 
 """
 以下为框架代码 请勿修改
