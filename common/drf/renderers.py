@@ -37,10 +37,7 @@ class StandardResponseRenderer(JSONRenderer):
             elif isinstance(data, dict):
                 message = ""
                 for key, value in data.items():
-                    message += "[" + key + "] "
-                    for msg in value:
-                        message += msg
-                    message += "\n"
+                    message = f"{message}[{key}]{' '.join(value)}\n"
             render_data = {
                 "result": False,
                 "message": message,

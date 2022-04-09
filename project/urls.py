@@ -11,20 +11,13 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
-from django.urls import path
+from rest_framework.routers import DefaultRouter
 
 from project import views
 
-urlpatterns = [
-    path(r"get_project/<int:pk>/", views.ProjectViewSet.as_view({"get": "retrieve"})),
-    path(
-        r"update_project/<int:pk>/",
-        views.ProjectViewSet.as_view({"put": "update"}),
-    ),
-    path(
-        r"delete_project/<int:pk>/",
-        views.ProjectViewSet.as_view({"delete": "destroy"}),
-    ),
-    path(r"get_projects/", views.ProjectViewSet.as_view({"get": "list"})),
-    path(r"create_project/", views.ProjectViewSet.as_view({"post": "create"})),
-]
+router = DefaultRouter()
+router.register(r"projects", views.ProjectViewSet)
+
+urlpatterns = []
+
+urlpatterns += router.urls
