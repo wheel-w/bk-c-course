@@ -19,12 +19,10 @@ from rest_framework import permissions
 # drf_yasg
 schema_view = get_schema_view(
     openapi.Info(
-        title="Snippets API",
+        title="bk-c-course",
         default_version="v1",
-        description="Test description",
-        terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="contact@snippets.local"),
-        license=openapi.License(name="BSD License"),
+        description="可视化测试API的界面",
+        terms_of_service="http://apps.paas-edu.bktencent.com/stag--bk-course-manage/",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],

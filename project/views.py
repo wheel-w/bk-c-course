@@ -12,9 +12,7 @@ specific language governing permissions and limitations under the License.
 """
 
 from rest_framework import viewsets
-from rest_framework.renderers import BrowsableAPIRenderer
 
-from common.drf.renderers import BKJSONRenderer
 from project.models import Project
 from project.serializer import ProjectSerializer
 
@@ -22,4 +20,3 @@ from project.serializer import ProjectSerializer
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    renderer_classes = [BKJSONRenderer, BrowsableAPIRenderer]

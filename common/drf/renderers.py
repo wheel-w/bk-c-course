@@ -10,28 +10,59 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+import json
 
+from rest_framework.compat import INDENT_SEPARATORS, LONG_SEPARATORS, SHORT_SEPARATORS
 from rest_framework.renderers import JSONRenderer
-from rest_framework.status import is_success
 
 
-class BKJSONRenderer(JSONRenderer):
+class StandardResponseRenderer(JSONRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        response = renderer_context["response"]
-        if is_success(response.status_code):
-            data = {
-                "result": True,
-                "code": response.status_code,
-                "data": data,
-                "message": "OK",
+        """
+        Render `data` into JSON, returning a bytestring.
+        """
+        renderer_context = renderer_context or {}
+        renderer_context["response"].status_code = 200
+        indent = self.get_indent(accepted_media_type, renderer_context)
+
+        if indent is None:
+            separators = SHORT_SEPARATORS if self.compact else LONG_SEPARATORS
+        else:
+            separators = INDENT_SEPARATORS
+
+        # 如果请求失败,填充message信息
+        if renderer_context["response"].exception:
+            if isinstance(data, str):
+                message = data
+            elif isinstance(data, dict):
+                message = ""
+                for key, value in data.items():
+                    message += "[" + key + "] "
+                    for msg in value:
+                        message += msg
+                    message += "\n"
+            render_data = {
+                "result": False,
+                "message": message,
+                "code": -1,
+                "data": None,
             }
         else:
-            data = {
-                "result": False,
-                "code": response.status_code,
-                "data": None,
-                "message": data,
+            render_data = {
+                "result": True,
+                "message": "success",
+                "code": 0,
+                "data": data,
             }
-        return super(BKJSONRenderer, self).render(
-            data, accepted_media_type, renderer_context
+
+        ret = json.dumps(
+            render_data,
+            cls=self.encoder_class,
+            indent=indent,
+            ensure_ascii=self.ensure_ascii,
+            allow_nan=not self.strict,
+            separators=separators,
         )
+
+        ret = ret.replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
+        return ret.encode()

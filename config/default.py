@@ -28,8 +28,6 @@ INSTALLED_APPS = (
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "drf_yasg",
-    "rest_framework",
     # account app
     "blueapps.account",
 )
@@ -40,6 +38,8 @@ INSTALLED_APPS += (  # noqa
     "project",
     "home_application",
     "mako_application",
+    "drf_yasg",
+    "rest_framework",
 )
 
 # 这里是默认的中间件，大部分情况下，不需要改动
@@ -132,6 +132,14 @@ LANGUAGES = (
     ("en", "English"),
     ("zh-hans", "简体中文"),
 )
+
+REST_FRAMEWORK = {
+    # drf提供的渲染类
+    "DEFAULT_RENDERER_CLASSES": [
+        "common.drf.renderers.StandardResponseRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+}
 
 """
 以下为框架代码 请勿修改

@@ -15,7 +15,7 @@ from django.db import models
 
 
 class Project(models.Model):
-    name = models.CharField("项目名称", max_length=90)
+    name = models.CharField("项目名称", max_length=90, unique=True)
     introduction = models.TextField("项目简介", blank=True, null=True)
     property = models.CharField("项目性质", max_length=90)
     category = models.CharField("项目归属", max_length=90)
