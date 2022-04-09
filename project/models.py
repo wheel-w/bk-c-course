@@ -25,7 +25,6 @@ class Project(models.Model):
     update_time = models.DateTimeField("项目更新时间", auto_now=True)
 
     class Meta:
-        db_table = "project"
         ordering = ["-update_time"]
 
     def __str__(self):

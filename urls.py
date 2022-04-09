@@ -33,7 +33,7 @@ urlpatterns = [
     url(r"^mako/", include("mako_application.urls")),
     url(r"^i18n/", include("django.conf.urls.i18n")),
     url(r"course/", include("course.urls")),
-    url(r"^project/", include("project.urls")),
+    url(r"^api/", include("project.urls")),
     # swagger-ui
     url(r"^", include("common.urls")),
 ]
