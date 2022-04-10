@@ -22,8 +22,11 @@ jobs:
 
       - name: Configuration environment
         env:
+          BRANCH_NAME: $${GITHUB_REF##*/}
           CODE_CD_PRI: ${{secrets.CODE_CD_PRI}}
         run: |
+          echo checkout branch $BRANCH_NAME
+          git checkout $BRANCH_NAME
           mkdir -p ~/.ssh/
           echo "$CODE_CD_PRI" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
@@ -46,4 +49,4 @@ jobs:
         run: |
           git add static
           git commit -m "minor: build"
-          git push gitee-origin HEAD:test -f
+          git push gitee-origin -f
