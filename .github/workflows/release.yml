@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - master
+    - delopy
 
 jobs:
   build:
@@ -22,17 +23,16 @@ jobs:
 
       - name: Configuration environment
         env:
-          BRANCH_NAME: master
           CODE_CD_PRI: ${{secrets.CODE_CD_PRI}}
         run: |
-          echo checkout branch $BRANCH_NAME
-          git checkout $BRANCH_NAME
+          echo checkout branch ${GITHUB_REF##*/}
+          git checkout ${GITHUB_REF##*/}E
           mkdir -p ~/.ssh/
           echo "$CODE_CD_PRI" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan gitee.com >> ~/.ssh/known_hosts
           git remote add gitee-origin git@gitee.com:wang-wenxing/xaut-saas.git
-          git config --global user.name "<username>"
+          git config --global user.name github-auto-release
           git config --global user.email "<username@email.address>"
           
       - name: Install dependencies
