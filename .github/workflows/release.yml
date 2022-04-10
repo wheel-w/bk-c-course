@@ -44,6 +44,6 @@ jobs:
           
       - name: force push to gitee
         run: |
-          git add status
+          git add static
           git commit -m "minor: build"
           git push gitee-origin HEAD:test -f
