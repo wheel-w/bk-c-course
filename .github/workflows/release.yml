@@ -13,7 +13,10 @@ jobs:
         node-version: [14.x]
 
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: main
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
@@ -44,6 +47,7 @@ jobs:
           
       - name: force push to gitee
         run: |
-          git add static
+          
+          git add status
           git commit -m "minor: build"
           git push gitee-origin -f
