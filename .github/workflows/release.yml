@@ -26,7 +26,7 @@ jobs:
           CODE_CD_PRI: ${{secrets.CODE_CD_PRI}}
         run: |
           echo checkout branch ${GITHUB_REF##*/}
-          git checkout ${GITHUB_REF##*/}E
+          git checkout ${GITHUB_REF##*/}
           mkdir -p ~/.ssh/
           echo "$CODE_CD_PRI" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
