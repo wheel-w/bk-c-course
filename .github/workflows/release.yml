@@ -22,7 +22,7 @@ jobs:
 
       - name: Configuration environment
         env:
-          BRANCH_NAME: ${GITHUB_REF##*/}
+          BRANCH_NAME: master
           CODE_CD_PRI: ${{secrets.CODE_CD_PRI}}
         run: |
           echo checkout branch $BRANCH_NAME
