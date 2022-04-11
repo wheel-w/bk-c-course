@@ -54,7 +54,7 @@ class UserTag(models.Model):
     tag_value = models.CharField("标签值", max_length=20)
     tag_color = models.CharField("标签颜色", max_length=7)
     is_built_in = models.IntegerField("是否内置", choices=BuiltIn, default=False)
-    sub_project = models.CharField("所属项目", max_length=30)
+    sub_project = models.IntegerField("所属项目", max_length=30)
     time_created = models.DateTimeField("创建时间", default=timezone.now)
     time_updated = models.DateTimeField("修改时间", auto_now=True)
     tag_comment = models.CharField("备注", max_length=30, null=True)
