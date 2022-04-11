@@ -6,14 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("userManager", "0001_initial"),
+        ("user_manager", "0002_usertag_tag_comment"),
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.AlterField(
             model_name="usertag",
             name="tag_comment",
-            field=models.CharField(default="", max_length=30, verbose_name="备注"),
-            preserve_default=False,
+            field=models.CharField(max_length=30, null=True, verbose_name="备注"),
         ),
     ]

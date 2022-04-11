@@ -1,7 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版（BLUEKing PaaS Community
+Edition) available.
+Copyright (C) 2017-2021 THL A29 Limited, a Tencent company. ALL rights reserved.
+Licensed under the MIT License (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+http://opensource.org/licenses/MII
+Unless required by applicable Law or agreed to in writing, software distributed under the License is distributed on
+an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific Language governing permissions and limitations under the License.
+"""
 from django.db import models
 from django.utils import timezone
-
-# Create your models here.
 
 
 class User(models.Model):
@@ -30,29 +40,31 @@ class User(models.Model):
     time_created = models.DateTimeField("创建时间", default=timezone.now)
     time_updated = models.DateTimeField("修改时间", auto_now=True)
 
-    class Meta:
-        db_table = "u_user"
+    def __str__(self):
+        return self.name
 
 
 class UserTag(models.Model):
+    class BuiltIn:
+        BUILT_IN = 1
+        NON_INTRINSIC = 2
+
+    BUILTIN = [(BuiltIn.BUILT_IN, "内置"), (BuiltIn.NON_INTRINSIC, "非内置")]
     tag_value = models.CharField("标签值", max_length=20)
     tag_color = models.CharField("标签颜色", max_length=7)
-    is_built_in = models.BooleanField("是否内置", default=False)
-    sub_project = models.CharField("所属项目", max_length=30)
+    is_built_in = models.IntegerField(choices=BUILTIN, default=False)
+    sub_project = models.IntegerField("所属项目", max_length=30)
     time_created = models.DateTimeField("创建时间", default=timezone.now)
     time_updated = models.DateTimeField("修改时间", auto_now=True)
     tag_comment = models.CharField("备注", max_length=30, null=True)
 
-    class Meta:
-        db_table = "u_tag"
+    def __str__(self):
+        return f"{self.tag_value}_{self.tag_color}"
 
 
 class UserTagContact(models.Model):
     user_id = models.BigIntegerField("用户id")
     tag_id = models.BigIntegerField("标签id")
-
-    class Meta:
-        db_table = "u_tag_user"
 
     def __str__(self):
         return "{}-{}".format(self.user_id, self.tag_id)
