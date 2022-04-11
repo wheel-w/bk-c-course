@@ -13,11 +13,16 @@ specific language governing permissions and limitations under the License.
 
 from django.conf.urls import include, url
 from django.contrib import admin
+
 from home_application.views import django_admin_static_serve
 
 urlpatterns = [
     url(r"^django_admin/", admin.site.urls),
-    url(r"^django_admin/(?P<path>.*)$", django_admin_static_serve, {"document_root": "static"}),
+    url(
+        r"^django_admin/(?P<path>.*)$",
+        django_admin_static_serve,
+        {"document_root": "static"},
+    ),
     url(r"^course/", include("course.urls")),
     url(r"^account/", include("blueapps.account.urls")),
     # 如果你习惯使用 Django 模板，请在 home_application 里开发你的应用，
@@ -28,4 +33,7 @@ urlpatterns = [
     url(r"^mako/", include("mako_application.urls")),
     url(r"^i18n/", include("django.conf.urls.i18n")),
     url(r"course/", include("course.urls")),
+    url(r"^api/", include("project.urls")),
+    # swagger-ui
+    url(r"^", include("common.urls")),
 ]
