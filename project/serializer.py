@@ -13,10 +13,25 @@ specific language governing permissions and limitations under the License.
 
 from rest_framework import serializers
 
-from project.models import Project
+from project.models import Project, UserProjectContact
+from user_manager.models import User
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = "__all__"
+
+
+class UserProjectContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProjectContact
+        fields = "__all__"
+
+    # 校验传来的项目id和学生id是否存在
+    def validate(self, attrs):
+        if not Project.objects.filter(id=attrs["project_id"]).exists():
+            raise serializers.ValidationError(f"id为{attrs['project_id']}的项目不存在!")
+        if not User.objects.filter(id=attrs["user_id"]).exists():
+            raise serializers.ValidationError(f"id为{attrs['user_id']}的学生不存在!")
+        return attrs

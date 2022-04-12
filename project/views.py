@@ -13,10 +13,15 @@ specific language governing permissions and limitations under the License.
 
 from rest_framework import viewsets
 
-from project.models import Project
-from project.serializer import ProjectSerializer
+from project.models import Project, UserProjectContact
+from project.serializer import ProjectSerializer, UserProjectContactSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+
+
+class UserProjectContactViewSet(viewsets.ModelViewSet):
+    queryset = UserProjectContact.objects.all()
+    serializer_class = UserProjectContactSerializer

@@ -17,5 +17,6 @@ from project import views
 
 router = DefaultRouter()
 router.register(r"project", views.ProjectViewSet)
+router.register(r"userproject-contact", views.UserProjectContactViewSet)
 
 urlpatterns = [path(r"", include(router.urls))]
