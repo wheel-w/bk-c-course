@@ -16,6 +16,6 @@ from rest_framework.routers import DefaultRouter
 from project import views
 
 router = DefaultRouter()
-router.register(r"projects", views.ProjectViewSet)
+router.register(r"project", views.ProjectViewSet)
 
 urlpatterns = [path(r"", include(router.urls))]
