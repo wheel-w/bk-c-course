@@ -30,6 +30,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     # account app
     "blueapps.account",
+    "django_extensions",
 )
 
 # 请在这里加入你的自定义 APP
