@@ -10,10 +10,9 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
-
-import settings
 
 
 class User(models.Model):
