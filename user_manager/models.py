@@ -13,6 +13,8 @@ specific Language governing permissions and limitations under the License.
 from django.db import models
 from django.utils import timezone
 
+import settings
+
 
 class User(models.Model):
     class Gender:
@@ -20,13 +22,12 @@ class User(models.Model):
         FEMALE = "FEMALE"
 
     GENDER = [(Gender.MALE, "男"), (Gender.FEMALE, "女")]
-    u = models.OneToOneField(
+    account = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
         auto_created=True,
         parent_link=True,
-        primary_key=True,
         serialize=False,
-        on_delete=models.CASCADE,
-        to="account.user",
+        on_delete=models.DO_NOTHING,
     )
     name = models.CharField("姓名", max_length=20, blank=True, null=True)
     gender = models.CharField(
