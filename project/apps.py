@@ -12,6 +12,6 @@ specific Language governing permissions and limitations under the License.
 from django.apps import AppConfig
 
 
-class ExamConfig(AppConfig):
+class ProjectConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "exam"
+    name = "project"

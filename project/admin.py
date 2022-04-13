@@ -9,6 +9,10 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-# from django.test import TestCase
+from django.contrib import admin
 
-# Create your tests here.
+from .models import Project, StudentProjectInfo
+
+# Register your models here.
+admin.site.register(Project)
+admin.site.register(StudentProjectInfo)

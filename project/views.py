@@ -9,12 +9,7 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from django.contrib import admin
 
-# Register your models here.
-from .models import Exam, StudentExamAnswer, StudentExamContact
+# from django.shortcuts import render
 
-# Register your models here.
-admin.site.register(Exam)
-admin.site.register(StudentExamAnswer)
-admin.site.register(StudentExamContact)
+# Create your views here.
