@@ -100,7 +100,7 @@ class StudentProjectInfo(models.Model):
         (Status.MARKED, "已批改"),
     ]
 
-    status = models.CharField("状态", max_length=10, choices=STATUS)
+    status = models.CharField("学生做题状态", max_length=10, choices=STATUS)
     cumulative_time = models.DurationField("答题累计时间", default=timedelta(seconds=0))
 
     def __str__(self):
