@@ -11,9 +11,10 @@ specific Language governing permissions and limitations under the License.
 """
 from django.contrib import admin
 
-from .models import Question, QuestionTag, QuestionTagContact
+# Register your models here.
+from .models import Exam, StudentExamAnswer, StudentExamContact
 
 # Register your models here.
-admin.site.register(Question)
-admin.site.register(QuestionTag)
-admin.site.register(QuestionTagContact)
+admin.site.register(Exam)
+admin.site.register(StudentExamAnswer)
+admin.site.register(StudentExamContact)

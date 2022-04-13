@@ -9,11 +9,9 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from django.contrib import admin
+from django.apps import AppConfig
 
-from .models import Question, QuestionTag, QuestionTagContact
 
-# Register your models here.
-admin.site.register(Question)
-admin.site.register(QuestionTag)
-admin.site.register(QuestionTagContact)
+class ExamConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "exam"

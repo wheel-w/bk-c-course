@@ -39,6 +39,7 @@ INSTALLED_APPS += (  # noqa
     "home_application",
     "mako_application",
     "question",
+    "exam",
 )
 
 # 这里是默认的中间件，大部分情况下，不需要改动
