@@ -17,7 +17,7 @@ from django.db import models
 # Create your models here.
 
 
-class Project(models.Model):
+class ProjectTask(models.Model):
     class Status:
         DRAFT = "DRAFT"
         RELEASE = "RELEASE"
@@ -31,9 +31,9 @@ class Project(models.Model):
 
     TYPES = [(Types.DAILY, "日常任务"), (Types.ASSESSMENT, "考核任务")]
 
-    types = models.CharField("项目类型", max_length=10, choices=TYPES)
-    course_id = models.IntegerField("项目所属课程id")
-    title = models.CharField("项目名称", max_length=255)
+    project_id = models.IntegerField("任务所属项目id")
+    types = models.CharField("任务类型", max_length=10, choices=TYPES)
+    title = models.CharField("任务名称", max_length=255)
     master_teacher = models.CharField("导师姓名", max_length=90)
     master_teacher_id = models.IntegerField("导师id")
     question_order = models.CharField(
@@ -48,7 +48,7 @@ class Project(models.Model):
     create_time = models.DateTimeField("创建时间", auto_now_add=True)
     start_time = models.DateTimeField("开始时间", blank=True, null=True)
     end_time = models.DateTimeField("截止时间", blank=True, null=True)
-    status = models.CharField("项目状态", max_length=10, choices=STATUS)
+    status = models.CharField("任务状态", max_length=10, choices=STATUS)
     judge_teachers_id = models.CharField(
         "评委老师id",
         validators=[validate_comma_separated_integer_list],
@@ -65,7 +65,7 @@ class Project(models.Model):
         null=True,
         default="",
     )
-    project_students_id = models.CharField(
+    students_id = models.CharField(
         "学生id",
         validators=[validate_comma_separated_integer_list],
         max_length=200,
@@ -73,17 +73,17 @@ class Project(models.Model):
         null=True,
         default="",
     )
-    project_students_visible = models.BooleanField(default=False)
+    students_visible = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
 
 
-class StudentProjectInfo(models.Model):
-    student_id = models.BigIntegerField("用户id")
-    course_id = models.IntegerField("课程id")
+class StudentProjectTaskInfo(models.Model):
+    student_id = models.BigIntegerField("学生id")
     project_id = models.IntegerField("项目id")
-    stu_answers = models.JSONField("学生提交答案")
+    project_task_id = models.IntegerField("任务id")
+    stu_answers = models.JSONField("学生提交答案列表")
     individual_score = models.JSONField("学生题目单项得分")
     total_score = models.FloatField("学生总体得分", blank=True, null=True, default=0)
 
@@ -100,8 +100,8 @@ class StudentProjectInfo(models.Model):
         (Status.MARKED, "已批改"),
     ]
 
-    status = models.CharField("学生做题状态", max_length=10, choices=STATUS)
-    cumulative_time = models.DurationField("答题累计时间", default=timedelta(seconds=0))
+    status = models.CharField("学生完成任务状态", max_length=10, choices=STATUS)
+    cumulative_time = models.DurationField("任务累计时间", default=timedelta(seconds=0))
 
     def __str__(self):
-        return "{}-{}-{}".format(self.course_id, self.project_id, self.student_id)
+        return "{}-{}-{}".format(self.project_id, self.project_task_id, self.student_id)

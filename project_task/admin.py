@@ -11,8 +11,8 @@ specific Language governing permissions and limitations under the License.
 """
 from django.contrib import admin
 
-from .models import Project, StudentProjectInfo
+from .models import ProjectTask, StudentProjectTaskInfo
 
 # Register your models here.
-admin.site.register(Project)
-admin.site.register(StudentProjectInfo)
+admin.site.register(ProjectTask)
+admin.site.register(StudentProjectTaskInfo)
