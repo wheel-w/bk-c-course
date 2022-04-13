@@ -10,4 +10,21 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-# from django.shortcuts import render
+from rest_framework.viewsets import ModelViewSet
+from user_manager import serialize
+from user_manager.models import User, UserTag, UserTagContact
+
+
+class UserView(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = serialize.UserRegisterSerializer
+
+
+class AddTagToUserView(ModelViewSet):
+    queryset = UserTagContact.objects.all()
+    serializer_class = serialize.UserTagContactSerializer
+
+
+class UserTagView(ModelViewSet):
+    queryset = UserTag.objects.all()
+    serializer_class = serialize.UserTagSerializer
