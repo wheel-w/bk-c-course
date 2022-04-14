@@ -13,6 +13,31 @@ from django.contrib import admin
 
 from .models import ProjectTask, StudentProjectTaskInfo
 
+
+class ProjectTaskAdmin(admin.ModelAdmin):
+    list_filter = (
+        "project_id",
+        "id",
+        "title",
+        "types",
+        "status",
+        "created_id",
+        "updated_id",
+    )
+
+
+class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
+    list_filter = (
+        "project_id",
+        "id",
+        "project_task_id",
+        "status",
+        "total_score",
+        "created_id",
+        "updated_id",
+    )
+
+
 # Register your models here.
-admin.site.register(ProjectTask)
-admin.site.register(StudentProjectTaskInfo)
+admin.site.register(ProjectTask, ProjectTaskAdmin)
+admin.site.register(StudentProjectTaskInfo, StudentProjectTaskInfoAdmin)

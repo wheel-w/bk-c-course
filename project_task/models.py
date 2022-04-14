@@ -15,6 +15,7 @@ from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
 
 # Create your models here.
+from django.utils import timezone
 
 
 class ProjectTask(models.Model):
@@ -31,11 +32,9 @@ class ProjectTask(models.Model):
 
     TYPES = [(Types.DAILY, "日常任务"), (Types.ASSESSMENT, "考核任务")]
 
-    project_id = models.IntegerField("任务所属项目id")
+    project_id = models.BigIntegerField("任务所属项目id")
     types = models.CharField("任务类型", max_length=10, choices=TYPES)
     title = models.CharField("任务名称", max_length=255)
-    master_teacher = models.CharField("导师姓名", max_length=90)
-    master_teacher_id = models.IntegerField("导师id")
     question_order = models.CharField(
         "存储题目顺序",
         validators=[validate_comma_separated_integer_list],
@@ -49,31 +48,24 @@ class ProjectTask(models.Model):
     start_time = models.DateTimeField("开始时间", blank=True, null=True)
     end_time = models.DateTimeField("截止时间", blank=True, null=True)
     status = models.CharField("任务状态", max_length=10, choices=STATUS)
-    judge_teachers_id = models.CharField(
-        "评委老师id",
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        blank=True,
-        null=True,
-        default="",
-    )
-    judge_teachers_weight = models.CharField(
-        "评委老师权重",
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        blank=True,
-        null=True,
-        default="",
-    )
-    students_id = models.CharField(
-        "学生id",
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        blank=True,
-        null=True,
-        default="",
-    )
+    judge_teachers = models.JSONField("评委老师id及其权重")
+
     students_visible = models.BooleanField(default=False)
+
+    created_id = models.BigIntegerField("创建者id")
+    updated_id = models.BigIntegerField("更新者id")
+    time_created = models.DateTimeField("创建时间", default=timezone.now)
+    time_updated = models.DateTimeField("修改时间", auto_now=True)
+
+    students_visible = models.BooleanField("参与任务的学生是否匿名", default=False)
+    students_task_id = models.CharField(
+        "学生任务信息id",
+        validators=[validate_comma_separated_integer_list],
+        max_length=200,
+        blank=True,
+        null=True,
+        default="",
+    )
 
     def __str__(self):
         return self.title
@@ -81,8 +73,8 @@ class ProjectTask(models.Model):
 
 class StudentProjectTaskInfo(models.Model):
     student_id = models.BigIntegerField("学生id")
-    project_id = models.IntegerField("项目id")
-    project_task_id = models.IntegerField("任务id")
+    project_id = models.BigIntegerField("项目id")
+    project_task_id = models.BigIntegerField("任务id")
     stu_answers = models.JSONField("学生提交答案列表")
     individual_score = models.JSONField("学生题目单项得分")
     total_score = models.FloatField("学生总体得分", blank=True, null=True, default=0)
@@ -92,16 +84,23 @@ class StudentProjectTaskInfo(models.Model):
         SAVED = "SAVED"
         SUBMITTED = "SUBMITTED"
         MARKED = "MARKED"
+        CANCEL = "CANCEL"
 
     STATUS = [
         (Status.NOT_ANSWER, "未答题"),
         (Status.SAVED, "已保存"),
         (Status.SUBMITTED, "已提交"),
         (Status.MARKED, "已批改"),
+        (Status.CANCEL, "已撤销"),
     ]
 
     status = models.CharField("学生完成任务状态", max_length=10, choices=STATUS)
     cumulative_time = models.DurationField("任务累计时间", default=timedelta(seconds=0))
+
+    created_id = models.BigIntegerField("创建者id")
+    updated_id = models.BigIntegerField("更新者id")
+    time_created = models.DateTimeField("创建时间", default=timezone.now)
+    time_updated = models.DateTimeField("修改时间", auto_now=True)
 
     def __str__(self):
         return "{}-{}-{}".format(self.project_id, self.project_task_id, self.student_id)
