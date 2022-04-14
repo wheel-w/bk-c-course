@@ -21,8 +21,8 @@ class ProjectTaskAdmin(admin.ModelAdmin):
         "title",
         "types",
         "status",
-        "created_id",
-        "updated_id",
+        "creator",
+        "updater",
     )
 
 

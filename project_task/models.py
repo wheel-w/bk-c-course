@@ -50,10 +50,8 @@ class ProjectTask(models.Model):
     status = models.CharField("任务状态", max_length=10, choices=STATUS)
     judge_teachers = models.JSONField("评委老师id及其权重")
 
-    created_id = models.BigIntegerField("创建者id")
-    creator = models.TextField("创建者名称")
-    updated_id = models.BigIntegerField("更新者id")
-    updater = models.TextField("更新者名称")
+    creator = models.TextField("创建者姓名")
+    updater = models.TextField("更新者姓名")
     time_created = models.DateTimeField("创建时间", auto_now_add=True)
     time_updated = models.DateTimeField("更新时间", auto_now=True)
 
