@@ -31,9 +31,9 @@ class Question(models.Model):
         (QuestionTypes.SHORT_ANSWER, "简答题"),
     ]
 
-    course_id = models.IntegerField("题目所属课程id")
+    project_id = models.IntegerField("题目所属项目id")
     types = models.CharField("题目类型", max_length=20, choices=TYPES)
-    question = models.TextField("题目")
+    title = models.TextField("题目")
     question_url = models.TextField("题目文件url", null=True, blank=True)
     option_A = models.TextField("选项A", blank=True, null=True)
     option_B = models.TextField("选项B", blank=True, null=True)
@@ -46,7 +46,7 @@ class Question(models.Model):
     explain_url = models.TextField("答案解析文件url", null=True, blank=True)
 
     def __str__(self):
-        return "{}".format(self.question)
+        return "{}".format(self.title)
 
 
 class QuestionTag(models.Model):

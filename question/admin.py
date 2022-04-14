@@ -13,7 +13,35 @@ from django.contrib import admin
 
 from .models import Question, QuestionTag, QuestionTagContact
 
+
+class QuestionAdmin(admin.ModelAdmin):
+    list_filter = (
+        "project_id",
+        "id",
+        "title",
+        "types",
+    )
+
+
+class QuestionTagAdmin(admin.ModelAdmin):
+    list_filter = (
+        "id",
+        "value",
+        "text",
+        "created_id",
+        "updated_id",
+    )
+
+
+class QuestionTagContactAdmin(admin.ModelAdmin):
+    list_filter = (
+        "id",
+        "user_id",
+        "tag_id",
+    )
+
+
 # Register your models here.
-admin.site.register(Question)
-admin.site.register(QuestionTag)
-admin.site.register(QuestionTagContact)
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(QuestionTag, QuestionTagAdmin)
+admin.site.register(QuestionTagContact, QuestionTagContactAdmin)
