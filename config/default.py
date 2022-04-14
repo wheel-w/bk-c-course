@@ -37,6 +37,7 @@ INSTALLED_APPS += (  # noqa
     "course",
     "home_application",
     "mako_application",
+    "user_manager",
     "question",
     "project_task",
 )
