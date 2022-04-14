@@ -45,13 +45,29 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserTagContactSerializer(serializers.ModelSerializer):
+class AccountSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.UserTagContact
-        fields = "__all__"
+        model = Account
+        fields = ["id", "last_login", "is_active"]
+
+
+class UserSerSerializer(serializers.ModelSerializer):
+    account = AccountSerializer()
+
+    class Meta:
+        model = models.User
+        fields = ["id", "name", "gender", "account", "email"]
 
 
 class UserTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UserTag
         fields = "__all__"
+
+
+class UserTagContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.UserTagContact
+        fields = "__all__"
+
+    userTag = UserTagSerializer(source="tag_set", read_only=True, many=True)
