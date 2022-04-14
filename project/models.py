@@ -20,7 +20,8 @@ class Project(models.Model):
     property = models.CharField("项目性质", max_length=90)
     category = models.CharField("项目归属", max_length=90)
     organization = models.CharField("组织名称", max_length=90)
-    creator = models.CharField("创建人", max_length=90)
+    creator = models.CharField("创建人", max_length=90, blank=True, null=True)
+    updater = models.CharField("更新人", max_length=90, blank=True, null=True)
     create_time = models.DateTimeField("项目创建时间", auto_now_add=True)
     update_time = models.DateTimeField("项目更新时间", auto_now=True)
 

@@ -21,17 +21,36 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = "__all__"
+        extra_kwargs = {
+            "introduction": {"required": False},
+            "creator": {"required": False},
+            "updater": {"required": False},
+        }
+
+
+class PartialProjectSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=90, required=False)
+    introduction = serializers.CharField(required=False)
+    property = serializers.CharField(max_length=90, required=False)
+    category = serializers.CharField(max_length=90, required=False)
+    organization = serializers.CharField(max_length=90, required=False)
+    creator = serializers.CharField(max_length=90, required=False)
+    updater = serializers.CharField(max_length=90, required=False)
+    create_time = serializers.DateTimeField(required=False)
+    update_time = serializers.DateTimeField(required=False)
 
 
 class UserProjectContactSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField(read_only=True)
+    user_gender = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = UserProjectContact
-        fields = "__all__"
+        exclude = ["id"]
+        extra_kwargs = {"project_id": {"write_only": True}}
 
-    # 校验传来的项目id和学生id是否存在
-    def validate(self, attrs):
-        if not Project.objects.filter(id=attrs["project_id"]).exists():
-            raise serializers.ValidationError(f"id为{attrs['project_id']}的项目不存在!")
-        if not User.objects.filter(id=attrs["user_id"]).exists():
-            raise serializers.ValidationError(f"id为{attrs['user_id']}的学生不存在!")
-        return attrs
+    def get_user_name(self, data):
+        return User.objects.get(id=data.user_id).name
+
+    def get_user_gender(self, data):
+        return User.objects.get(id=data.user_id).gender

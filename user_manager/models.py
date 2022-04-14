@@ -23,9 +23,6 @@ class User(models.Model):
     GENDER = [(Gender.MALE, "男"), (Gender.FEMALE, "女")]
     account = models.OneToOneField(
         settings.AUTH_USER_MODEL,
-        auto_created=True,
-        parent_link=True,
-        serialize=False,
         on_delete=models.DO_NOTHING,
     )
     name = models.CharField("姓名", max_length=20, blank=True, null=True)
