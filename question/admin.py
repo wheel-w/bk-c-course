@@ -28,8 +28,8 @@ class QuestionTagAdmin(admin.ModelAdmin):
         "id",
         "value",
         "text",
-        "created_id",
-        "updated_id",
+        "time_created",
+        "time_updated",
     )
 
 

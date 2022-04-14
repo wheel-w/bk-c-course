@@ -12,7 +12,6 @@ specific Language governing permissions and limitations under the License.
 from django.db import models
 
 # Create your models here.
-from django.utils import timezone
 
 
 class Question(models.Model):
@@ -31,7 +30,7 @@ class Question(models.Model):
         (QuestionTypes.SHORT_ANSWER, "简答题"),
     ]
 
-    project_id = models.IntegerField("题目所属项目id")
+    project_id = models.BigIntegerField("题目所属项目id")
     types = models.CharField("题目类型", max_length=20, choices=TYPES)
     title = models.TextField("题目")
     question_url = models.TextField("题目文件url", null=True, blank=True)
@@ -53,8 +52,8 @@ class QuestionTag(models.Model):
     value = models.CharField("标签值", max_length=20)
     color = models.CharField("标签颜色", max_length=7)
     text = models.CharField("标签说明", max_length=200)
-    time_created = models.DateTimeField("创建时间", default=timezone.now)
-    time_updated = models.DateTimeField("修改时间", auto_now=True)
+    time_created = models.DateTimeField("创建时间", auto_now_add=True)
+    time_updated = models.DateTimeField("更新时间", auto_now=True)
 
     def __str__(self):
         return "{}".format(self.value)
