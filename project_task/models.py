@@ -35,6 +35,7 @@ class ProjectTask(models.Model):
     project_id = models.BigIntegerField("任务所属项目id")
     types = models.CharField("任务类型", max_length=10, choices=TYPES)
     title = models.CharField("任务名称", max_length=255)
+    describe = models.CharField("任务描述", max_length=255)
     question_order = models.CharField(
         "存储题目顺序",
         validators=[validate_comma_separated_integer_list],
