@@ -15,7 +15,6 @@ from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
 
 # Create your models here.
-from django.utils import timezone
 
 
 class ProjectTask(models.Model):
@@ -51,22 +50,14 @@ class ProjectTask(models.Model):
     status = models.CharField("任务状态", max_length=10, choices=STATUS)
     judge_teachers = models.JSONField("评委老师id及其权重")
 
-    students_visible = models.BooleanField(default=False)
-
     created_id = models.BigIntegerField("创建者id")
+    creator = models.TextField("创建者名称")
     updated_id = models.BigIntegerField("更新者id")
-    time_created = models.DateTimeField("创建时间", default=timezone.now)
-    time_updated = models.DateTimeField("修改时间", auto_now=True)
+    updater = models.TextField("更新者名称")
+    time_created = models.DateTimeField("创建时间", auto_now_add=True)
+    time_updated = models.DateTimeField("更新时间", auto_now=True)
 
-    students_visible = models.BooleanField("参与任务的学生是否匿名", default=False)
-    students_task_id = models.CharField(
-        "学生任务信息id",
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        blank=True,
-        null=True,
-        default="",
-    )
+    students_visible = models.BooleanField("导师评分是否开启匿名", default=False)
 
     def __str__(self):
         return self.title
@@ -100,8 +91,8 @@ class StudentProjectTaskInfo(models.Model):
 
     created_id = models.BigIntegerField("创建者id")
     updated_id = models.BigIntegerField("更新者id")
-    time_created = models.DateTimeField("创建时间", default=timezone.now)
-    time_updated = models.DateTimeField("修改时间", auto_now=True)
+    time_created = models.DateTimeField("创建时间", auto_now_add=True)
+    time_updated = models.DateTimeField("更新时间", auto_now=True)
 
     def __str__(self):
         return "{}-{}-{}".format(self.project_id, self.project_task_id, self.student_id)
