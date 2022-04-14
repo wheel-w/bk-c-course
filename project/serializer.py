@@ -20,3 +20,20 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = "__all__"
+        extra_kwargs = {
+            "introduction": {"required": False},
+            "creator": {"required": False},
+            "updater": {"required": False},
+        }
+
+
+class PartialProjectSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=90, required=False)
+    introduction = serializers.CharField(required=False)
+    property = serializers.CharField(max_length=90, required=False)
+    category = serializers.CharField(max_length=90, required=False)
+    organization = serializers.CharField(max_length=90, required=False)
+    creator = serializers.CharField(max_length=90, required=False)
+    updater = serializers.CharField(max_length=90, required=False)
+    create_time = serializers.DateTimeField(required=False)
+    update_time = serializers.DateTimeField(required=False)
