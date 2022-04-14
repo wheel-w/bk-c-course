@@ -1,0 +1,52 @@
+name: release
+
+on:
+  push:
+    branches:
+    - master
+    - delopy
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Configuration environment
+        env:
+          CODE_CD_PRI: ${{secrets.CODE_CD_PRI}}
+        run: |
+          echo checkout branch ${GITHUB_REF##*/}
+          git checkout ${GITHUB_REF##*/}
+          mkdir -p ~/.ssh/
+          echo "$CODE_CD_PRI" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan gitee.com >> ~/.ssh/known_hosts
+          git remote add gitee-origin git@gitee.com:wang-wenxing/xaut-saas.git
+          git config --global user.name github-auto-release
+          git config --global user.email "<username@email.address>"
+          
+      - name: Install dependencies
+        run: |
+          cd frontend/desktop
+          npm install
+          
+      - name: npm run build
+        run: |
+          cd frontend/desktop
+          npm run build
+          
+      - name: force push to gitee
+        run: |
+          git add static
+          git commit -m "minor: build"
+          git push gitee-origin -f

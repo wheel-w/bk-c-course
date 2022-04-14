@@ -16,25 +16,30 @@ from blueapps.conf.log import get_logging_config_dict
 
 # 这里是默认的 INSTALLED_APPS，大部分情况下，不需要改动
 # 如果你已经了解每个默认 APP 的作用，确实需要去掉某些 APP，请去掉下面的注释，然后修改
-INSTALLED_APPS = (
-    "simpleui",
-    "bkoauth",
-    # 框架自定义命令
-    "blueapps.contrib.bk_commands",
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.sites",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-    # account app
-    "blueapps.account",
-)
+# INSTALLED_APPS = (
+#     "simpleui",
+#     "bkoauth",
+#     # 框架自定义命令
+#     "blueapps.contrib.bk_commands",
+#     "django.contrib.admin",
+#     "django.contrib.auth",
+#     "django.contrib.contenttypes",
+#     "django.contrib.sessions",
+#     "django.contrib.sites",
+#     "django.contrib.messages",
+#     "django.contrib.staticfiles",
+#     # account app
+#     "blueapps.account",
+# )
 
 # 请在这里加入你的自定义 APP
-INSTALLED_APPS += (  # noqa
+INSTALLED_APPS = (  # noqa
+    "simpleui",
     "course",
+    "project",
+    "common",
+    "drf_yasg",
+    "rest_framework",
     "home_application",
     "mako_application",
     "user_manager",
@@ -44,28 +49,28 @@ INSTALLED_APPS += (  # noqa
 
 # 这里是默认的中间件，大部分情况下，不需要改动
 # 如果你已经了解每个默认 MIDDLEWARE 的作用，确实需要去掉某些 MIDDLEWARE，或者改动先后顺序，请去掉下面的注释，然后修改
-MIDDLEWARE = (
-    # request instance provider
-    "blueapps.middleware.request_provider.RequestProvider",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    # 跨域检测中间件， 默认关闭
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "django.middleware.security.SecurityMiddleware",
-    # 蓝鲸静态资源服务
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    # Auth middleware
-    "blueapps.account.middlewares.RioLoginRequiredMiddleware",
-    "blueapps.account.middlewares.WeixinLoginRequiredMiddleware",
-    "blueapps.account.middlewares.LoginRequiredMiddleware",
-    # exception middleware
-    "blueapps.core.exceptions.middleware.AppExceptionMiddleware",
-    # django国际化中间件
-    "django.middleware.locale.LocaleMiddleware",
-)
+# MIDDLEWARE = (
+#     # request instance provider
+#     "blueapps.middleware.request_provider.RequestProvider",
+#     "django.contrib.sessions.middleware.SessionMiddleware",
+#     "django.middleware.common.CommonMiddleware",
+#     "django.middleware.csrf.CsrfViewMiddleware",
+#     "django.contrib.auth.middleware.AuthenticationMiddleware",
+#     "django.contrib.messages.middleware.MessageMiddleware",
+#     # 跨域检测中间件， 默认关闭
+#     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+#     "django.middleware.security.SecurityMiddleware",
+#     # 蓝鲸静态资源服务
+#     "whitenoise.middleware.WhiteNoiseMiddleware",
+#     # Auth middleware
+#     "blueapps.account.middlewares.RioLoginRequiredMiddleware",
+#     "blueapps.account.middlewares.WeixinLoginRequiredMiddleware",
+#     "blueapps.account.middlewares.LoginRequiredMiddleware",
+#     # exception middleware
+#     "blueapps.core.exceptions.middleware.AppExceptionMiddleware",
+#     # django国际化中间件
+#     "django.middleware.locale.LocaleMiddleware",
+# )
 
 # 自定义中间件
 MIDDLEWARE += ("blueapps.middleware.bkui.middlewares.BkuiPageMiddleware",)
@@ -132,6 +137,14 @@ LANGUAGES = (
     ("en", "English"),
     ("zh-hans", "简体中文"),
 )
+
+REST_FRAMEWORK = {
+    # drf提供的渲染类
+    "DEFAULT_RENDERER_CLASSES": [
+        "common.drf.renderers.StandardResponseRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+}
 
 """
 以下为框架代码 请勿修改
