@@ -12,12 +12,7 @@ specific Language governing permissions and limitations under the License.
 """
 from blueapps.account.models import User as Account
 from rest_framework import status
-from rest_framework.mixins import (
-    CreateModelMixin,
-    ListModelMixin,
-    RetrieveModelMixin,
-    UpdateModelMixin,
-)
+from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
@@ -32,23 +27,81 @@ class AccountView(GenericViewSet, UpdateModelMixin):
     queryset = Account.objects.all()
     serializer_class = serialize.AccountSerializer
 
+    # 删除用户
     def destroy(self, request, *args, **kwargs):
         request.data["is_active"] = False
         self.partial_update(request, *args)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserView(GenericViewSet, ListModelMixin, RetrieveModelMixin):
-    queryset = User.objects.all()
+class UserView(GenericViewSet):
+    """查寻用户信息"""
+
+    queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
     serializer_class = serialize.UserSerSerializer
     pagination_class = MyPageNumberPagination
     filter_class = UserFilter
     filter_fields = ["name", "gender"]
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            self.add_tag(serializer.data)
+            return self.get_paginated_response(serializer.data)
 
-class RegisterView(GenericViewSet, CreateModelMixin, UpdateModelMixin):
+        serializer = self.get_serializer(queryset, many=True)
+        self.add_tag(serializer.data)
+        return Response(serializer.data)
+
+    def add_tag(self, users):
+        user_ids = [user.get("id") for user in users]
+        user_tag_dic = self.get_user_tag_map(user_ids)
+        for user in users:
+            # 遍历每一个获取到user 查看其是否有标签
+            if user.get("id") in user_tag_dic:
+                user["tag"] = user_tag_dic.get(user.get("id"))
+            else:
+                user["tag"] = None
+        return users
+
+    @staticmethod
+    def get_user_tag_map(user_ids):
+        tag_conns = UserTagContact.objects.filter(user_id__in=user_ids)
+        tag_ids = {tag_conn.tag_id for tag_conn in tag_conns}
+        tags = UserTag.objects.filter(id__in=tag_ids)
+        tags_dic = {}  # key: 标签id  value: tag_value, tag_color
+        for tag in tags:
+            tags_dic[tag.id] = {"tag_value": tag.tag_value, "tag_color": tag.tag_color}
+        user_tag_dic = {}  # key: user_id  value: {tags_dic ...}
+        for tag_conn in tag_conns:
+            if user_tag_dic.get(tag_conn.user_id):
+                user_tag_dic[tag_conn.user_id][tag_conn.tag_id] = tags_dic[
+                    tag_conn.tag_id
+                ]
+            else:
+                user_tag_dic[tag_conn.user_id] = {
+                    tag_conn.tag_id: tags_dic[tag_conn.tag_id]
+                }
+        return user_tag_dic
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = dict(serializer.data)
+        data["tag"] = self.get_user_tag_map([data.get("id")]).pop(instance.id)
+        return Response(data)
+
+
+class UserUpdateView(GenericViewSet, UpdateModelMixin):
     queryset = User.objects.all()
-    serializer_class = serialize.UserRegisterSerializer
+    serializer_class = serialize.UserBaseSerializer
+
+
+class UserRegisterView(GenericViewSet, CreateModelMixin):
+    queryset = User.objects.all()
+    serializer_class = serialize.UserCreateSerializer
 
 
 # 用户, 标签连接视图
