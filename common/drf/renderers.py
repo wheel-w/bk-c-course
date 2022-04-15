@@ -38,8 +38,6 @@ class StandardResponseRenderer(JSONRenderer):
                 message = ""
                 for key, value in data.items():
                     message = f"{message}[{key}]{''.join(value)}\n"
-            else:
-                message = renderer_context["response"].message
             render_data = {
                 "result": False,
                 "message": message,

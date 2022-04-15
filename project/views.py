@@ -109,9 +109,7 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     def bulk_import(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
         if not Project.objects.filter(id=project_id).exists():
-            response = Response(exception=True)
-            response.message = f"id为{project_id}的项目不存在"
-            return response
+            return Response(f"id为{project_id}的项目不存在", exception=True)
         users_id = request.data["user_id_list"]
         exist_contacts = UserProjectContact.objects.filter(
             project_id=project_id, user_id__in=users_id
@@ -149,9 +147,7 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
         if not Project.objects.filter(id=project_id).exists():
-            response = Response(exception=True)
-            response.message = f"id为{project_id}的项目不存在"
-            return response
+            return Response(f"id为{project_id}的项目不存在", exception=True)
         user_id_list = request.data["user_id_list"]
         UserProjectContact.objects.filter(
             project_id=project_id, user_id__in=user_id_list
