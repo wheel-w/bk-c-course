@@ -68,7 +68,9 @@ class AccountView(GenericViewSet):
         return user
 
 
-class UserView(GenericViewSet):
+class UserView(
+    GenericViewSet,
+):
     """查寻用户信息"""
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
@@ -87,7 +89,7 @@ class UserView(GenericViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         self.add_tag(serializer.data)
-        return Response(serializer.data)
+        return Response(serializer.data, headers={"access-control-allow-origin": "*"})
 
     def add_tag(self, users):
         user_ids = [user.get("id") for user in users]
@@ -125,7 +127,7 @@ class UserView(GenericViewSet):
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)
         data["tag"] = self.get_user_tag_map([data.get("id")]).pop(instance.id)
-        return Response(data)
+        return Response(data, headers={"access-control-allow-origin": "*"})
 
 
 class UserUpdateView(GenericViewSet, UpdateModelMixin):
