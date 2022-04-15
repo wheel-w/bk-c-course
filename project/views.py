@@ -27,9 +27,16 @@ from project.serializer import (
 from user_manager.models import User
 
 
+class UserProjectPagination(PageNumberPagination):
+    page_size = 3
+    page_size_query_param = "page_size"
+    max_page_size = 30
+
+
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    pagination_class = UserProjectPagination
 
     @swagger_auto_schema(
         request_body=ProjectSerializer,
@@ -71,12 +78,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         kwargs["partial"] = True
         request.data["updater"] = request.user.username
         return super().update(request, *args, **kwargs)
-
-
-class UserProjectPagination(PageNumberPagination):
-    page_size = 3
-    page_size_query_param = "page_size"
-    max_page_size = 20
 
 
 class UserProjectContactViewSet(viewsets.ModelViewSet):
