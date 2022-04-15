@@ -15,12 +15,12 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import GenericViewSet
 
 from user_manager import serialize
 from user_manager.filters import UserFilter
 from user_manager.models import User, UserTag, UserTagContact
-from user_manager.Pagination import MyPageNumberPagination
+from user_manager.pagination import MyPageNumberPagination
 
 
 # 用户相关视图
@@ -50,6 +50,22 @@ class AccountView(GenericViewSet):
             elem.is_active = False
         Account.objects.bulk_update(queryset, ["is_active"])
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = User.objects.filter(id=instance.id)
+        if not user:
+            self.create_user(instance)
+            user = User.objects.filter(id=instance.id)
+        serializer = serialize.UserSerSerializer(user)
+        return Response(serializer.data)
+
+    @staticmethod
+    def create_user(instance):
+        user = User.objects.create(
+            id=instance.id, account_id=instance.id, name=instance.username
+        )
+        return user
 
 
 class UserView(GenericViewSet):
@@ -120,21 +136,3 @@ class UserUpdateView(GenericViewSet, UpdateModelMixin):
 class UserRegisterView(GenericViewSet, CreateModelMixin):
     queryset = User.objects.all()
     serializer_class = serialize.UserCreateSerializer
-
-
-# 用户, 标签连接视图
-class AddTagToUserView(ModelViewSet):
-    queryset = UserTagContact.objects.all()
-    serializer_class = serialize.UserTagContactSerializer
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        print(instance)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-
-# 标签相关视图
-class UserTagView(ModelViewSet):
-    queryset = UserTag.objects.all()
-    serializer_class = serialize.UserTagSerializer
