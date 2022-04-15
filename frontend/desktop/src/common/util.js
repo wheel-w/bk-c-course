@@ -173,8 +173,8 @@ export function json2Query (param, key) {
     let paramStr = ''
 
     if (param instanceof String || typeof param === 'string'
-            || param instanceof Number || typeof param === 'number'
-            || param instanceof Boolean || typeof param === 'boolean'
+        || param instanceof Number || typeof param === 'number'
+        || param instanceof Boolean || typeof param === 'boolean'
     ) {
         paramStr += separator + key + mappingOperator + encodeURIComponent(param)
     } else {
@@ -341,4 +341,27 @@ export function loadScript (url, callback) {
     }
 
     document.getElementsByTagName('head')[0].appendChild(script)
+}
+
+/**
+ * 导出对象到本地json文件
+ *
+ * @param {Object} 要保存的对象
+ * @param {String} filename文件名
+ */
+export function saveJSON (data, filename = 'json.json') {
+    if (!data) {
+        console.warn('要保存的数据为空')
+        return
+    }
+    if (typeof data === 'object') {
+        data = JSON.stringify(data, undefined, 3)
+    }
+    const blob = new Blob([data], { type: 'text/json' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.download = filename
+    a.href = url
+    a.click()
+    URL.revokeObjectURL(url)
 }

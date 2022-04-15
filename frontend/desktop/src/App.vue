@@ -165,6 +165,14 @@
                             pathName: 'displaypaper',
                             children: [],
                             group: true
+                        },
+                        {
+                            id: 'userManage',
+                            name: '用户管理',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'userManage',
+                            children: [],
+                            group: true
                         }
                     ],
                     id: 'home',
@@ -219,6 +227,14 @@
                             name: '作业管理',
                             icon: 'icon-tree-process-shape',
                             pathName: 'displaypaper',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'userManage',
+                            name: '用户管理',
+                            icon: 'icon-tree-process-shape',
+                            pathName: 'userManage',
                             children: [],
                             group: true
                         }
