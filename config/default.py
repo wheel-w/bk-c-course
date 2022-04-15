@@ -42,6 +42,8 @@ INSTALLED_APPS = (  # noqa
     "rest_framework",
     "home_application",
     "mako_application",
+    "question",
+    "project_task",
     "user_manager",
     # 过滤
     "django_filters",
