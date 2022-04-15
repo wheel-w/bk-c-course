@@ -82,9 +82,8 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         project_id = request.data["project_id"]
         user_id = request.data["user_id"]
-        data = UserProjectContact.objects.create(project_id=project_id, user_id=user_id)
-        serializer = UserProjectContactSerializer(data)
-        return Response(serializer.data)
+        UserProjectContact.objects.create(project_id=project_id, user_id=user_id)
+        return Response()
 
     @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有用户信息")
     def retrieve(self, request, *args, **kwargs):
@@ -109,15 +108,23 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     )
     def bulk_import(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
-        user_id_list = request.data["user_id_list"]
+        users_id = request.data["user_id_list"]
+        exist_users = UserProjectContact.objects.filter(
+            project_id=project_id, user_id__in=users_id
+        )
+        # 去重
+        user_id_list = [
+            val
+            for val in users_id
+            if not exist_users.filter(project_id=project_id, user_id=val).exists()
+        ]
         queryset_list = []
         for user_id in user_id_list:
             queryset_list.append(
                 UserProjectContact(project_id=project_id, user_id=user_id)
             )
-        data = UserProjectContact.objects.bulk_create(queryset_list)
-        serializer = UserProjectContactSerializer(data, many=True)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        UserProjectContact.objects.bulk_create(queryset_list)
+        return Response(status=status.HTTP_201_CREATED)
 
     # 传入一个数组user_id_list，批量删除项目下的用户
     @swagger_auto_schema(
@@ -150,14 +157,12 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         records = []
         project_id = kwargs["project_id"]
         title = f"{Project.objects.get(id=project_id).name}用户名单"
-        user_id_list = []
-        user_ids = UserProjectContact.objects.filter(project_id=project_id)
-        for u_i in user_ids:
-            user_id_list.append(u_i.user_id)
+        user_id_list = UserProjectContact.objects.values_list(
+            "user_id", flat=True
+        ).filter(project_id=project_id)
         users = User.objects.filter(id__in=user_id_list)
-        obj = {"MALE": "男", "FEMALE": "女"}
         # 添加记录
         for user in users:
-            record = [user.name, obj[user.gender], user.phone_number]
+            record = [user.name, user.get_gender_display(), user.phone_number]
             records.append(record)
         return export_excel(head_data, records, title)
