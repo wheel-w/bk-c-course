@@ -119,6 +119,7 @@ class AccountDeleteSerializer(serializers.ModelSerializer):
 class UserSerSerializer(serializers.ModelSerializer):
     """查找用户信息"""
 
+    last_login = serializers.CharField(source="account.last_login", read_only=True)
     username = serializers.CharField(source="account.username", read_only=True)
     role = serializers.CharField(
         min_length=2, max_length=2, required=True, write_only=True
@@ -129,6 +130,7 @@ class UserSerSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
+            "last_login",
             "role",
             "name",
             "gender",
