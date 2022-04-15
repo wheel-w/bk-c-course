@@ -32,19 +32,6 @@ class UserTagContactSerializer(serializers.ModelSerializer):
         fields = ["id", "user_id", "tag_id"]
 
 
-class AccountCreateSerializer(serializers.ModelSerializer):
-    """账户创建"""
-
-    class Meta:
-        model = Account
-        fields = ["password", "username", "nickname"]
-        extra_kwargs = {
-            "is_staff": {"default": False},
-            "is_active": {"default": True},
-            "is_superuser": {"default": False},
-        }
-
-
 class UserBaseSerializer(serializers.ModelSerializer):
     """用户信息, 更新"""
 
@@ -60,41 +47,6 @@ class UserBaseSerializer(serializers.ModelSerializer):
             "vx_number",
             "vx_open_id",
         ]
-
-
-class UserCreateSerializer(serializers.ModelSerializer):
-    """创建帐号及用户"""
-
-    account = AccountCreateSerializer(source="account_dict", write_only=True)
-
-    role = serializers.CharField(
-        min_length=2, max_length=2, required=True, write_only=True
-    )
-
-    class Meta:
-        model = models.User
-        fields = "__all__"
-
-    def validate(self, attrs):
-        tag = models.UserTag.objects.filter(tag_value=attrs.pop("role")).first()
-        if not tag:
-            raise serializers.ValidationError("请输入存在的标签")
-        attrs["role"] = tag
-        return attrs
-
-    def create(self, validated_data):
-        account_data = validated_data.pop("account_dict")
-        role = validated_data.pop("role")
-        is_superuser = account_data.get("is_superuser")
-        if is_superuser:
-            account = Account.objects.create_superuser(**account_data)
-        else:
-            account = Account.objects.create_user(**account_data)
-        user = models.User.objects.create(
-            id=account.id, account_id=account.id, **validated_data
-        )
-        models.UserTagContact.objects.create(user_id=user.id, tag_id=role.id)
-        return user
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -119,8 +71,11 @@ class AccountDeleteSerializer(serializers.ModelSerializer):
 class UserSerSerializer(serializers.ModelSerializer):
     """查找用户信息"""
 
+    # 上一次登录信息
     last_login = serializers.CharField(source="account.last_login", read_only=True)
+    # 用户名
     username = serializers.CharField(source="account.username", read_only=True)
+    # 标签
     role = serializers.CharField(
         min_length=2, max_length=2, required=True, write_only=True
     )
@@ -140,3 +95,12 @@ class UserSerSerializer(serializers.ModelSerializer):
             "vx_number",
             "vx_open_id",
         ]
+
+
+class OriginAccountSerilizer(serializers.Serializer):
+    """蓝鲸账户信息"""
+
+    username = serializers.CharField()
+    departments = serializers.ListField()
+    display_name = serializers.CharField()
+    leader = serializers.ListField()
