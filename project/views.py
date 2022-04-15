@@ -10,7 +10,6 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
@@ -28,7 +27,7 @@ from user_manager.models import User
 
 
 class UserProjectPagination(PageNumberPagination):
-    page_size = 3
+    page_size = 10
     page_size_query_param = "page_size"
     max_page_size = 30
 
@@ -94,16 +93,19 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         UserProjectContact.objects.create(project_id=project_id, user_id=user_id)
         return Response()
 
+    # TODO: 修改
     @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有用户信息")
     def list(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
         data = UserProjectContact.objects.filter(project_id=project_id)
         page = self.paginate_queryset(data)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(data, many=True)
-        return Response(serializer.data)
+        user_id_list = [user.user_id for user in page]
+        users = User.objects.filter(id__in=user_id_list)
+        user_info = [
+            {"id": user.id, "user_name": user.name, "gender": user.gender}
+            for user in users
+        ]
+        return self.get_paginated_response(user_info)
 
     # 向项目中批量导入用户
     @swagger_auto_schema(
@@ -124,17 +126,13 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         if not Project.objects.filter(id=project_id).exists():
             return Response(f"id为{project_id}的项目不存在", exception=True)
         users_id = request.data["user_id_list"]
+        # 项目下已经存在的用户id
         exist_contacts = UserProjectContact.objects.filter(
-            project_id=project_id, user_id__in=users_id
-        )
-        exist_users = User.objects.filter(id__in=users_id)
+            project_id=project_id
+        ).values_list("user_id", flat=True)
+        exist_users = User.objects.filter(id__in=users_id).values_list("id", flat=True)
         # 去重
-        user_id_list = [
-            val
-            for val in users_id
-            if not exist_contacts.filter(project_id=project_id, user_id=val).exists()
-            and exist_users.filter(id=val).exists()
-        ]
+        user_id_list = [val for val in exist_users if val not in exist_contacts]
         queryset_list = []
         for user_id in user_id_list:
             queryset_list.append(
@@ -176,9 +174,7 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         records = []
         project_id = kwargs["project_id"]
         if not Project.objects.filter(id=project_id).exists():
-            response = Response(exception=True)
-            response.message = f"id为{project_id}的项目不存在"
-            return response
+            return Response(f"id为{project_id}的项目不存在", exception=True)
         title = f"{Project.objects.get(id=project_id).name}用户名单"
         user_id_list = UserProjectContact.objects.values_list(
             "user_id", flat=True
