@@ -12,6 +12,7 @@ specific Language governing permissions and limitations under the License.
 """
 from blueapps.account.models import User as Account
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
@@ -23,14 +24,31 @@ from user_manager.Pagination import MyPageNumberPagination
 
 
 # 用户相关视图
-class AccountView(GenericViewSet, UpdateModelMixin):
+class AccountView(GenericViewSet):
     queryset = Account.objects.all()
-    serializer_class = serialize.AccountSerializer
+    serializer_class = serialize.AccountDeleteSerializer
 
     # 删除用户
     def destroy(self, request, *args, **kwargs):
         request.data["is_active"] = False
-        self.partial_update(request, *args)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=["POST"], detail=False)
+    def batch_delete(self, request, *args, **kwargs):
+        """批量删除"""
+        id_list = request.data.get("id_list")
+        if not id_list or not isinstance(id_list, list):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        queryset = self.get_queryset().filter(id__in=id_list, is_active=True)
+        if not queryset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        for elem in queryset:
+            elem.is_active = False
+        Account.objects.bulk_update(queryset, ["is_active"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

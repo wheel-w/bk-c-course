@@ -109,6 +109,14 @@ class AccountSerializer(serializers.ModelSerializer):
         }
 
 
+class AccountDeleteSerializer(serializers.ModelSerializer):
+    id_list = serializers.ListField()
+
+    class Meta:
+        model = Account
+        fields = ["id_list"]
+
+
 class UserSerSerializer(serializers.ModelSerializer):
     """查找用户信息"""
 

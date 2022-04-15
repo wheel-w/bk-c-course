@@ -22,7 +22,7 @@ router.register("list", views.UserView)
 # router.register("tag", views.UserTagView)
 router.register("register", views.UserRegisterView)
 router.register("update", views.UserUpdateView)
+router.register("account", views.AccountView)
 urlpatterns = [
     path("", include(router.urls)),
-    path("account/<int:pk>/", views.AccountView.as_view({"delete": "destroy"})),
 ]
