@@ -17,11 +17,12 @@ from rest_framework.routers import DefaultRouter
 from user_manager import views
 
 router = DefaultRouter()
-router.register("", views.UserView)
-router.register("add_tag", views.AddTagToUserView)
-router.register("tag", views.UserTagView)
-router.register("register", views.RegisterView)
+router.register("list", views.UserView)
+# router.register("add_tag", views.AddTagToUserView)
+# router.register("tag", views.UserTagView)
+router.register("register", views.UserRegisterView)
+router.register("update", views.UserUpdateView)
 urlpatterns = [
     path("", include(router.urls)),
-    path("account/<int:pk>", views.AccountView.as_view({"delete": "destroy"})),
+    path("account/<int:pk>/", views.AccountView.as_view({"delete": "destroy"})),
 ]
