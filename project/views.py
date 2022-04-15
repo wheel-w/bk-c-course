@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from common.export_excel import export_excel
@@ -72,9 +73,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
 
+class UserProjectPagination(PageNumberPagination):
+    page_size = 3
+    page_size_query_param = "page_size"
+    max_page_size = 20
+
+
 class UserProjectContactViewSet(viewsets.ModelViewSet):
     queryset = UserProjectContact.objects.all()
     serializer_class = UserProjectContactSerializer
+    pagination_class = UserProjectPagination
 
     @swagger_auto_schema(
         operation_summary="传入project_id和user_id创建一条UserProjectContact记录"
@@ -86,10 +94,14 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         return Response()
 
     @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有用户信息")
-    def retrieve(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
         data = UserProjectContact.objects.filter(project_id=project_id)
-        serializer = super().get_serializer(data, many=True)
+        page = self.paginate_queryset(data)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(data, many=True)
         return Response(serializer.data)
 
     # 向项目中批量导入用户

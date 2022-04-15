@@ -25,7 +25,7 @@ urlpatterns = [
     path(
         r"project-user/<int:project_id>/",
         views.UserProjectContactViewSet.as_view(
-            {"post": "bulk_import", "get": "retrieve", "delete": "destroy"}
+            {"post": "bulk_import", "get": "list", "delete": "destroy"}
         ),
     ),
     path(
