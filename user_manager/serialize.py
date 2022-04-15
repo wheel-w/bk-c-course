@@ -76,7 +76,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, attrs):
-        print("invalidate")
         tag = models.UserTag.objects.filter(tag_value=attrs.pop("role")).first()
         if not tag:
             raise serializers.ValidationError("请输入存在的标签")
@@ -103,7 +102,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ["last_login", "is_active", "username"]
+        fields = ["last_login", "username"]
         extra_kwargs = {
             "username": {"allow_null": True, "allow_blank": True, "required": False}
         }
@@ -120,10 +119,7 @@ class AccountDeleteSerializer(serializers.ModelSerializer):
 class UserSerSerializer(serializers.ModelSerializer):
     """查找用户信息"""
 
-    account = AccountSerializer(
-        required=False
-    )  # ["last_login", "is_active", 'username']
-
+    username = serializers.CharField(source="account.username", read_only=True)
     role = serializers.CharField(
         min_length=2, max_length=2, required=True, write_only=True
     )
@@ -132,7 +128,7 @@ class UserSerSerializer(serializers.ModelSerializer):
         model = models.User
         fields = [
             "id",
-            "account",
+            "username",
             "role",
             "name",
             "gender",
