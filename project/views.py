@@ -108,15 +108,21 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     )
     def bulk_import(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
+        if not Project.objects.filter(id=project_id).exists():
+            response = Response(exception=True)
+            response.message = f"id为{project_id}的项目不存在"
+            return response
         users_id = request.data["user_id_list"]
-        exist_users = UserProjectContact.objects.filter(
+        exist_contacts = UserProjectContact.objects.filter(
             project_id=project_id, user_id__in=users_id
         )
+        exist_users = User.objects.filter(id__in=users_id)
         # 去重
         user_id_list = [
             val
             for val in users_id
-            if not exist_users.filter(project_id=project_id, user_id=val).exists()
+            if not exist_contacts.filter(project_id=project_id, user_id=val).exists()
+            and exist_users.filter(id=val).exists()
         ]
         queryset_list = []
         for user_id in user_id_list:
@@ -142,6 +148,10 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
+        if not Project.objects.filter(id=project_id).exists():
+            response = Response(exception=True)
+            response.message = f"id为{project_id}的项目不存在"
+            return response
         user_id_list = request.data["user_id_list"]
         UserProjectContact.objects.filter(
             project_id=project_id, user_id__in=user_id_list
@@ -156,6 +166,10 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         # 查询记录数据
         records = []
         project_id = kwargs["project_id"]
+        if not Project.objects.filter(id=project_id).exists():
+            response = Response(exception=True)
+            response.message = f"id为{project_id}的项目不存在"
+            return response
         title = f"{Project.objects.get(id=project_id).name}用户名单"
         user_id_list = UserProjectContact.objects.values_list(
             "user_id", flat=True
