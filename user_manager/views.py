@@ -42,10 +42,10 @@ class AccountView(GenericViewSet):
         """批量删除"""
         id_list = request.data.get("id_list")
         if not id_list or not isinstance(id_list, list):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response("请传入一个id列表", exception=True)
         queryset = self.get_queryset().filter(id__in=id_list, is_active=True)
         if not queryset:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response("没有找到任何对应用户", exception=True)
         for elem in queryset:
             elem.is_active = False
         Account.objects.bulk_update(queryset, ["is_active"])
