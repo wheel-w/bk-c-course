@@ -20,9 +20,9 @@ router = DefaultRouter()
 router.register("list", views.UserView)
 # router.register("add_tag", views.AddTagToUserView)
 # router.register("tag", views.UserTagView)
-router.register("register", views.UserRegisterView)
 router.register("update", views.UserUpdateView)
 router.register("account", views.AccountView)
+router.register("", views.OriginAccountView)
 urlpatterns = [
     path("", include(router.urls)),
 ]
