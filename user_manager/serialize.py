@@ -60,7 +60,7 @@ class AccountSerializer(serializers.ModelSerializer):
         }
 
 
-class AccountDeleteSerializer(serializers.ModelSerializer):
+class AccountGetSerializer(serializers.ModelSerializer):
     id_list = serializers.ListField()
 
     class Meta:
