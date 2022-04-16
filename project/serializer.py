@@ -14,7 +14,6 @@ specific language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from project.models import Project, UserProjectContact
-from user_manager.models import User
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -41,16 +40,7 @@ class PartialProjectSerializer(serializers.Serializer):
 
 
 class UserProjectContactSerializer(serializers.ModelSerializer):
-    user_name = serializers.SerializerMethodField(read_only=True)
-    user_gender = serializers.SerializerMethodField(read_only=True)
-
     class Meta:
         model = UserProjectContact
         exclude = ["id"]
         extra_kwargs = {"project_id": {"write_only": True}}
-
-    def get_user_name(self, data):
-        return User.objects.get(id=data.user_id).name
-
-    def get_user_gender(self, data):
-        return User.objects.get(id=data.user_id).gender
