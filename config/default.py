@@ -49,6 +49,10 @@ INSTALLED_APPS = (  # noqa
     "django_filters",
 ) + INSTALLED_APPS
 
+# 上线主域名
+MAIN_DOMAIN = "https://bkapi.paas-edu.bktencent.com"
+APP_CODE = "bk-course-manage"
+APP_SECRET = "svgZF9p20lKI86YtMrAcI4WwDGyet3KcgVH8"
 # 这里是默认的中间件，大部分情况下，不需要改动
 # 如果你已经了解每个默认 MIDDLEWARE 的作用，确实需要去掉某些 MIDDLEWARE，或者改动先后顺序，请去掉下面的注释，然后修改
 # MIDDLEWARE = (
