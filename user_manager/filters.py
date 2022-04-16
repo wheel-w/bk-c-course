@@ -17,7 +17,7 @@ from user_manager.models import User
 
 
 class UserFilter(FilterSet):
-    """根据name字段的过滤器"""
+    """user展示的过滤器"""
 
     name = django_filters.CharFilter(
         field_name="name", lookup_expr="icontains"
