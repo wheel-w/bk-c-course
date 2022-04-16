@@ -125,14 +125,18 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         project_id = kwargs["project_id"]
         if not Project.objects.filter(id=project_id).exists():
             return Response(f"id为{project_id}的项目不存在", exception=True)
-        users_id = request.data["user_id_list"]
+        user_id_list = request.data["user_id_list"]
         # 项目下已经存在的用户id
-        exist_contacts = UserProjectContact.objects.filter(
-            project_id=project_id
-        ).values_list("user_id", flat=True)
-        exist_users = User.objects.filter(id__in=users_id).values_list("id", flat=True)
+        exist_contacts = set(
+            UserProjectContact.objects.filter(project_id=project_id).values_list(
+                "user_id", flat=True
+            )
+        )
+        exist_users = set(
+            User.objects.filter(id__in=user_id_list).values_list("id", flat=True)
+        )
         # 去重
-        user_id_list = [val for val in exist_users if val not in exist_contacts]
+        user_id_list = exist_users.difference(exist_contacts)
         queryset_list = []
         for user_id in user_id_list:
             queryset_list.append(
@@ -157,8 +161,6 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
-        if not Project.objects.filter(id=project_id).exists():
-            return Response(f"id为{project_id}的项目不存在", exception=True)
         user_id_list = request.data["user_id_list"]
         UserProjectContact.objects.filter(
             project_id=project_id, user_id__in=user_id_list
@@ -173,8 +175,6 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         # 查询记录数据
         records = []
         project_id = kwargs["project_id"]
-        if not Project.objects.filter(id=project_id).exists():
-            return Response(f"id为{project_id}的项目不存在", exception=True)
         title = f"{Project.objects.get(id=project_id).name}用户名单"
         user_id_list = UserProjectContact.objects.values_list(
             "user_id", flat=True
