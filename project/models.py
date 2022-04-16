@@ -30,3 +30,15 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class UserProjectContact(models.Model):
+    user_id = models.IntegerField("用户id")
+    project_id = models.IntegerField("项目id")
+    create_time = models.DateTimeField("成员加入项目时间", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-create_time"]
+
+    def __str__(self):
+        return "{}-{}".format(self.user_id, self.project_id)

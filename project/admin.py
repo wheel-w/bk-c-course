@@ -13,7 +13,7 @@ specific language governing permissions and limitations under the License.
 
 from django.contrib import admin
 
-from .models import Project
+from .models import Project, UserProjectContact
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -21,4 +21,10 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "property", "category", "organization", "creator")
 
 
+class UserProjectContactAdmin(admin.ModelAdmin):
+    list_filter = ("id", "project_id", "user_id")
+    list_display = ("id", "project_id", "user_id")
+
+
 admin.site.register(Project, ProjectAdmin)
+admin.site.register(UserProjectContact, UserProjectContactAdmin)
