@@ -23,6 +23,7 @@ router.register("list", views.UserView)
 router.register("update", views.UserUpdateView)
 router.register("account", views.AccountView)
 router.register("", views.OriginAccountView)
+router.register("batch", views.BatchView)
 urlpatterns = [
     path("", include(router.urls)),
 ]
