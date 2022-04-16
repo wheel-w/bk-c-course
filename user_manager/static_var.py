@@ -10,15 +10,18 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from settings import APP_CODE, APP_SECRET, MAIN_DOMAIN
+import os
+
+from django.conf import settings
 
 USER_PAGE_SIZE = 20
 REQUEST_PARAMS = {
-    "bk_app_code": APP_CODE,
-    "bk_app_secret": APP_SECRET,
+    "bk_app_code": settings.APP_CODE,
+    "bk_app_secret": settings.SECRET_KEY,
     "fields": ["username", "departments", "display_name", "leader"],
     "wildcard_search_fields": ["departments__name", "display_name", "username"],
     "page_size": USER_PAGE_SIZE,
 }
 
-PROFILES_LIST_URL = MAIN_DOMAIN + "/api/bk-user/prod/api/v2/profiles/"
+APIGW_BASE_URL = os.getenv("BK_COMPONENT_API_URL")
+PROFILES_LIST_URL = APIGW_BASE_URL + "/api/bk-user/prod/api/v2/profiles/"
