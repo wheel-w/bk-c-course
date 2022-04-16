@@ -13,7 +13,7 @@ specific language governing permissions and limitations under the License.
 
 from rest_framework import serializers
 
-from project.models import Project
+from project.models import Project, UserProjectContact
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -37,3 +37,10 @@ class PartialProjectSerializer(serializers.Serializer):
     updater = serializers.CharField(max_length=90, required=False)
     create_time = serializers.DateTimeField(required=False)
     update_time = serializers.DateTimeField(required=False)
+
+
+class UserProjectContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProjectContact
+        exclude = ["id"]
+        extra_kwargs = {"project_id": {"write_only": True}}

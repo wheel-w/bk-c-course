@@ -10,6 +10,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -18,4 +19,17 @@ from project import views
 router = DefaultRouter()
 router.register(r"project", views.ProjectViewSet)
 
-urlpatterns = [path(r"", include(router.urls))]
+urlpatterns = [
+    path(r"", include(router.urls)),
+    path(r"project-user/", views.UserProjectContactViewSet.as_view({"post": "create"})),
+    path(
+        r"project-user/<int:project_id>/",
+        views.UserProjectContactViewSet.as_view(
+            {"post": "bulk_import", "get": "list", "delete": "destroy"}
+        ),
+    ),
+    path(
+        r"project-user/<int:project_id>/export-info",
+        views.UserProjectContactViewSet.as_view({"get": "export_info"}),
+    ),
+]

@@ -18,6 +18,7 @@ from .models import User, UserTag, UserTagContact
 # Register your models here.
 class UserAdmin(admin.ModelAdmin):
     list_filter = ("id", "name", "gender", "phone_number")
+    list_display = ("id", "name", "gender", "account")
 
 
 class UserTagAdmin(admin.ModelAdmin):
