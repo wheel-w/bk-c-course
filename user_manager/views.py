@@ -154,12 +154,12 @@ class UserView(GenericViewSet, DestroyModelMixin):
         """获取用户信息, 并返回"""
         queryset = self.get_queryset()
         # 根据 tag_value 筛选
-        role = request.query_params.get("role")
-        if role:
-            if isinstance(role, list):
-                role_ids = UserTag.objects.filter(tag_value__in=role).values("id")
-            elif isinstance(role, str):
-                role_ids = UserTag.objects.filter(tag_value=role).values("id")
+        tag = request.query_params.get("tag")
+        if tag:
+            if isinstance(tag, list):
+                role_ids = UserTag.objects.filter(tag_value__in=tag).values("id")
+            elif isinstance(tag, str):
+                role_ids = UserTag.objects.filter(tag_value=tag).values("id")
             else:
                 Response("请返回一个tag_value列表或者一个tag_value", exception=True)
             user_ids = (
