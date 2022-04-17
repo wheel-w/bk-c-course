@@ -159,7 +159,7 @@ class UserView(GenericViewSet, DestroyModelMixin):
             elif isinstance(role, str):
                 role_ids = UserTag.objects.filter(tag_value=role).values("id")
             else:
-                Response("请返回一个tag_value列表或者一个tag_value", exception=True)
+                return Response("请返回一个tag_value列表或者一个tag_value", exception=True)
             user_ids = (
                 UserTagContact.objects.filter(tag_id__in=role_ids)
                 .values("user_id")
