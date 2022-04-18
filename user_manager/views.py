@@ -13,13 +13,13 @@ specific Language governing permissions and limitations under the License.
 import json
 
 import requests
-from blueapps.account.models import User as Account
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 
+from blueapps.account.models import User as Account
 from user_manager import serialize
 from user_manager.filters import UserFilter
 from user_manager.models import User, UserTag, UserTagContact
@@ -50,7 +50,6 @@ class AccountView(GenericViewSet):
         user = User.objects.create(
             id=instance.id, account_id=instance.id, name=instance.username
         )
-
         return user
 
 
@@ -81,7 +80,6 @@ class BatchView(ViewSet):
             return Response("请传入一个用户名列表", exception=True)
         # 获取已经存在的用户, 并在usernames列表中删除这些用户
         accounts = Account.objects.filter(username__in=usernames).values("username")
-
         exist_accounts = []
         for account in accounts:
             usernames.remove(account["username"])
@@ -161,7 +159,7 @@ class UserView(GenericViewSet, DestroyModelMixin):
             elif isinstance(role, str):
                 role_ids = UserTag.objects.filter(tag_value=role).values("id")
             else:
-                Response("请返回一个tag_value列表或者一个tag_value", exception=True)
+                return Response("请返回一个tag_value列表或者一个tag_value", exception=True)
             user_ids = (
                 UserTagContact.objects.filter(tag_id__in=role_ids)
                 .values("user_id")

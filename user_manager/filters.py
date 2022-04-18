@@ -23,10 +23,10 @@ class UserFilter(FilterSet):
         field_name="name", lookup_expr="icontains"
     )  # icontains 包含,忽略大小写
     gender = django_filters.CharFilter(field_name="gender")
-    min_date = django_filters.DateFilter(
+    min_date = django_filters.DateTimeFilter(
         field_name="account_id__last_login", lookup_expr="gte"
     )
-    max_date = django_filters.DateFilter(
+    max_date = django_filters.DateTimeFilter(
         field_name="account_id__last_login", lookup_expr="lte"
     )
 
