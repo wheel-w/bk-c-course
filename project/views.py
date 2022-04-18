@@ -36,6 +36,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     pagination_class = UserProjectPagination
+    filter_fields = ["property", "category", "organization", "creator"]
 
     @swagger_auto_schema(
         request_body=ProjectSerializer,
@@ -93,7 +94,6 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         UserProjectContact.objects.create(project_id=project_id, user_id=user_id)
         return Response()
 
-    # TODO: 修改
     @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有用户信息")
     def list(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
