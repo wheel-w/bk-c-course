@@ -13,19 +13,20 @@ specific language governing permissions and limitations under the License.
 
 import tempfile
 
+import xlwt
 from django.http import FileResponse
 from django.utils.encoding import escape_uri_path
-from xlwt import Workbook
+from xlwt import Pattern, Style, Workbook, XFStyle
 
 
 def export_excel(head_data, records, title):
     w = Workbook(encoding="utf-8")
     sheet1 = w.add_sheet("sheet1")
     for filed in range(0, len(head_data)):
-        sheet1.write(0, filed, head_data[filed])
+        sheet1.write(0, filed, head_data[filed], excel_head_style())
     for row in range(1, len(records) + 1):
         for col in range(0, len(head_data)):
-            sheet1.write(row, col, records[row - 1][col])
+            sheet1.write(row, col, records[row - 1][col], excel_record_style())
             sheet1.col(col).width = 256 * 15
 
     tmpfile = tempfile.NamedTemporaryFile(
@@ -40,3 +41,62 @@ def export_excel(head_data, records, title):
         escape_uri_path(f"{title}.xls")
     )
     return response
+
+
+# 定义导出文件表头格式
+def excel_head_style():
+    # 创建一个样式
+    style = XFStyle()
+    # 设置背景色
+    pattern = Pattern()
+    pattern.pattern = Pattern.SOLID_PATTERN
+    pattern.pattern_fore_colour = Style.colour_map["light_green"]  # 设置单元格背景色
+    style.pattern = pattern
+    # 设置字体
+    font0 = xlwt.Font()
+    font0.name = "微软雅黑"
+    font0.bold = True
+    font0.colour_index = 0
+    font0.height = 240
+    style.font = font0
+    # 设置文字位置
+    alignment = xlwt.Alignment()  # 设置字体在单元格的位置
+    alignment.horz = xlwt.Alignment.HORZ_CENTER  # 水平方向
+    alignment.vert = xlwt.Alignment.VERT_CENTER  # 竖直方向
+    style.alignment = alignment
+    # 设置边框
+    borders = xlwt.Borders()  # Create borders
+    borders.left = xlwt.Borders.THIN  # 添加边框-虚线边框
+    borders.right = xlwt.Borders.THIN  # 添加边框-虚线边框
+    borders.top = xlwt.Borders.THIN  # 添加边框-虚线边框
+    borders.bottom = xlwt.Borders.THIN  # 添加边框-虚线边框
+    style.borders = borders
+
+    return style
+
+
+# 定义导出文件记录格式
+def excel_record_style():
+    # 创建一个样式
+    style = XFStyle()
+    # 设置字体
+    font0 = xlwt.Font()
+    font0.name = "微软雅黑"
+    font0.bold = False
+    font0.colour_index = 0
+    font0.height = 200
+    style.font = font0
+    # 设置文字位置
+    alignment = xlwt.Alignment()  # 设置字体在单元格的位置
+    alignment.horz = xlwt.Alignment.HORZ_CENTER  # 水平方向
+    alignment.vert = xlwt.Alignment.VERT_CENTER  # 竖直方向
+    style.alignment = alignment
+    # 设置边框
+    borders = xlwt.Borders()  # Create borders
+    borders.left = xlwt.Borders.THIN  # 添加边框-虚线边框
+    borders.right = xlwt.Borders.THIN  # 添加边框-虚线边框
+    borders.top = xlwt.Borders.THIN  # 添加边框-虚线边框
+    borders.bottom = xlwt.Borders.THIN  # 添加边框-虚线边框
+    style.borders = borders
+
+    return style
