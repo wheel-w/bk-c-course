@@ -13,6 +13,7 @@ specific Language governing permissions and limitations under the License.
 import json
 
 import requests
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
@@ -52,16 +53,22 @@ class OriginAccountView(ViewSet):
     def get_user(self, request, *args, **kwargs):
         """获取用户信息, 如果没有则自动创建一个将username当做name的user"""
         username = request.query_params.get("username")
+        # 确保用户传入了一个username
         if not username:
             return Response("请传递一个用户名", exception=True)
-        instance = self.queryset.filter(username=username).first()
-        if not instance:
+        # 判断该用户是否存在于本地account中
+        try:
+            instance = self.queryset.get(username=username)
+        except ObjectDoesNotExist:
             return Response("用户不存在", exception=True)
-        user = User.objects.filter(id=instance.id)
-        if not user:
-            self.create_user(instance)
-            user = User.objects.filter(id=instance.id)
-        serializer = serialize.UserSerSerializer(user.first())
+        # 获取或根据account信息创建一个user
+        try:
+            user = User.objects.get(account_id=instance.id)
+        except ObjectDoesNotExist:
+            user = User.objects.create(
+                id=instance.id, account_id=instance.id, name=instance.username
+            )
+        serializer = serialize.UserSerSerializer(user)
         return Response(serializer.data)
 
     @staticmethod
