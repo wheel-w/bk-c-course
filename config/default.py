@@ -147,8 +147,11 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "common.drf.authentication.CustomSessionAuthentication",
+    ],
 }
-
 """
 以下为框架代码 请勿修改
 """
