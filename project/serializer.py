@@ -17,6 +17,9 @@ from project.models import Project, UserProjectContact
 
 
 class ProjectSerializer(serializers.ModelSerializer):
+    create_time = serializers.SerializerMethodField()
+    update_time = serializers.SerializerMethodField()
+
     class Meta:
         model = Project
         fields = "__all__"
@@ -25,6 +28,12 @@ class ProjectSerializer(serializers.ModelSerializer):
             "creator": {"required": False},
             "updater": {"required": False},
         }
+
+    def get_create_time(self, data):
+        return data.create_time.strftime("%Y-%m-%d %H:%M:%S")
+
+    def get_update_time(self, data):
+        return data.update_time.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class PartialProjectSerializer(serializers.Serializer):
