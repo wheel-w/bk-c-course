@@ -45,6 +45,8 @@ INSTALLED_APPS = (  # noqa
     "question",
     "project_task",
     "user_manager",
+    # 过滤
+    "django_filters",
 ) + INSTALLED_APPS
 
 # 这里是默认的中间件，大部分情况下，不需要改动
@@ -144,8 +146,12 @@ REST_FRAMEWORK = {
         "common.drf.renderers.StandardResponseRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
+        "common.drf.authentication.CustomSessionAuthentication",
+    ],
 }
-
 """
 以下为框架代码 请勿修改
 """

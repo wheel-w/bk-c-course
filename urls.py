@@ -34,6 +34,9 @@ urlpatterns = [
     url(r"^i18n/", include("django.conf.urls.i18n")),
     url(r"course/", include("course.urls")),
     url(r"^api/", include("project.urls")),
+    url(r"^api/", include("user_manager.urls")),
+    url(r"^api/", include("project_task.urls")),
+    url(r"^api/", include("question.urls")),
     # swagger-ui
     url(r"^", include("common.urls")),
 ]
