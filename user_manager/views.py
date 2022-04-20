@@ -16,7 +16,7 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 
@@ -262,6 +262,6 @@ class UserView(GenericViewSet):
         return Response(serializer.data)
 
 
-class UserUpdateView(GenericViewSet, UpdateModelMixin):
+class UserUpdateView(GenericViewSet, UpdateModelMixin, RetrieveModelMixin):
     queryset = User.objects.all()
     serializer_class = serialize.UserBaseSerializer
