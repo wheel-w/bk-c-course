@@ -83,11 +83,11 @@ class BatchView(ViewSet):
             pre_exist: 已经存在于account但时新增到user里面的用户名
         """
         # 参数校验
-        usernames_name_map = request.data.get("usernames_name_map")
-        if not usernames_name_map or not isinstance(usernames_name_map, dict):
+        username_name_map = request.data.get("usernames_name_map")
+        if not username_name_map or not isinstance(username_name_map, dict):
             return Response("请传入一个用户名-姓名映射字典", exception=True)
         # 获取已经存在的用户, 并在usernames列表中删除这些用户
-        export_usernames = set(usernames_name_map.keys())
+        export_usernames = set(username_name_map.keys())
         exist_users = set(
             User.objects.filter(account__username__in=export_usernames).values_list(
                 "account__username", flat=True
@@ -128,7 +128,7 @@ class BatchView(ViewSet):
             User(
                 id=account.get("id"),
                 account_id=account.get("id"),
-                name=usernames_name_map.get(account.get("username")),
+                name=username_name_map.get(account.get("username")),
             )
             for account in new_user_account
         ]
