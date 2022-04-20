@@ -16,7 +16,7 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 
@@ -61,13 +61,11 @@ class OriginAccountView(ViewSet):
             instance = self.queryset.get(username=username)
         except ObjectDoesNotExist:
             return Response("用户不存在", exception=True)
-        # 获取或根据account信息创建一个user
+        # 获取user信息
         try:
             user = User.objects.get(account_id=instance.id)
         except ObjectDoesNotExist:
-            user = User.objects.create(
-                id=instance.id, account_id=instance.id, name=instance.username
-            )
+            return Response("您尚未被导入到当前系统中", exception=True)
         serializer = serialize.UserSerSerializer(user)
         return Response(serializer.data)
 
@@ -84,18 +82,45 @@ class BatchView(ViewSet):
 
     @action(methods=["POST"], detail=False)
     def add(self, request, *args, **kwargs):
-        """批量增加用户"""
+        """
+        批量增加用户
+        return:
+            existent: 已经存在于user里面的用户名
+            add: 新增加到account和user里的用户名
+            pre_exist: 已经存在于account但时新增到user里面的用户名
+        """
         # 参数校验
         usernames = request.data.get("usernames")
         if not usernames or not isinstance(usernames, list):
             return Response("请传入一个用户名列表", exception=True)
         # 获取已经存在的用户, 并在usernames列表中删除这些用户
-        accounts = Account.objects.filter(username__in=usernames).values("username")
+        users = list(
+            map(
+                lambda x: x[0],
+                User.objects.filter(account__username__in=usernames).values_list(
+                    "account__username"
+                ),
+            )
+        )  #
+        accounts = list(
+            map(
+                lambda x: x[0],
+                Account.objects.filter(username__in=usernames).values_list("username"),
+            )
+        )
         exist_accounts = []
+        # 删除已经存在于账号中的用户名
         for account in accounts:
-            usernames.remove(account["username"])
-            exist_accounts.append(account["username"])
-        if not usernames:
+            usernames.remove(account)
+            exist_accounts.append(account)
+        # 获取已经存在于账号中但是未在user中的用户名
+        for user in users:
+            accounts.remove(user)
+        # 从已存在用户名列表中 删除未在user中出现的用户名
+        for account in accounts:
+            exist_accounts.remove(account)
+        if not (usernames or accounts):
+            # 如果所有用户都在user中存在则返回
             return Response("所选用户已经添加到本系统", exception=True)
         # 批量增加 Account
         account_list = []
@@ -111,6 +136,7 @@ class BatchView(ViewSet):
             )
         Account.objects.bulk_create(account_list)
         # 批量增加 User
+        usernames.extend([username for username in accounts])
         account_ids = Account.objects.filter(username__in=usernames).values(
             "username", "id"
         )
@@ -119,7 +145,9 @@ class BatchView(ViewSet):
             for account in account_ids
         ]
         User.objects.bulk_create(user_list)
-        return Response({"existent": exist_accounts, "add": usernames})
+        return Response(
+            {"existent": exist_accounts, "add": usernames, "pre_exist": accounts}
+        )
 
     @action(methods=["POST"], detail=False)
     def delete(self, request, *args, **kwargs):
@@ -132,9 +160,9 @@ class BatchView(ViewSet):
         queryset = self.queryset.filter(id__in=id_list)
         delete_users = []
         for i in queryset:
-            # 纪录删除的用户姓名
+            # 记录删除的用户姓名
             delete_users.append(i.name)
-            # 在删除列表中删除已经删除的用户名
+            # 在删除列表中删除已经找到的用户名
             id_list.remove(i.id)
         if not queryset:
             return Response("没有找到任何对应用户", exception=True)
@@ -150,7 +178,7 @@ class BatchView(ViewSet):
         )
 
 
-class UserView(GenericViewSet, DestroyModelMixin):
+class UserView(GenericViewSet):
     """查询用户信息"""
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
@@ -205,7 +233,7 @@ class UserView(GenericViewSet, DestroyModelMixin):
 
     @staticmethod
     def get_user_tag_map(user_ids):
-        """获取每一个返回的 User 所拥有的标签"""
+        """获取每一个返回的 User 所拥有的标签列表"""
         tag_conns = UserTagContact.objects.filter(user_id__in=user_ids)
         tag_ids = {tag_conn.tag_id for tag_conn in tag_conns}
         tags = UserTag.objects.filter(id__in=tag_ids)
@@ -228,8 +256,14 @@ class UserView(GenericViewSet, DestroyModelMixin):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)
-        data["tag"] = self.get_user_tag_map([data.get("id")]).pop(instance.id)
+        data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id)
         return Response(data)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        instance.delete()
+        return Response(serializer.data)
 
 
 class UserUpdateView(GenericViewSet, UpdateModelMixin):
