@@ -83,10 +83,11 @@ class BatchView(ViewSet):
             pre_exist: 已经存在于account但时新增到user里面的用户名
         """
         # 参数校验
-        usernames = request.data.get("usernames")
-        if not usernames or not isinstance(usernames, list):
-            return Response("请传入一个用户名列表", exception=True)
+        income_usernames = request.data.get("usernames")
+        if not income_usernames or not isinstance(income_usernames, dict):
+            return Response("请传入一个用户名-姓名映射字典", exception=True)
         # 获取已经存在的用户, 并在usernames列表中删除这些用户
+        usernames = set(income_usernames.keys())
         users = set(
             User.objects.filter(account__username__in=usernames).values_list(
                 "account__username", flat=True
@@ -118,14 +119,23 @@ class BatchView(ViewSet):
             )
         Account.objects.bulk_create(account_list)
         # 将只有账户没有User的用户加入到要增加User的列表中
-        usernames |= accounts
+        new_user_usernames = usernames | accounts
         # 批量增加 User
-        account_ids = Account.objects.filter(username__in=usernames).values_list(
-            "id", flat=True
-        )
-        user_list = [User(id=id_, account_id=id_) for id_ in account_ids]
+        new_user_account = Account.objects.filter(
+            username__in=new_user_usernames
+        ).values("id", "username")
+        user_list = [
+            User(
+                id=account.get("id"),
+                account_id=account.get("id"),
+                name=income_usernames.get(account.get("username")),
+            )
+            for account in new_user_account
+        ]
         User.objects.bulk_create(user_list)
-        return Response({"existent": users, "add": usernames, "pre_exist": accounts})
+        return Response(
+            {"existent": users, "add": new_user_usernames, "pre_exist": accounts}
+        )
 
     @action(methods=["POST"], detail=False)
     def delete(self, request, *args, **kwargs):
