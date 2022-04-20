@@ -251,7 +251,7 @@ class UserView(GenericViewSet):
         data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id)
         return Response(data)
 
-    def delete(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         instance.delete()
