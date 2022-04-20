@@ -69,13 +69,6 @@ class OriginAccountView(ViewSet):
         serializer = serialize.UserSerSerializer(user)
         return Response(serializer.data)
 
-    @staticmethod
-    def create_user(instance):
-        user = User.objects.create(
-            id=instance.id, account_id=instance.id, name=instance.username
-        )
-        return user
-
 
 class BatchView(ViewSet):
     queryset = User.objects.all()
@@ -94,31 +87,20 @@ class BatchView(ViewSet):
         if not usernames or not isinstance(usernames, list):
             return Response("请传入一个用户名列表", exception=True)
         # 获取已经存在的用户, 并在usernames列表中删除这些用户
-        users = list(
-            map(
-                lambda x: x[0],
-                User.objects.filter(account__username__in=usernames).values_list(
-                    "account__username"
-                ),
-            )
-        )  #
-        accounts = list(
-            map(
-                lambda x: x[0],
-                Account.objects.filter(username__in=usernames).values_list("username"),
+        users = set(
+            User.objects.filter(account__username__in=usernames).values_list(
+                "account__username", flat=True
             )
         )
-        exist_accounts = []
+        accounts = set(
+            Account.objects.filter(username__in=usernames).values_list(
+                "username", flat=True
+            )
+        )
         # 删除已经存在于账号中的用户名
-        for account in accounts:
-            usernames.remove(account)
-            exist_accounts.append(account)
-        # 获取已经存在于账号中但是未在user中的用户名
-        for user in users:
-            accounts.remove(user)
+        usernames = set(usernames) - accounts
         # 从已存在用户名列表中 删除未在user中出现的用户名
-        for account in accounts:
-            exist_accounts.remove(account)
+        accounts = accounts - users
         if not (usernames or accounts):
             # 如果所有用户都在user中存在则返回
             return Response("所选用户已经添加到本系统", exception=True)
@@ -135,19 +117,15 @@ class BatchView(ViewSet):
                 )
             )
         Account.objects.bulk_create(account_list)
+        # 将只有账户没有User的用户加入到要增加User的列表中
+        usernames |= accounts
         # 批量增加 User
-        usernames.extend([username for username in accounts])
-        account_ids = Account.objects.filter(username__in=usernames).values(
-            "username", "id"
+        account_ids = Account.objects.filter(username__in=usernames).values_list(
+            "id", flat=True
         )
-        user_list = [
-            User(id=account["id"], account_id=account["id"], name=account["username"])
-            for account in account_ids
-        ]
+        user_list = [User(id=id_, account_id=id_) for id_ in account_ids]
         User.objects.bulk_create(user_list)
-        return Response(
-            {"existent": exist_accounts, "add": usernames, "pre_exist": accounts}
-        )
+        return Response({"existent": users, "add": usernames, "pre_exist": accounts})
 
     @action(methods=["POST"], detail=False)
     def delete(self, request, *args, **kwargs):
