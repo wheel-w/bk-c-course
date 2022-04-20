@@ -47,6 +47,10 @@ class OriginAccountView(ViewSet):
         REQUEST_PARAMS["wildcard_search"] = params.get("key", "")
         data = requests.get(PROFILES_LIST_URL, params=REQUEST_PARAMS)
         data = json.loads(data.content)
+        if not data["result"]:
+            return Response(data["message"], exception=True)
+        if data["data"]["count"] == 0:
+            return Response("没有找到您想找的用户", exception=True)
         return Response(data["data"])
 
     @action(methods=["GET"], detail=False)
