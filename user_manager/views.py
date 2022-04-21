@@ -14,6 +14,8 @@ import json
 
 import requests
 from django.core.exceptions import ObjectDoesNotExist
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
@@ -95,6 +97,16 @@ class OriginAccountView(ViewSet):
 class BatchView(ViewSet):
     queryset = User.objects.all()
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["user_id_list"],
+            properties={
+                "username_name_map": openapi.Schema(type=openapi.TYPE_OBJECT),
+                "tag_value": openapi.Schema(type=openapi.TYPE_STRING),
+            },
+        ),
+    )
     @action(methods=["POST"], detail=False)
     def add(self, request, *args, **kwargs):
         """
@@ -108,6 +120,10 @@ class BatchView(ViewSet):
         username_name_map = request.data.get("username_name_map")
         if not username_name_map or not isinstance(username_name_map, dict):
             return Response("请传入一个用户名-姓名映射字典", exception=True)
+        tag_value = request.data.get("tag_value")
+        if not tag_value:
+            return Response("请制定一个标签")
+        tag = UserTag.objects.filter(tag_value=tag_value).first()
         # 获取已经存在的用户, 并在usernames列表中删除这些用户
         export_usernames = set(username_name_map.keys())
         exist_users = set(
@@ -146,15 +162,22 @@ class BatchView(ViewSet):
         new_user_account = Account.objects.filter(
             username__in=new_user_usernames
         ).values("id", "username")
-        new_user_list = [
-            User(
-                id=account.get("id"),
-                account_id=account.get("id"),
-                name=username_name_map.get(account.get("username")),
+        new_user_list = []
+        new_tag_list = []
+        for account in new_user_account:
+            new_user_list.append(
+                User(
+                    id=account.get("id"),
+                    account_id=account.get("id"),
+                    name=username_name_map.get(account.get("username")),
+                )
             )
-            for account in new_user_account
-        ]
+            new_tag_list.append(
+                UserTagContact(user_id=account.get("id"), tag_id=tag.id)
+            )
+
         User.objects.bulk_create(new_user_list)
+        UserTagContact.objects.bulk_create(new_tag_list)
         return Response(
             {
                 "existent": exist_users,
