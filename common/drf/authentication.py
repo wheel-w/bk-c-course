@@ -21,4 +21,4 @@ class CustomSessionAuthentication(SessionAuthentication):
         if settings.RUN_MODE == "STAGING":
             return
 
-        super().enforce_csrf(self, request)
+        super().enforce_csrf(request)
