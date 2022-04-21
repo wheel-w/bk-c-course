@@ -51,6 +51,17 @@ class OriginAccountView(ViewSet):
             return Response(data["message"], exception=True)
         if data["data"]["count"] == 0:
             return Response("没有找到您想找的用户", exception=True)
+        result = data["data"]["results"]
+        account_username = {account["username"] for account in result}
+        exist_user = User.objects.filter(
+            account_id__username__in=account_username
+        ).values_list("account_id__username", flat=True)
+        for account in result:
+            if account["username"] in exist_user:
+                account["is_import"] = True
+            else:
+                account["is_import"] = False
+
         return Response(data["data"])
 
     @action(methods=["GET"], detail=False)
