@@ -10,22 +10,19 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific Language governing permissions and limitations under the License.
 """
 # Create your views here.
+# from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import generics, status
+from rest_framework.response import Response
 
-from project_task.models import ProjectTask, StudentProjectTaskInfo
+from project_task.models import ProjectTask
+from project_task.pagination import ProjectTaskPagination
 from project_task.serilizer import (
-    ProjectSearchInfoSerializer,
     ProjectTaskSerializer,
     StudentProjectTaskInfoSerializer,
+    TaskCreateSerializer,
 )
-
-
-class ProjectTaskPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 30
+from question.serializer import QuestionSerializer
 
 
 class ProjectTaskList(generics.ListCreateAPIView):
@@ -34,101 +31,119 @@ class ProjectTaskList(generics.ListCreateAPIView):
     pagination_class = ProjectTaskPagination
 
     @swagger_auto_schema(
-        operation_summary="创建项目任务",
+        operation_summary="创建项目任务,和其对应的题目与关系表",
+        request_body=TaskCreateSerializer,
+        # responses=ProjectTaskSerializer
     )
     def post(self, request, *args, **kwargs):
+        question_data = request.data.pop("questions")
+        student_data = request.data.pop("students")
+        # 创建任务
         request.data["creator"] = request.user.username
         request.data["updater"] = request.user.username
-        return super().create(request, *args, **kwargs)
+        task = ProjectTaskSerializer(data=request.data)
+        task.is_valid(raise_exception=True)
+        task_temp = task.save()
+
+        # question生成
+        questions = QuestionSerializer(data=question_data, many=True)
+        questions.is_valid(raise_exception=True)
+
+        questions_order = ""
+        comma_flag = True
+        for i in questions.save():
+            if comma_flag:
+                questions_order += f"{i.id}"
+                comma_flag = False
+                continue
+            questions_order += f",{i.id}"
+
+        # question列表进入task_temp
+        task = ProjectTaskSerializer(
+            instance=task_temp, data={"questions_order": questions_order}, partial=True
+        )
+        task.is_valid(raise_exception=True)
+        task_temp = task.save()
+
+        # 创建关系表
+        relation = []
+        for i in student_data:
+            temp = {
+                "student_id": i,
+                "project_id": request.data.get("project_id"),
+                "project_task_id": task_temp.id,
+                "created_id": request.user.id,
+                "updated_id": request.user.id,
+            }
+            relation.append(temp)
+        taskinfo = StudentProjectTaskInfoSerializer(data=relation, many=True)
+        taskinfo.is_valid(raise_exception=True)
+        taskinfo.save()
+
+        headers = self.get_success_headers(task.data)
+        return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ProjectTaskDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ProjectTask.objects.all()
-    serializer_class = ProjectTaskSerializer
+# class ProjectTaskDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = ProjectTask.objects.all()
+#     serializer_class = ProjectTaskSerializer
+#
+#     @swagger_auto_schema(
+#         operation_summary="更新项目任务",
+#     )
+#     def put(self, request, *args, **kwargs):
+#         request.data["updater"] = request.user.username
+#         return super().update(request, *args, **kwargs)
+#
+#     @swagger_auto_schema(
+#         operation_summary="更新部分项目任务",
+#     )
+#     def patch(self, request, *args, **kwargs):
+#         request.data["updater"] = request.user.username
+#         return super().patch(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="更新项目任务",
-    )
-    def put(self, request, *args, **kwargs):
-        request.data["updater"] = request.user.username
-        return super().update(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="更新部分项目任务",
-    )
-    def patch(self, request, *args, **kwargs):
-        request.data["updater"] = request.user.username
-        return super().patch(request, *args, **kwargs)
-
-
-class StudentProjectTaskInfoCreate(generics.CreateAPIView):
-    queryset = StudentProjectTaskInfo.objects.all()
-    serializer_class = StudentProjectTaskInfoSerializer
-
-    @swagger_auto_schema(
-        operation_summary="创建项目任务关系表",
-    )
-    def post(self, request, *args, **kwargs):
-        request.data["creator"] = request.user.username
-        request.data["updater"] = request.user.username
-        return super().post(request, *args, **kwargs)
-
-
-class StudentProjectTaskInfoDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = StudentProjectTaskInfo.objects.all()
-    serializer_class = StudentProjectTaskInfoSerializer
-    lookup_field = "project_id"
-
-    # lookup_url_kwarg =
-
-    @swagger_auto_schema(
-        operation_summary="修改项目任务关系表",
-    )
-    def get(self, request, *args, **kwargs):
-        a = self.get_object()
-        print(a.cumulative_time)
-        return super().retrieve(self, request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        request.data["updater"] = request.user.username
-        # request.data["cumulative_time"] = StudentProjectTaskInfo.objects.filter(project_id=project_id)
-        return self.update(request, *args, **kwargs)
-
-
-class ProjectSearchInfoList(generics.ListAPIView):
-    queryset = StudentProjectTaskInfo.objects.all()
-    serializer_class = ProjectSearchInfoSerializer
-    pagination_class = ProjectTaskPagination
-
-    @swagger_auto_schema(
-        operation_summary="根据项目搜索关系表",
-    )
-    def get(self, request, *args, **kwargs):
-        self.queryset = self.queryset.filter(project_id=kwargs["project_id"])
-        return super().list(self, request, *args, **kwargs)
-
-
-class TaskSearchInfoList(generics.ListAPIView):
-    queryset = StudentProjectTaskInfo.objects.all()
-    serializer_class = ProjectSearchInfoSerializer
-    pagination_class = ProjectTaskPagination
-
-    @swagger_auto_schema(
-        operation_summary="根据任务搜索关系表",
-    )
-    def get(self, request, *args, **kwargs):
-        self.queryset = self.queryset.filter(project_task_id=kwargs["project_task_id"])
-        return super().list(self, request, *args, **kwargs)
-
-
-class StudentSearchInfoList(generics.ListAPIView):
-    queryset = StudentProjectTaskInfo.objects.all()
-    serializer_class = ProjectSearchInfoSerializer
-    pagination_class = ProjectTaskPagination
-
-    @swagger_auto_schema(
-        operation_summary="根据学生搜索关系表",
-    )
-    def get(self, request, *args, **kwargs):
-        self.queryset = self.queryset.filter(student_id=kwargs["student_id"])
-        return super().list(self, request, *args, **kwargs)
+# class StudentProjectTaskInfoList(generics.ListCreateAPIView):
+#     queryset = StudentProjectTaskInfo.objects.all()
+#     serializer_class = StudentProjectTaskInfoSerializer
+#     filter_backends = [DjangoFilterBackend]
+#     filterset_fields = ['project_id', 'project_task_id', "student_id"]
+#
+#     @swagger_auto_schema(
+#         operation_summary="创建项目任务关系表",
+#     )
+#     def post(self, request, *args, **kwargs):
+#         if self.get_queryset().filter(student_id=request.data["student_id"],
+#                                       project_task_id=request.data["project_task_id"]).exists():
+#             return Response("该学生在这个任务已存在", exception=True)
+#         request.data["created_id"] = request.user.id
+#         request.data["updated_id"] = request.user.id
+#         return super().create(request, *args, **kwargs)
+#
+#
+# class StudentProjectTaskInfoDetail(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = StudentProjectTaskInfo.objects.all()
+#     serializer_class = StudentProjectTaskInfoSerializer
+#     lookup_field = "project_task_id"
+#
+#     @swagger_auto_schema(
+#         operation_summary="查询项目任务关系表",
+#     )
+#     def get(self, request, *args, **kwargs):
+#         self.queryset = self.get_queryset().filter(student_id=kwargs["student_id"])
+#         return super().get(self, request, *args, **kwargs)
+#
+#     @swagger_auto_schema(
+#         operation_summary="修改项目任务关系表",
+#     )
+#     def put(self, request, *args, **kwargs):
+#         self.queryset = self.get_queryset().filter(student_id=kwargs["student_id"])
+#         request.data["updater"] = request.user.username
+#         return self.update(request, *args, **kwargs)
+#
+#     @swagger_auto_schema(
+#         operation_summary="修改项目任务关系表（提交学生答题情况）",
+#     )
+#     def patch(self, request, *args, **kwargs):
+#         self.queryset = self.get_queryset().filter(student_id=kwargs["student_id"])
+#         # request.data["updater"] = request.user.username
+#         return super().patch(self, request, *args, **kwargs)
