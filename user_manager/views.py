@@ -46,16 +46,23 @@ class OriginAccountView(ViewSet):
         REQUEST_PARAMS["page"] = params.get("page", 1)
         REQUEST_PARAMS["wildcard_search"] = params.get("key", "")
         data = requests.get(PROFILES_LIST_URL, params=REQUEST_PARAMS)
+        # 解析数据
         data = json.loads(data.content)
+        # 数据校验
         if not data["result"]:
             return Response(data["message"], exception=True)
         if data["data"]["count"] == 0:
             return Response("没有找到您想找的用户", exception=True)
+        # 添加字段 is_import
         result = data["data"]["results"]
+        # 获取返回的用户名列表
         account_username = {account["username"] for account in result}
+        # 查询这些用户是否存在于本系统中
         exist_user = User.objects.filter(
             account_id__username__in=account_username
         ).values_list("account_id__username", flat=True)
+        # 如果存在则加字段 is_import = true
+        # 如果不存在则加字段 is_import = false
         for account in result:
             if account["username"] in exist_user:
                 account["is_import"] = True
