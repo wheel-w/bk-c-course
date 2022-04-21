@@ -13,6 +13,7 @@ specific language governing permissions and limitations under the License.
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -78,6 +79,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
         kwargs["partial"] = True
         request.data["updater"] = request.user.username
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["project_id_list"],
+            properties={
+                "project_id_list": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_INTEGER),
+                )
+            },
+        ),
+        operation_summary="根据project_id_list批量删除项目",
+    )
+    @action(methods=["DELETE"], detail=False)
+    def bulk_delete(self, request, *args, **kwargs):
+        project_id_list = request.data["project_id_list"]
+        Project.objects.filter(id__in=project_id_list).delete()
+        return Response()
 
 
 class UserProjectContactViewSet(viewsets.ModelViewSet):
