@@ -49,8 +49,8 @@ class ProjectTaskList(generics.ListCreateAPIView):
             try:
                 questions.is_valid(raise_exception=True)
                 questions_id_list = questions.save()
-            except ValidationError:
-                return Response("问题参数校验错误", exception=True)
+            except ValidationError as e:
+                return Response(e.detail, exception=True)
 
             # 创建任务并写入数据库
             request.data["creator"] = request.user.username
@@ -72,8 +72,8 @@ class ProjectTaskList(generics.ListCreateAPIView):
             try:
                 task.is_valid(raise_exception=True)
                 task_temp = task.save()
-            except ValidationError:
-                return Response("任务参数校验错误", exception=True)
+            except ValidationError as e:
+                return Response(e.detail, exception=True)
 
             # 创建关系表
             relation = []
@@ -91,8 +91,8 @@ class ProjectTaskList(generics.ListCreateAPIView):
             try:
                 taskinfo.is_valid(raise_exception=True)
                 taskinfo.save()
-            except ValidationError:
-                return Response("关系表参数校验错误", exception=True)
+            except ValidationError as e:
+                return Response(e.detail, exception=True)
 
         transaction.savepoint_commit(save_id)
 
