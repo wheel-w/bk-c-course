@@ -16,7 +16,6 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from project_task.models import ProjectTask
-from project_task.pagination import ProjectTaskPagination
 from project_task.serilizer import (
     ProjectTaskSerializer,
     StudentProjectTaskInfoSerializer,
@@ -28,7 +27,6 @@ from question.serializer import QuestionSerializer
 class ProjectTaskList(generics.ListCreateAPIView):
     queryset = ProjectTask.objects.all()
     serializer_class = ProjectTaskSerializer
-    pagination_class = ProjectTaskPagination
 
     @swagger_auto_schema(
         operation_summary="创建项目任务,和其对应的题目与关系表", request_body=TaskCreateSerializer
