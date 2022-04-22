@@ -15,10 +15,4 @@ from django.urls import path
 
 from project_task import views
 
-urlpatterns = [
-    path(r"project-task/", views.ProjectTaskList.as_view()),
-    # path(r"project-task/<int:pk>/", views.ProjectTaskDetail.as_view()),
-    # path(r"project-task/relationinfo/", views.StudentProjectTaskInfoList.as_view()),
-    # path(r"project-task/relationinfo/<int:project_task_id>/<int:student_id>",
-    #      views.StudentProjectTaskInfoDetail.as_view()),
-]
+urlpatterns = [path(r"project-task/", views.ProjectTaskList.as_view())]
