@@ -151,7 +151,9 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         "common.drf.authentication.CustomSessionAuthentication",
     ],
+    "DEFAULT_PAGINATION_CLASS": "common.drf.pagination.GeneralPagination",
 }
+
 """
 以下为框架代码 请勿修改
 """

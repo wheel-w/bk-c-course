@@ -13,6 +13,7 @@ specific Language governing permissions and limitations under the License.
 import json
 
 import requests
+from blueapps.account.models import User as Account
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import action
@@ -20,11 +21,9 @@ from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 
-from blueapps.account.models import User as Account
 from user_manager import serialize
 from user_manager.filters import UserFilter
 from user_manager.models import User, UserTag, UserTagContact
-from user_manager.pagination import MyPageNumberPagination
 
 from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS
 
@@ -175,7 +174,6 @@ class UserView(GenericViewSet):
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
     serializer_class = serialize.UserSerSerializer
-    pagination_class = MyPageNumberPagination
     filter_class = UserFilter
     filter_fields = ["name", "gender"]
 
