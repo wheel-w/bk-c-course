@@ -16,6 +16,7 @@ class TaskCreateSerializer(ProjectTaskSerializer):
     """
 
     questions = QuestionSerializer(many=True)
+    questions_order_scores = serializers.ListField()
     students = serializers.ListField()
 
 

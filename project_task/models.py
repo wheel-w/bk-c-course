@@ -11,7 +11,6 @@ specific Language governing permissions and limitations under the License.
 """
 from datetime import timedelta
 
-from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
 
 # Create your models here.
@@ -35,22 +34,7 @@ class ProjectTask(models.Model):
     types = models.CharField("任务类型", max_length=10, choices=TYPES)
     title = models.CharField("任务名称", max_length=255)
     describe = models.CharField("任务描述", max_length=255)
-    questions_order = models.CharField(
-        "存储题目id及其顺序",
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        blank=True,
-        null=True,
-        default="",
-    )
-    questions_score = models.CharField(
-        "每个题目的单独分数",
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        blank=True,
-        null=True,
-        default="",
-    )
+    questions_id_order_scores = models.JSONField("题目id及其顺序与分值", blank=True, null=True)
 
     start_time = models.DateTimeField("任务开始时间", blank=True, null=True)
     end_time = models.DateTimeField("任务截止时间", blank=True, null=True)

@@ -11,8 +11,10 @@ specific Language governing permissions and limitations under the License.
 """
 # Create your views here.
 # from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from project_task.models import ProjectTask
@@ -35,59 +37,64 @@ class ProjectTaskList(generics.ListCreateAPIView):
         question_data = request.data.pop("questions")
         student_data = request.data.pop("students")
 
-        # 创建任务并写入数据库
-        request.data["creator"] = request.user.username
-        request.data["updater"] = request.user.username
-        task = ProjectTaskSerializer(data=request.data)
-        task.is_valid(raise_exception=True)
-        task_temp = task.save()
+        with transaction.atomic():
+            # 创建事务保存点
+            save_id = transaction.savepoint()
 
-        # question生成
-        for i in range(len(question_data)):
-            question_data[i]["project_id"] = request.data["project_id"]
-        questions = QuestionSerializer(data=question_data, many=True)
+            # question生成
+            for i in range(len(question_data)):
+                question_data[i]["project_id"] = request.data["project_id"]
+            questions = QuestionSerializer(data=question_data, many=True)
 
-        # 创建关系表
-        relation = []
-        for i in student_data:
-            temp = {
-                "student_id": i,
-                "project_id": request.data.get("project_id"),
-                "project_task_id": task_temp.id,
-                "creator_id": request.user.id,
-                "updator_id": request.user.id,
-            }
-            relation.append(temp)
-        print(relation)
-        taskinfo = StudentProjectTaskInfoSerializer(data=relation, many=True)
-        print(taskinfo.is_valid())
+            try:
+                questions.is_valid(raise_exception=True)
+                questions_id_list = questions.save()
+            except ValidationError:
+                return Response("问题参数校验错误", exception=True)
 
-        if questions.is_valid() and taskinfo.is_valid():
-            # question_id列表生成
-            questions_id_list = questions.save()
-            questions_order = ",".join(str(i.id) for i in questions_id_list)
+            # 创建任务并写入数据库
+            request.data["creator"] = request.user.username
+            request.data["updater"] = request.user.username
 
-            # question列表进入task_temp并保存
-            task = ProjectTaskSerializer(
-                instance=task_temp,
-                data={"questions_order": questions_order},
-                partial=True,
-            )
-            task.is_valid(raise_exception=True)
-            task.save()
+            order_scores = request.data.pop("questions_order_scores")
+            questions_id_order_scores = []
 
-            # 关系表保存
-            taskinfo.save()
+            try:
+                for i in range(len(questions_id_list)):
+                    questions_temp = {questions_id_list[i].id: order_scores[i]}
+                    questions_id_order_scores.append(questions_temp)
+            except IndexError:
+                return Response("答案与答案分数个数不匹配", exception=True)
 
-            headers = self.get_success_headers(task.data)
-            return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
-        else:
-            error_msg = ""
-            ProjectTask.objects.filter(pk=task_temp.id).delete()
-            if (not questions.is_valid()) and (not taskinfo.is_valid()):
-                error_msg = "问题参数和关系表参数校验错误"
-            elif not questions.is_valid():
-                error_msg = "问题参数校验错误"
-            elif not taskinfo.is_valid():
-                error_msg = "关系表参数校验错误"
-            return Response(error_msg, exception=True)
+            request.data["questions_id_order_scores"] = questions_id_order_scores
+            task = ProjectTaskSerializer(data=request.data)
+
+            try:
+                task.is_valid(raise_exception=True)
+                task_temp = task.save()
+            except ValidationError:
+                return Response("任务参数校验错误", exception=True)
+
+            # 创建关系表
+            relation = []
+            for i in student_data:
+                temp = {
+                    "student_id": i,
+                    "project_id": request.data.get("project_id"),
+                    "project_task_id": task_temp.id,
+                    "creator_id": request.user.id,
+                    "updator_id": request.user.id,
+                }
+                relation.append(temp)
+            taskinfo = StudentProjectTaskInfoSerializer(data=relation, many=True)
+
+            try:
+                taskinfo.is_valid(raise_exception=True)
+                taskinfo.save()
+            except ValidationError:
+                return Response("关系表参数校验错误", exception=True)
+
+        transaction.savepoint_commit(save_id)
+
+        headers = self.get_success_headers(task.data)
+        return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
