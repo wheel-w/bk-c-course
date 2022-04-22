@@ -14,7 +14,6 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from common.export_excel import export_excel
@@ -27,16 +26,9 @@ from project.serializer import (
 from user_manager.models import User
 
 
-class UserProjectPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 30
-
-
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    pagination_class = UserProjectPagination
     filter_fields = ["property", "category", "organization", "creator"]
 
     @swagger_auto_schema(
@@ -103,7 +95,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class UserProjectContactViewSet(viewsets.ModelViewSet):
     queryset = UserProjectContact.objects.all()
     serializer_class = UserProjectContactSerializer
-    pagination_class = UserProjectPagination
 
     @swagger_auto_schema(
         operation_summary="传入project_id和user_id创建一条UserProjectContact记录"
