@@ -45,7 +45,6 @@ class OriginAccountView(ViewSet):
     def get_account_list(self, request, *args, **kwargs):
         """获取蓝鲸账户列表"""
         params = request.query_params
-        REQUEST_PARAMS["page"] = params.get("page", 1)
         REQUEST_PARAMS["wildcard_search"] = params.get("key", "")
         data = requests.get(PROFILES_LIST_URL, params=REQUEST_PARAMS)
         # 解析数据
@@ -56,22 +55,26 @@ class OriginAccountView(ViewSet):
         if data["data"]["count"] == 0:
             return Response("没有找到您想找的用户", exception=True)
         # 添加字段 is_import
-        result = data["data"]["results"]
+        src_data = data["data"]["results"]
         # 获取返回的用户名列表
-        account_username = {account["username"] for account in result}
-        # 查询这些用户是否存在于本系统中
+        account_username = {account["username"] for account in src_data}
+        # 获取存在本系统中的用户列表
         exist_user = User.objects.filter(
             account_id__username__in=account_username
         ).values_list("account_id__username", flat=True)
-        # 如果存在则加字段 is_import = true
-        # 如果不存在则加字段 is_import = false
-        for account in result:
-            if account["username"] in exist_user:
-                account["is_import"] = True
-            else:
-                account["is_import"] = False
+        # 重构数据
+        store_list = []
+        for elem in src_data:
+            store_list.append(
+                {
+                    "username": elem["username"],
+                    "name": elem["display_name"],
+                    "departments": elem["departments"][0]["name"],
+                    "is_import": True if elem["username"] in exist_user else False,
+                }
+            )
 
-        return Response(data["data"])
+        return Response(store_list)
 
     @action(methods=["GET"], detail=False)
     def get_user(self, request, *args, **kwargs):
@@ -100,7 +103,7 @@ class BatchView(ViewSet):
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=["user_id_list"],
+            required=["username_name_map", "tag_value"],
             properties={
                 "username_name_map": openapi.Schema(type=openapi.TYPE_OBJECT),
                 "tag_value": openapi.Schema(type=openapi.TYPE_STRING),
