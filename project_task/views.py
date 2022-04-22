@@ -31,14 +31,13 @@ class ProjectTaskList(generics.ListCreateAPIView):
     pagination_class = ProjectTaskPagination
 
     @swagger_auto_schema(
-        operation_summary="创建项目任务,和其对应的题目与关系表",
-        request_body=TaskCreateSerializer,
-        # responses=ProjectTaskSerializer
+        operation_summary="创建项目任务,和其对应的题目与关系表", request_body=TaskCreateSerializer
     )
     def post(self, request, *args, **kwargs):
         question_data = request.data.pop("questions")
         student_data = request.data.pop("students")
-        # 创建任务
+
+        # 创建任务并写入数据库
         request.data["creator"] = request.user.username
         request.data["updater"] = request.user.username
         task = ProjectTaskSerializer(data=request.data)
@@ -46,24 +45,9 @@ class ProjectTaskList(generics.ListCreateAPIView):
         task_temp = task.save()
 
         # question生成
+        for i in range(len(question_data)):
+            question_data[i]["project_id"] = request.data["project_id"]
         questions = QuestionSerializer(data=question_data, many=True)
-        questions.is_valid(raise_exception=True)
-
-        questions_order = ""
-        comma_flag = True
-        for i in questions.save():
-            if comma_flag:
-                questions_order += f"{i.id}"
-                comma_flag = False
-                continue
-            questions_order += f",{i.id}"
-
-        # question列表进入task_temp
-        task = ProjectTaskSerializer(
-            instance=task_temp, data={"questions_order": questions_order}, partial=True
-        )
-        task.is_valid(raise_exception=True)
-        task_temp = task.save()
 
         # 创建关系表
         relation = []
@@ -72,13 +56,40 @@ class ProjectTaskList(generics.ListCreateAPIView):
                 "student_id": i,
                 "project_id": request.data.get("project_id"),
                 "project_task_id": task_temp.id,
-                "created_id": request.user.id,
-                "updated_id": request.user.id,
+                "creator_id": request.user.id,
+                "updator_id": request.user.id,
             }
             relation.append(temp)
+        print(relation)
         taskinfo = StudentProjectTaskInfoSerializer(data=relation, many=True)
-        taskinfo.is_valid(raise_exception=True)
-        taskinfo.save()
+        print(taskinfo.is_valid())
 
-        headers = self.get_success_headers(task.data)
-        return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
+        if questions.is_valid() and taskinfo.is_valid():
+            # question_id列表生成
+            questions_id_list = questions.save()
+            questions_order = ",".join(str(i.id) for i in questions_id_list)
+
+            # question列表进入task_temp并保存
+            task = ProjectTaskSerializer(
+                instance=task_temp,
+                data={"questions_order": questions_order},
+                partial=True,
+            )
+            task.is_valid(raise_exception=True)
+            task.save()
+
+            # 关系表保存
+            taskinfo.save()
+
+            headers = self.get_success_headers(task.data)
+            return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
+        else:
+            error_msg = ""
+            ProjectTask.objects.filter(pk=task_temp.id).delete()
+            if (not questions.is_valid()) and (not taskinfo.is_valid()):
+                error_msg = "问题参数和关系表参数校验错误"
+            elif not questions.is_valid():
+                error_msg = "问题参数校验错误"
+            elif not taskinfo.is_valid():
+                error_msg = "关系表参数校验错误"
+            return Response(error_msg, exception=True)
