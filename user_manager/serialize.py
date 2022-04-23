@@ -77,7 +77,7 @@ class UserSerSerializer(serializers.ModelSerializer):
     # 用户名
     username = serializers.CharField(source="account.username", read_only=True)
     # 标签
-    role = serializers.CharField(min_length=2, max_length=2, read_only=True)
+    role = serializers.CharField(min_length=2, max_length=4, read_only=True)
 
     class Meta:
         model = models.User
