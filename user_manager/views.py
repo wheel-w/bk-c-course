@@ -18,13 +18,13 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import RetrieveModelMixin, UpdateModelMixin
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 
 from blueapps.account.models import User as Account
 from user_manager import serialize
-from user_manager.filters import UserFilter
+from user_manager.filters import UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
 from user_manager.pagination import MyPageNumberPagination
 
@@ -40,9 +40,9 @@ class AccountView(GenericViewSet):
 class OriginAccountView(ViewSet):
     queryset = Account.objects.all()
     serialize_class = serialize.OriginAccountSerilizer
+    lookup_url_kwarg = "username"
 
-    @action(methods=["GET"], detail=False)
-    def get_account_list(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         """获取蓝鲸账户列表"""
         params = request.query_params
         REQUEST_PARAMS["wildcard_search"] = params.get("key", "")
@@ -68,7 +68,7 @@ class OriginAccountView(ViewSet):
             store_list.append(
                 {
                     "username": elem["username"],
-                    "name": elem["display_name"],
+                    "display_name": elem["display_name"],
                     "departments": elem["departments"][0]["name"],
                     "is_import": True if elem["username"] in exist_user else False,
                 }
@@ -76,10 +76,9 @@ class OriginAccountView(ViewSet):
 
         return Response(store_list)
 
-    @action(methods=["GET"], detail=False)
-    def get_user(self, request, *args, **kwargs):
+    def retrieve(self, request, *args, **kwargs):
         """获取用户信息, 如果没有则自动创建一个将username当做name的user"""
-        username = request.query_params.get("username")
+        username = kwargs.get("username")
         # 确保用户传入了一个username
         if not username:
             return Response("请传递一个用户名", exception=True)
@@ -218,7 +217,7 @@ class BatchView(ViewSet):
         )
 
 
-class UserView(GenericViewSet):
+class UserView(GenericViewSet, UpdateModelMixin):
     """查询用户信息"""
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
@@ -233,18 +232,9 @@ class UserView(GenericViewSet):
         # 根据 tag_value 筛选
         role = request.query_params.get("role")
         if role:
-            if isinstance(role, list):
-                role_ids = UserTag.objects.filter(tag_value__in=role).values("id")
-            elif isinstance(role, str):
-                role_ids = UserTag.objects.filter(tag_value=role).values("id")
-            else:
-                return Response("请返回一个tag_value列表或者一个tag_value", exception=True)
-            user_ids = (
-                UserTagContact.objects.filter(tag_id__in=role_ids)
-                .values("user_id")
-                .distinct()
-            )
-            queryset = queryset.filter(id__in=user_ids)
+            flag, queryset_or_msg = filter_by_role(role, queryset)
+            if not flag:
+                return Response(queryset_or_msg, exception=True)
         # 根据 filter_class 进行筛选
         queryset = self.filter_queryset(queryset)
         # 分页
@@ -283,12 +273,12 @@ class UserView(GenericViewSet):
         user_tag_dic = {}  # key: user_id  value: {tags_dic ...}
         for tag_conn in tag_conns:
             if user_tag_dic.get(tag_conn.user_id):
-                user_tag_dic[tag_conn.user_id][tag_conn.tag_id] = tags_dic[
+                user_tag_dic[tag_conn.user_id][tag_conn.tag_id] = tags_dic.get(
                     tag_conn.tag_id
-                ]
+                )
             else:
                 user_tag_dic[tag_conn.user_id] = {
-                    tag_conn.tag_id: tags_dic[tag_conn.tag_id]
+                    tag_conn.tag_id: tags_dic.get(tag_conn.tag_id)
                 }
         return user_tag_dic
 
@@ -305,7 +295,16 @@ class UserView(GenericViewSet):
         instance.delete()
         return Response(serializer.data)
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", True)
+        instance = self.get_object()
+        serializer = serialize.UserBaseSerializer(
+            instance, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-class UserUpdateView(GenericViewSet, UpdateModelMixin, RetrieveModelMixin):
-    queryset = User.objects.all()
-    serializer_class = serialize.UserBaseSerializer
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)

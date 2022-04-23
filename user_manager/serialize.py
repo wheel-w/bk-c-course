@@ -10,8 +10,9 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from blueapps.account.models import User as Account
 from rest_framework import serializers
+
+from blueapps.account.models import User as Account
 
 from . import models
 
@@ -76,9 +77,7 @@ class UserSerSerializer(serializers.ModelSerializer):
     # 用户名
     username = serializers.CharField(source="account.username", read_only=True)
     # 标签
-    role = serializers.CharField(
-        min_length=2, max_length=2, required=True, write_only=True
-    )
+    role = serializers.CharField(min_length=2, max_length=2, read_only=True)
 
     class Meta:
         model = models.User
