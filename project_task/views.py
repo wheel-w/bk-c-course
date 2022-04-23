@@ -14,7 +14,6 @@ specific Language governing permissions and limitations under the License.
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from project_task.models import ProjectTask
@@ -39,18 +38,14 @@ class ProjectTaskList(generics.ListCreateAPIView):
 
         with transaction.atomic():
             # 创建事务保存点
-            save_id = transaction.savepoint()
+            save = transaction.savepoint()
 
             # question生成
             for i in range(len(question_data)):
                 question_data[i]["project_id"] = request.data["project_id"]
             questions = QuestionSerializer(data=question_data, many=True)
-
-            try:
-                questions.is_valid(raise_exception=True)
-                questions_id_list = questions.save()
-            except ValidationError as e:
-                return Response(e.detail, exception=True)
+            questions.is_valid(raise_exception=True)
+            questions_id_list = questions.save()
 
             # 创建任务并写入数据库
             request.data["creator"] = request.user.username
@@ -68,12 +63,8 @@ class ProjectTaskList(generics.ListCreateAPIView):
 
             request.data["questions_id_order_scores"] = questions_id_order_scores
             task = ProjectTaskSerializer(data=request.data)
-
-            try:
-                task.is_valid(raise_exception=True)
-                task_temp = task.save()
-            except ValidationError as e:
-                return Response(e.detail, exception=True)
+            task.is_valid(raise_exception=True)
+            task_temp = task.save()
 
             # 创建关系表
             relation = []
@@ -87,14 +78,10 @@ class ProjectTaskList(generics.ListCreateAPIView):
                 }
                 relation.append(temp)
             taskinfo = StudentProjectTaskInfoSerializer(data=relation, many=True)
+            taskinfo.is_valid(raise_exception=True)
+            taskinfo.save()
 
-            try:
-                taskinfo.is_valid(raise_exception=True)
-                taskinfo.save()
-            except ValidationError as e:
-                return Response(e.detail, exception=True)
-
-        transaction.savepoint_commit(save_id)
+        transaction.savepoint_commit(save)
 
         headers = self.get_success_headers(task.data)
         return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
