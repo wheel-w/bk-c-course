@@ -10,16 +10,12 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate_questions_id_order_scores(self, data):
-        flag = 1
         for i in data:
-            d = list(i.values())[0]
+            temp = list(i.values())[0]
             try:
-                int(dict(d)[str(flag)])
+                int(list(dict(temp).values())[0])
             except ValueError:
                 raise serializers.ValidationError("问题分数-参数校验错误")
-            except KeyError:
-                raise serializers.ValidationError("问题顺序-参数校验错误")
-            flag += 1
         return data
 
 
