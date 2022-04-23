@@ -294,17 +294,3 @@ class UserView(GenericViewSet, UpdateModelMixin):
         serializer = self.get_serializer(instance)
         instance.delete()
         return Response(serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", True)
-        instance = self.get_object()
-        serializer = serialize.UserBaseSerializer(
-            instance, data=request.data, partial=partial
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        if getattr(instance, "_prefetched_objects_cache", None):
-            instance._prefetched_objects_cache = {}
-
-        return Response(serializer.data)
