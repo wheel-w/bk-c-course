@@ -13,7 +13,7 @@ specific Language governing permissions and limitations under the License.
 import django_filters
 from django_filters.rest_framework import FilterSet
 
-from user_manager.models import User, UserTag, UserTagContact
+from user_manager.models import User, UserTagContact
 
 
 class UserFilter(FilterSet):
@@ -29,21 +29,19 @@ class UserFilter(FilterSet):
     max_date = django_filters.DateTimeFilter(
         field_name="account_id__last_login", lookup_expr="lte"
     )
+    ordering = django_filters.OrderingFilter(
+        fields={"account_id__last_login": "last_login", "id": "id"},
+    )
 
     class Meta:
         model = User  # 关联的模型
         fields = ["name", "gender", "min_date", "max_date"]  # 过滤的字段
 
 
-def filter_by_role(role, queryset):
-    if isinstance(role, list):
-        role_ids = UserTag.objects.filter(tag_value__in=role).values("id")
-    elif isinstance(role, str):
-        role_ids = UserTag.objects.filter(tag_value=role).values("id")
-    else:
-        return False, "请返回一个tag_value列表或者一个tag_value"
+def filter_by_role(tag_ids, queryset):
     user_ids = (
-        UserTagContact.objects.filter(tag_id__in=role_ids).values("user_id").distinct()
+        UserTagContact.objects.filter(tag_id__in=tag_ids).values("user_id").distinct()
     )
     queryset = queryset.filter(id__in=user_ids)
+    print(queryset)
     return True, queryset

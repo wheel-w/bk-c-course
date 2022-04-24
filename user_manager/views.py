@@ -224,17 +224,21 @@ class UserView(GenericViewSet, UpdateModelMixin):
     serializer_class = serialize.UserSerSerializer
     pagination_class = GeneralPagination
     filter_class = UserFilter
-    filter_fields = ["name", "gender"]
 
     def list(self, request, *args, **kwargs):
         """获取用户信息, 并返回"""
         queryset = self.get_queryset()
         # 根据 tag_value 筛选
-        tag_ids = request.query_params.get("tag_ids")
+        tag_ids = {
+            request.query_params.get("tag_ids"),
+        }
+        tag_ids |= set(request.data.get("tag_ids", {}))
         if tag_ids:
             flag, queryset_or_msg = filter_by_role(tag_ids, queryset)
             if not flag:
                 return Response(queryset_or_msg, exception=True)
+            else:
+                queryset = queryset_or_msg
         # 根据 filter_class 进行筛选
         queryset = self.filter_queryset(queryset)
         # 分页

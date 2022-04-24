@@ -73,7 +73,7 @@ class UserSerSerializer(serializers.ModelSerializer):
     """查找用户信息"""
 
     # 上一次登录信息
-    last_login = serializers.CharField(source="account.last_login", read_only=True)
+    last_login = serializers.DateTimeField(source="account.last_login", read_only=True)
     # 用户名
     username = serializers.CharField(source="account.username", read_only=True)
     # 标签
