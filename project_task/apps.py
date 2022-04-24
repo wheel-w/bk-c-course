@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版（BLUEKing PaaS Community
 Edition) available.
@@ -10,25 +9,9 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from django.contrib import admin
-
-from .models import User, UserTag, UserTagContact
+from django.apps import AppConfig
 
 
-# Register your models here.
-class UserAdmin(admin.ModelAdmin):
-    list_filter = ("id", "name", "gender", "phone_number")
-    list_display = ("id", "name", "gender", "account")
-
-
-class UserTagAdmin(admin.ModelAdmin):
-    list_filter = ("tag_value", "tag_color", "is_built_in", "sub_project")
-
-
-class UserTagContactAdmin(admin.ModelAdmin):
-    list_filter = ("id", "user_id", "tag_id")
-
-
-admin.site.register(User, UserAdmin)
-admin.site.register(UserTag, UserTagAdmin)
-admin.site.register(UserTagContact, UserTagContactAdmin)
+class ProjectTaskConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "project_task"

@@ -10,25 +10,20 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from django.contrib import admin
 
-from .models import User, UserTag, UserTagContact
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
+from user_manager import views
 
-# Register your models here.
-class UserAdmin(admin.ModelAdmin):
-    list_filter = ("id", "name", "gender", "phone_number")
-    list_display = ("id", "name", "gender", "account")
-
-
-class UserTagAdmin(admin.ModelAdmin):
-    list_filter = ("tag_value", "tag_color", "is_built_in", "sub_project")
-
-
-class UserTagContactAdmin(admin.ModelAdmin):
-    list_filter = ("id", "user_id", "tag_id")
-
-
-admin.site.register(User, UserAdmin)
-admin.site.register(UserTag, UserTagAdmin)
-admin.site.register(UserTagContact, UserTagContactAdmin)
+router = DefaultRouter()
+router.register("list", views.UserView)
+# router.register("add_tag", views.AddTagToUserView)
+# router.register("tag", views.UserTagView)
+router.register("update", views.UserUpdateView)
+router.register("account", views.AccountView)
+router.register("", views.OriginAccountView)
+router.register("batch", views.BatchView)
+urlpatterns = [
+    path("user/", include(router.urls)),
+]

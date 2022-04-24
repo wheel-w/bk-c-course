@@ -23,9 +23,6 @@ class User(models.Model):
     GENDER = [(Gender.MALE, "男"), (Gender.FEMALE, "女")]
     account = models.OneToOneField(
         settings.AUTH_USER_MODEL,
-        auto_created=True,
-        parent_link=True,
-        serialize=False,
         on_delete=models.DO_NOTHING,
     )
     name = models.CharField("姓名", max_length=20, blank=True, null=True)
@@ -50,8 +47,7 @@ class UserTag(models.Model):
         NON_INTRINSIC = 2
 
     BUILTIN = [(BuiltIn.BUILT_IN, "内置"), (BuiltIn.NON_INTRINSIC, "非内置")]
-
-    tag_value = models.CharField("标签值", max_length=20)
+    tag_value = models.CharField("标签值", max_length=20, unique=True)
     tag_color = models.CharField("标签颜色", max_length=7)
     is_built_in = models.IntegerField("是否内置", choices=BUILTIN, default=False)
     sub_project = models.IntegerField("所属项目")

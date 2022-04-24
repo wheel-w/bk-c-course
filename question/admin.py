@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Tencent is pleased to support the open source community by making 蓝鲸智云PaaS平台社区版（BLUEKing PaaS Community
 Edition) available.
@@ -12,23 +11,37 @@ specific Language governing permissions and limitations under the License.
 """
 from django.contrib import admin
 
-from .models import User, UserTag, UserTagContact
+from .models import Question, QuestionTag, QuestionTagContact
+
+
+class QuestionAdmin(admin.ModelAdmin):
+    list_filter = (
+        "project_id",
+        "id",
+        "title",
+        "types",
+    )
+
+
+class QuestionTagAdmin(admin.ModelAdmin):
+    list_filter = (
+        "id",
+        "value",
+        "text",
+        "time_created",
+        "time_updated",
+    )
+
+
+class QuestionTagContactAdmin(admin.ModelAdmin):
+    list_filter = (
+        "id",
+        "user_id",
+        "tag_id",
+    )
 
 
 # Register your models here.
-class UserAdmin(admin.ModelAdmin):
-    list_filter = ("id", "name", "gender", "phone_number")
-    list_display = ("id", "name", "gender", "account")
-
-
-class UserTagAdmin(admin.ModelAdmin):
-    list_filter = ("tag_value", "tag_color", "is_built_in", "sub_project")
-
-
-class UserTagContactAdmin(admin.ModelAdmin):
-    list_filter = ("id", "user_id", "tag_id")
-
-
-admin.site.register(User, UserAdmin)
-admin.site.register(UserTag, UserTagAdmin)
-admin.site.register(UserTagContact, UserTagContactAdmin)
+admin.site.register(Question, QuestionAdmin)
+admin.site.register(QuestionTag, QuestionTagAdmin)
+admin.site.register(QuestionTagContact, QuestionTagContactAdmin)

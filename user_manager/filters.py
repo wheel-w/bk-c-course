@@ -10,25 +10,26 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from django.contrib import admin
+import django_filters
+from django_filters.rest_framework import FilterSet
 
-from .models import User, UserTag, UserTagContact
-
-
-# Register your models here.
-class UserAdmin(admin.ModelAdmin):
-    list_filter = ("id", "name", "gender", "phone_number")
-    list_display = ("id", "name", "gender", "account")
+from user_manager.models import User
 
 
-class UserTagAdmin(admin.ModelAdmin):
-    list_filter = ("tag_value", "tag_color", "is_built_in", "sub_project")
+class UserFilter(FilterSet):
+    """user展示的过滤器"""
 
+    name = django_filters.CharFilter(
+        field_name="name", lookup_expr="icontains"
+    )  # icontains 包含,忽略大小写
+    gender = django_filters.CharFilter(field_name="gender")
+    min_date = django_filters.DateTimeFilter(
+        field_name="account_id__last_login", lookup_expr="gte"
+    )
+    max_date = django_filters.DateTimeFilter(
+        field_name="account_id__last_login", lookup_expr="lte"
+    )
 
-class UserTagContactAdmin(admin.ModelAdmin):
-    list_filter = ("id", "user_id", "tag_id")
-
-
-admin.site.register(User, UserAdmin)
-admin.site.register(UserTag, UserTagAdmin)
-admin.site.register(UserTagContact, UserTagContactAdmin)
+    class Meta:
+        model = User  # 关联的模型
+        fields = ["name", "gender", "min_date", "max_date"]  # 过滤的字段

@@ -10,21 +10,11 @@ Unless required by applicable law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-
-from django.contrib import admin
-
-from .models import Project, UserProjectContact
+from rest_framework.pagination import PageNumberPagination
 
 
-class ProjectAdmin(admin.ModelAdmin):
-    list_filter = ("id", "name", "property", "category")
-    list_display = ("id", "name", "property", "category", "organization", "creator")
-
-
-class UserProjectContactAdmin(admin.ModelAdmin):
-    list_filter = ("id", "project_id", "user_id")
-    list_display = ("id", "project_id", "user_id")
-
-
-admin.site.register(Project, ProjectAdmin)
-admin.site.register(UserProjectContact, UserProjectContactAdmin)
+class GeneralPagination(PageNumberPagination):
+    page_size = 10
+    max_page_size = 20
+    page_query_param = "page"
+    page_size_query_param = "page_size"
