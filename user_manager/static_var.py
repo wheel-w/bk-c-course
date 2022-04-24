@@ -14,12 +14,12 @@ import os
 
 from django.conf import settings
 
-USER_PAGE_SIZE = 20
+USER_PAGE_SIZE = 100
 REQUEST_PARAMS = {
     "bk_app_code": settings.APP_CODE,
     "bk_app_secret": settings.SECRET_KEY,
-    "fields": ["username", "departments", "display_name", "leader"],
-    "wildcard_search_fields": ["departments__name", "display_name", "username"],
+    "fields": ["username", "display_name", "departments"],
+    "wildcard_search_fields": ["display_name", "username"],
     "page_size": USER_PAGE_SIZE,
 }
 
