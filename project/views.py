@@ -13,7 +13,7 @@ specific language governing permissions and limitations under the License.
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from common.export_excel import export_excel
@@ -26,16 +26,9 @@ from project.serializer import (
 from user_manager.models import User
 
 
-class UserProjectPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = "page_size"
-    max_page_size = 30
-
-
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    pagination_class = UserProjectPagination
     filter_fields = ["property", "category", "organization", "creator"]
 
     @swagger_auto_schema(
@@ -79,11 +72,29 @@ class ProjectViewSet(viewsets.ModelViewSet):
         request.data["updater"] = request.user.username
         return super().update(request, *args, **kwargs)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["project_id_list"],
+            properties={
+                "project_id_list": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_INTEGER),
+                )
+            },
+        ),
+        operation_summary="根据project_id_list批量删除项目",
+    )
+    @action(methods=["DELETE"], detail=False)
+    def bulk_delete(self, request, *args, **kwargs):
+        project_id_list = request.data["project_id_list"]
+        Project.objects.filter(id__in=project_id_list).delete()
+        return Response()
+
 
 class UserProjectContactViewSet(viewsets.ModelViewSet):
     queryset = UserProjectContact.objects.all()
     serializer_class = UserProjectContactSerializer
-    pagination_class = UserProjectPagination
 
     @swagger_auto_schema(
         operation_summary="传入project_id和user_id创建一条UserProjectContact记录"
