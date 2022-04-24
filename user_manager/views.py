@@ -18,14 +18,14 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import ListModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 
 from blueapps.account.models import User as Account
 from common.drf.pagination import GeneralPagination
 from user_manager import serialize
-from user_manager.filters import UserFilter, filter_by_role
+from user_manager.filters import TagFilter, UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
 
 from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS
@@ -351,3 +351,9 @@ class UserView(GenericViewSet, UpdateModelMixin):
         serializer = self.get_serializer(instance)
         instance.delete()
         return Response(serializer.data)
+
+
+class TagView(GenericViewSet, ListModelMixin):
+    queryset = UserTag.objects.all()
+    serializer_class = serialize.UserTagSerializer
+    filter_class = TagFilter

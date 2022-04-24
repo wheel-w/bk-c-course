@@ -22,7 +22,14 @@ class UserTagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.UserTag
-        fields = "__all__"
+        fields = [
+            "id",
+            "tag_value",
+            "tag_color",
+            "tag_comment",
+            "sub_project",
+            "is_built_in",
+        ]
 
 
 class UserTagContactSerializer(serializers.ModelSerializer):

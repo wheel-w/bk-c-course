@@ -24,7 +24,11 @@ router.register("batch", views.BatchView)
 
 router_account = DefaultRouter()
 router_account.register("", views.OriginAccountView)
+
+router_tag = DefaultRouter()
+router_tag.register("", views.TagView)
 urlpatterns = [
     path("users/", include(router.urls)),
     path("accounts/", include(router_account.urls)),
+    path("tags/", include(router_tag.urls)),
 ]
