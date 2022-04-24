@@ -54,10 +54,9 @@
         methods: {
             handleConfirm () {
                 this.$http
-                    .put(`api/user/update/${this.config.id}/`, { ...this.config })
+                    .put(`api/users/${this.config.id}/`, { ...this.config })
                     .then(
                         (res) => {
-                            console.log(res)
                             this.$bkMessage({
                                 message: '修改成功',
                                 theme: 'success'

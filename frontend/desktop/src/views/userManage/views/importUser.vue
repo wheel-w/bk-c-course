@@ -8,7 +8,6 @@
                 v-model="selectedUsers"
                 :remote-method="handleSelectSearch"
                 :scroll-loading="bottomLoadingOptions"
-                @scroll-end="handleLazyLoad()"
                 searchable
                 style="width: 400px"
                 size="large"
@@ -62,10 +61,10 @@
     import { bkSelect, bkOption } from 'bk-magic-vue'
     /*
     搜索流程:
-    1.提供关键字给后端，获得100条以内相关数据，存入stroage,方便后面前端做分页
-    2.组件维护一份select框的备选项，使用动态load从stroage获取(分页)
-    3.每一个被选中后，都会添加至表格中，且表格默认选中
+    1.提供关键字给后端，获得100条以内相关数据
+    2.每一个被选中后，都会添加至表格中，且表格默认选中
     */
+    const BASE_UEL = 'api/accounts/'
     export default {
         components: {
             bkSelect,
@@ -73,6 +72,8 @@
         },
         data () {
             return {
+                // 后端返回的所有数据
+                allAccounts: [],
                 // 下方表格中展示的账户信息
                 accountList: [],
                 // 下拉框渲染选项,
@@ -91,7 +92,7 @@
                     },
                     {
                         label: '部门',
-                        prop: 'departments[0].full_name',
+                        prop: 'departments',
                         width: '300'
                     }
                 ],
@@ -113,37 +114,28 @@
                     return this.accountList.map((e) => e.username)
                 },
                 set (newVal) {
-                    const fullList = JSON.parse(sessionStorage.getItem('account_list'))
                     // 找出被选中的账号展示在表格里
-                    this.accountList = fullList.filter((x) => {
+                    this.accountList = this.allAccounts.filter((x) => {
                         return newVal.indexOf(x.username) !== -1
                     })
                 }
             }
         },
         mounted () {
-            this.flushList(this.keyWord)
+            this.flushAccounts(this.keyWord)
         },
         methods: {
-            // 获取accout列表,存入sessionStroage
+            // 获取accout列表
             async getAccountlist (keyWord) {
-                await this.$http
-                    .get(`api/user/get_account_list/?key=${keyWord}`)
-                    .then((res) => {
-                        window.sessionStorage.setItem(
-                            'account_list',
-                            JSON.stringify(res.data.results)
-                        )
-                    })
+                await this.$http.get(`${BASE_UEL}?key=${keyWord}`).then((res) => {
+                    this.allAccounts = res.data
+                })
             },
-            // 刷新accountlist并刷新下拉框
-            // @param {searchKeyWord}
-            flushList (keyWord) {
-                // stroage写入数据
+            // 搜索
+            flushAccounts (keyWord) {
                 this.getAccountlist(keyWord).then(() => {
-                    // 本地数据map成下拉框选项
-                    const list = JSON.parse(sessionStorage.getItem('account_list'))
-                    this.selectMap = list.map((item) => {
+                    // account列表map成下拉框选项
+                    this.selectMap = this.allAccounts.map((item) => {
                         return { username: item.username, display_name: item.display_name }
                     })
                 })
@@ -151,15 +143,13 @@
             // 传入account详细信息列表
             importUser (accountList) {
                 // 本来想用map的，可是序列化还是要转成对象，索性直接用对象
-                const userMapDict = {}
-                const tagValue = '教师'
                 const form = {}
+                form.username_name_map = {}
                 accountList.map((x) => {
-                    userMapDict[x.username] = x.display_name
+                    form.username_name_map[x.username] = x.display_name
                 })
-                form.username_name_map = userMapDict
-                form.tag_value = tagValue
-                return this.$http.post('/api/user/batch/add/', form)
+                form.tag_id = 2
+                return this.$http.post(`/api/users/batch/add/`, form)
             },
             handleImportAccounts () {
                 this.$bkInfo({
@@ -169,26 +159,21 @@
                     confirmFn: async () => {
                         try {
                             await new Promise((resolve, reject) => {
-                                // 此处需要修改
-                                this.importUser(this.accountList).then(
-                                    (res) => {
-                                        this.selectedUsers = []
-                                        resolve()
-                                    },
-                                    (reason) => {
-                                        // 忽略eslint烦人的规定
-                                        // eslint-disable-next-line prefer-promise-reject-errors
-                                        reject()
+                                this.importUser(this.accountList).then((res) => {
+                                    if (res.code !== 0) {
+                                        reject(res)
                                     }
-                                )
+                                    resolve()
+                                })
                             })
                             this.$bkMessage({
                                 message: '导入成功',
                                 theme: 'success'
                             })
+                            this.selectedUsers = []
                             return true
                         } catch (e) {
-                            console.warn(e)
+                            this.$bkMessage({ message: e.message, theme: 'error' })
                             return false
                         }
                     }
@@ -202,15 +187,12 @@
                     }
                 })
             },
-            handleLazyLoad () {
-                console.log('触底')
-            },
             handleSelectSearch (key) {
                 // 减少请求次数
                 if (key == null) {
                     return null
                 }
-                this.flushList(key)
+                this.flushAccounts(key)
             }
         }
     }

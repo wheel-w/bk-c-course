@@ -9,6 +9,7 @@
                     :clearable="false"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
+                    style="width: 120px;"
                 >
                     <bk-option
                         v-for="option in batch.options"
@@ -25,17 +26,15 @@
                     :val="batch.checkedUsers.length"
                     :visible="batch.checkedUsers.length !== 0"
                 >
-                    <bk-button @click="batch.visible = true" class="ml10">
-                        执行操作
-                    </bk-button>
+                    <bk-button @click="handleBatch" class="ml10"> 执行操作 </bk-button>
                 </bk-badge>
-                <!-- 批量操作弹窗 -->
+                <!-- 批量删除操作弹窗 -->
                 <bk-dialog
-                    v-model="batch.visible"
+                    v-model="batch.dialogVisible"
                     theme="primary"
                     :mask-close="false"
                     title="确认删除以下用户？"
-                    @confirm="handleBatch(batch.opera)"
+                    @confirm="handleBatchDel"
                 >
                     <bk-tag-input
                         v-model="batch.checkedUsers"
@@ -121,18 +120,19 @@
                 prop="email"
                 :width="180"
             ></bk-table-column>
-            <bk-table-column
-                label="QQ"
-                column-key="qq_number"
-                prop="qq_number"
-                :width="100"
-            ></bk-table-column>
+            <bk-table-column label="标签" column-key="tag" prop="tag" :width="100">
+                <template slot-scope="props"
+                >{{ props.row.tag }}
+                    <bk-tag theme="success">demo</bk-tag>
+                </template>
+            </bk-table-column>
             <bk-table-column
                 label="最近登陆时间"
                 column-key="last_login"
                 prop="last_login"
                 :width="220"
-                sortable
+                :filters="filters.min_date"
+                :filter-multiple="false"
             ></bk-table-column>
             <bk-table-column label="用户操作" width="180">
                 <template slot-scope="props">
@@ -160,11 +160,12 @@
         bkTableColumn,
         bkButton,
         bkBadge,
-        bkTagInput
+        bkTagInput,
+        bkTag
     } from 'bk-magic-vue'
     import { saveJSON } from '../../../common/util'
     const UserConfig = () => import('../components/userConfig')
-    const BASE_UEL = 'api/user'
+    const BASE_UEL = 'api/users/'
     export default {
         components: {
             bkInput,
@@ -173,9 +174,11 @@
             bkButton,
             UserConfig,
             bkBadge,
-            bkTagInput
+            bkTagInput,
+            bkTag
         },
         data () {
+            const current = new Date().getTime()
             return {
                 // 搜索条件
                 search: {
@@ -188,14 +191,15 @@
                 batch: {
                     // 批量操作选项
                     options: [
-                        { id: 1, name: '批量删除' },
-                        { id: 2, name: '批量操作2' }
+                        { id: 'batchDel', name: '批量删除' },
+                        { id: 'batchTag', name: '批量打tag' }
                     ],
                     // 当前选项
-                    opera: 1,
+                    opera: 'batchDel',
                     // 选中条目id
                     checkedUsers: [],
-                    visible: false
+                    // 删除dialog
+                    dialogVisible: false
                 },
                 // 用户列表
                 userlist: [],
@@ -215,8 +219,21 @@
                 filters: {
                     gender: [
                         { text: '男性', value: 'MALE' },
-                        { text: '女性', value: 'FEMALE' },
-                        { text: '未知', value: null }
+                        { text: '女性', value: 'FEMALE' }
+                    ],
+                    min_date: [
+                        {
+                            text: '近一星期',
+                            value: new Date(current - 7 * 24 * 3600 * 1000).toLocaleString()
+                        },
+                        {
+                            text: '近一月',
+                            value: new Date(current - 30 * 24 * 3600 * 1000).toLocaleString()
+                        },
+                        {
+                            text: '近一年',
+                            value: new Date(current - 365 * 24 * 3600 * 1000).toLocaleString()
+                        }
                     ]
                 }
             }
@@ -227,11 +244,13 @@
         methods: {
             getUserlist () {
                 return this.$http
-                    .get(`${BASE_UEL}/list/`, {
+                    .get(`${BASE_UEL}`, {
                         params: {
                             page: this.page.current,
                             page_size: this.page.limit,
-                            name: this.search.name
+                            gender: this.search.gender,
+                            name: this.search.name,
+                            min_date: this.search.last_login
                         }
                     })
                     .then((res) => {
@@ -243,7 +262,7 @@
                     })
             },
             deleteUser (idList) {
-                return this.$http.post(`${BASE_UEL}/batch/delete/`, {
+                return this.$http.post(`${BASE_UEL}batch/delete/`, {
                     id_list: idList
                 })
             },
@@ -251,33 +270,32 @@
                 this.page.limit = limit
                 this.getUserlist()
             },
-            handleBatch (opera) {
-                if (opera === 1) {
-                    this.$bkInfo({
-                        type: 'warning',
-                        title: '确认批量删除(不可逆)？',
-                        confirmLoading: true,
-                        confirmFn: async () => {
-                            try {
-                                await new Promise((resolve) => {
-                                    this.deleteUser(this.batch.checkedUsers).then((res) => {
-                                        resolve()
-                                    })
+            handleBatchDel () {
+                // 执行删除操作
+                this.$bkInfo({
+                    type: 'warning',
+                    title: '确认批量删除(不可逆)？',
+                    confirmLoading: true,
+                    confirmFn: async () => {
+                        try {
+                            await new Promise((resolve) => {
+                                this.deleteUser(this.batch.checkedUsers).then((res) => {
+                                    resolve()
                                 })
-                                this.$bkMessage({
-                                    message: '删除成功',
-                                    theme: 'success'
-                                })
-                                return true
-                            } catch (e) {
-                                console.warn(e)
-                                return false
-                            } finally {
-                                this.getUserlist()
-                            }
+                            })
+                            this.$bkMessage({
+                                message: '删除成功',
+                                theme: 'success'
+                            })
+                            return true
+                        } catch (e) {
+                            console.warn(e)
+                            return false
+                        } finally {
+                            this.getUserlist()
                         }
-                    })
-                }
+                    }
+                })
             },
             handlePageChange (page) {
                 this.page.current = page
@@ -331,10 +349,32 @@
                 this.userConfigCache = row
             },
             handleDownload () {
-                saveJSON(this.userlist, 'userlist.json')
+                if (confirm('目前只能保存当前页的用户信息')) {
+                    saveJSON(this.userlist, 'userlist.json')
+                }
             },
             handleFilterChange (column) {
-                console.log(column)
+                for (const key in column) {
+                    // 组件库支持多值条件，所以所有的条件value都是数组，这里转化一下
+                    // if (key === 'last_login') {
+                    //     column.min_date = column[key][0]
+                    //     continue
+                    // }
+                    column[key] = column[key][0]
+                }
+                Object.assign(this.search, column)
+                this.getUserlist()
+            },
+            handleBatch () {
+                if (this.batch.opera === 'batchDel') {
+                    if (this.batch.checkedUsers.length === 0) {
+                        alert('请选择用户')
+                        return
+                    }
+                    this.batch.dialogVisible = true
+                } else if (this.batch.opera === 'batchTag') {
+                    alert('施工中...')
+                }
             }
         }
     }
