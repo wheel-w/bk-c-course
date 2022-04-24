@@ -102,10 +102,10 @@ class BatchView(ViewSet):
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=["username_name_map", "tag_value"],
+            required=["username_name_map", "tag_id"],
             properties={
                 "username_name_map": openapi.Schema(type=openapi.TYPE_OBJECT),
-                "tag_value": openapi.Schema(type=openapi.TYPE_STRING),
+                "tag_id": openapi.Schema(type=openapi.TYPE_INTEGER),
             },
         ),
     )
@@ -122,10 +122,9 @@ class BatchView(ViewSet):
         username_name_map = request.data.get("username_name_map")
         if not username_name_map or not isinstance(username_name_map, dict):
             return Response("请传入一个用户名-姓名映射字典", exception=True)
-        tag_value = request.data.get("tag_value")
-        if not tag_value:
-            return Response("请制定一个标签")
-        tag = UserTag.objects.filter(tag_value=tag_value).first()
+        tag_id = request.data.get("tag_id")
+        if not UserTag.objects.filter(id=tag_id).exists():
+            return Response("请指定一个有效标签", exception=True)
         # 获取已经存在的用户, 并在usernames列表中删除这些用户
         export_usernames = set(username_name_map.keys())
         exist_users = set(
@@ -175,7 +174,7 @@ class BatchView(ViewSet):
                 )
             )
             new_tag_list.append(
-                UserTagContact(user_id=account.get("id"), tag_id=tag.id)
+                UserTagContact(user_id=account.get("id"), tag_id=tag_id)
             )
 
         User.objects.bulk_create(new_user_list)
@@ -215,6 +214,58 @@ class BatchView(ViewSet):
             },
             status=status.HTTP_204_NO_CONTENT,
         )
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["usernames", "tag_id"],
+            properties={
+                "usernames": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_STRING),
+                ),
+                "tag_id": openapi.Schema(type=openapi.TYPE_INTEGER),
+            },
+        ),
+    )
+    @action(methods=["POST"], detail=False)
+    def add_tag(self, request, *args, **kwargs):
+        """批量给用户添加标签"""
+        tag_id = request.data.get("tag_id")
+        # 查询数据库查看标签是否存在,病获得标签数据
+        user_tag = UserTag.objects.filter(id=tag_id).first()
+        if not user_tag:
+            return Response("请指定一个有效标签", exception=True)
+        # 获取要添加标签的用户信息
+        usernames = request.data.get("usernames")
+        users = set(
+            self.queryset.filter(account_id__username__in=usernames).values_list(
+                "id", "name"
+            )
+        )
+        if not users:  # 用户校验: 是否存在有效用户
+            return Response("请返回一个有效的用户名列表", exception=True)
+        # 获取已经存在该标签的用户集合
+        has_cur_tag_users = (
+            UserTagContact.objects.filter(user_id__in=set(map(lambda x: x[0], users)))
+            .values_list("user_id", flat=True)
+            .distinct()
+        )
+
+        user_tag_contact_list = []
+        exist_user_tag = set()
+        # 给用户添加标签
+        for user in users:
+            if user[0] in has_cur_tag_users:  # 如果已经有了标签
+                exist_user_tag.add(user)
+            else:
+                user_tag_contact_list.append(
+                    UserTagContact(user_id=user[0], tag_id=tag_id)
+                )
+        # 批量增加
+        UserTagContact.objects.bulk_create(user_tag_contact_list)
+
+        return Response({"exist": exist_user_tag, "add": set(users) - exist_user_tag})
 
 
 class UserView(GenericViewSet, UpdateModelMixin):
