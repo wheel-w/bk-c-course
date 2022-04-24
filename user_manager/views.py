@@ -280,9 +280,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         """获取用户信息, 并返回"""
         queryset = self.get_queryset()
         # 根据 tag_value 筛选
-        tag_ids = {
-            request.query_params.get("tag_ids"),
-        }
+        tag_ids = set(request.query_params.get("tag_ids", {}))
         tag_ids |= set(request.data.get("tag_ids", {}))
         if tag_ids:
             flag, queryset_or_msg = filter_by_role(tag_ids, queryset)
@@ -311,7 +309,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         for user in users:
             # 遍历每一个获取到user 查看其是否有标签
             if user.get("id") in user_tag_dic:
-                user["tag"] = user_tag_dic.get(user.get("id")).values()
+                user["tag"] = user_tag_dic.get(user.get("id"))
             else:
                 user["tag"] = None
         return users
