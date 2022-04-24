@@ -18,9 +18,9 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, UpdateModelMixin
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
 from blueapps.account.models import User as Account
 from common.drf.pagination import GeneralPagination
@@ -353,7 +353,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         return Response(serializer.data)
 
 
-class TagView(GenericViewSet, ListModelMixin):
+class TagView(ModelViewSet):
     queryset = UserTag.objects.all()
     serializer_class = serialize.UserTagSerializer
     filter_class = TagFilter
