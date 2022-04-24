@@ -57,8 +57,8 @@
                     left-icon="bk-icon icon-search"
                     placeholder="搜索用户"
                     v-model="search.name"
-                    @blur="handleSearchUser"
-                    @keyup.enter.native="handleSearchUser"
+                    @blur="getUserlist()"
+                    @keyup.enter.native="getUserlist()"
                     style="width: 300px"
                 >
                 </bk-input>
@@ -84,21 +84,29 @@
             @page-change="handlePageChange"
             @selection-change="handleSelect"
             @page-limit-change="handlePageLimitChange"
+            @filter-change="handleFilterChange"
         >
             <bk-table-column type="selection" width="60" resizable></bk-table-column>
             <bk-table-column
                 label="用户名"
-                key="username"
+                column-key="username"
                 prop="username"
                 width="150"
             ></bk-table-column>
             <bk-table-column
                 label="姓名"
-                key="name"
+                column-key="name"
                 prop="name"
                 :width="100"
             ></bk-table-column>
-            <bk-table-column label="性别" key="gender" prop="gender" :width="100">
+            <bk-table-column
+                label="性别"
+                column-key="gender"
+                prop="gender"
+                :filters="filters.gender"
+                :filter-multiple="false"
+                :width="100"
+            >
                 <template slot-scope="props">{{
                     props.row.gender === "FEMALE"
                         ? "女"
@@ -109,21 +117,22 @@
             </bk-table-column>
             <bk-table-column
                 label="邮箱"
-                key="email"
+                column-key="email"
                 prop="email"
                 :width="180"
             ></bk-table-column>
             <bk-table-column
                 label="QQ"
-                key="qq_number"
+                column-key="qq_number"
                 prop="qq_number"
                 :width="100"
             ></bk-table-column>
             <bk-table-column
                 label="最近登陆时间"
-                key="last_login"
+                column-key="last_login"
                 prop="last_login"
                 :width="220"
+                sortable
             ></bk-table-column>
             <bk-table-column label="用户操作" width="180">
                 <template slot-scope="props">
@@ -201,6 +210,14 @@
                     limit: 10,
                     count: 0,
                     limitList: [5, 10, 15, 20]
+                },
+                // 筛选
+                filters: {
+                    gender: [
+                        { text: '男性', value: 'MALE' },
+                        { text: '女性', value: 'FEMALE' },
+                        { text: '未知', value: null }
+                    ]
                 }
             }
         },
@@ -232,7 +249,6 @@
             },
             handlePageLimitChange (limit) {
                 this.page.limit = limit
-                this.page.current = parseInt(this.page.count / this.page.limit) + 1
                 this.getUserlist()
             },
             handleBatch (opera) {
@@ -317,8 +333,8 @@
             handleDownload () {
                 saveJSON(this.userlist, 'userlist.json')
             },
-            handleSearchUser () {
-                this.getUserlist()
+            handleFilterChange (column) {
+                console.log(column)
             }
         }
     }
