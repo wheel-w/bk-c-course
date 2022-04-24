@@ -13,7 +13,6 @@ specific Language governing permissions and limitations under the License.
 import json
 
 import requests
-from blueapps.account.models import User as Account
 from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -23,6 +22,8 @@ from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 
+from blueapps.account.models import User as Account
+from common.drf.pagination import GeneralPagination
 from user_manager import serialize
 from user_manager.filters import UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
@@ -221,6 +222,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
     serializer_class = serialize.UserSerSerializer
+    pagination_class = GeneralPagination
     filter_class = UserFilter
     filter_fields = ["name", "gender"]
 
@@ -228,9 +230,9 @@ class UserView(GenericViewSet, UpdateModelMixin):
         """获取用户信息, 并返回"""
         queryset = self.get_queryset()
         # 根据 tag_value 筛选
-        role = request.query_params.get("role")
-        if role:
-            flag, queryset_or_msg = filter_by_role(role, queryset)
+        tag_ids = request.query_params.get("tag_ids")
+        if tag_ids:
+            flag, queryset_or_msg = filter_by_role(tag_ids, queryset)
             if not flag:
                 return Response(queryset_or_msg, exception=True)
         # 根据 filter_class 进行筛选
@@ -254,7 +256,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         for user in users:
             # 遍历每一个获取到user 查看其是否有标签
             if user.get("id") in user_tag_dic:
-                user["tag"] = user_tag_dic.get(user.get("id"))
+                user["tag"] = user_tag_dic.get(user.get("id")).values()
             else:
                 user["tag"] = None
         return users
@@ -267,7 +269,11 @@ class UserView(GenericViewSet, UpdateModelMixin):
         tags = UserTag.objects.filter(id__in=tag_ids)
         tags_dic = {}  # key: 标签id  value: tag_value, tag_color
         for tag in tags:
-            tags_dic[tag.id] = {"tag_value": tag.tag_value, "tag_color": tag.tag_color}
+            tags_dic[tag.id] = {
+                "tag_id": tag.id,
+                "tag_value": tag.tag_value,
+                "tag_color": tag.tag_color,
+            }
         user_tag_dic = {}  # key: user_id  value: {tags_dic ...}
         for tag_conn in tag_conns:
             if user_tag_dic.get(tag_conn.user_id):
