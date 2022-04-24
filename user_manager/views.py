@@ -215,6 +215,58 @@ class BatchView(ViewSet):
             status=status.HTTP_204_NO_CONTENT,
         )
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["usernames", "tag_id"],
+            properties={
+                "usernames": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_STRING),
+                ),
+                "tag_id": openapi.Schema(type=openapi.TYPE_INTEGER),
+            },
+        ),
+    )
+    @action(methods=["POST"], detail=False)
+    def add_tag(self, request, *args, **kwargs):
+        """批量给用户添加标签"""
+        tag_id = request.data.get("tag_id")
+        # 查询数据库查看标签是否存在,病获得标签数据
+        user_tag = UserTag.objects.filter(id=tag_id).first()
+        if not user_tag:
+            return Response("请指定一个有效标签", exception=True)
+        # 获取要添加标签的用户信息
+        usernames = request.data.get("usernames")
+        users = set(
+            self.queryset.filter(account_id__username__in=usernames).values_list(
+                "id", "name"
+            )
+        )
+        if not users:  # 用户校验: 是否存在有效用户
+            return Response("请返回一个有效的用户名列表", exception=True)
+        # 获取已经存在该标签的用户集合
+        has_cur_tag_users = (
+            UserTagContact.objects.filter(user_id__in=set(map(lambda x: x[0], users)))
+            .values_list("user_id", flat=True)
+            .distinct()
+        )
+
+        user_tag_contact_list = []
+        exist_user_tag = set()
+        # 给用户添加标签
+        for user in users:
+            if user[0] in has_cur_tag_users:  # 如果已经有了标签
+                exist_user_tag.add(user)
+            else:
+                user_tag_contact_list.append(
+                    UserTagContact(user_id=user[0], tag_id=tag_id)
+                )
+        # 批量增加
+        UserTagContact.objects.bulk_create(user_tag_contact_list)
+
+        return Response({"exist": exist_user_tag, "add": set(users) - exist_user_tag})
+
 
 class UserView(GenericViewSet, UpdateModelMixin):
     """查询用户信息"""
