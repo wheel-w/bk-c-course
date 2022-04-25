@@ -69,7 +69,7 @@ class TaskCreateSerializer(serializers.Serializer):
             except IndexError:
                 return Response("答案与答案分数个数不匹配", exception=True)
 
-            validated_data["questions_id_order_scores"] = questions_info
+            validated_data["questions_info"] = questions_info
             task = ProjectTaskSerializer(data=validated_data)
             task.is_valid(raise_exception=True)
             task_temp = task.save()
