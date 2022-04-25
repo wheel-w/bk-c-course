@@ -1,6 +1,7 @@
 <template>
     <div id="importUser">
         <div class="topTab">
+            <!-- 下拉框 -->
             <bk-select
                 multiple
                 enable-scroll-load
@@ -14,28 +15,33 @@
                 placeholder="点我选择导入用户"
             >
                 <bk-option
-                    v-for="option in selectMap"
+                    v-for="option in batch.selectMap"
                     :key="option.username"
                     :id="option.username"
-                    :name="option.display_name"
+                    :name="option.display_name + ' --- ' + option.username"
+                    :disabled="option.disable"
                 >
                 </bk-option>
             </bk-select>
-            <bk-button theme="primary" @click="handleImportAccounts"
+            <bk-button
+                theme="primary"
+                @click="tagConfig.visible = true"
+                :disabled="batch.accountList.length === 0"
             >导入选中用户</bk-button
             >
         </div>
+        <!-- 表格 -->
         <bk-table
-            :data="accountList"
+            :data="batch.accountList"
             size="small"
             stripe
             height="60vh"
             @selection-change="handleSelect"
         >
-            <!-- 空状态 -->
+            <!-- 表格空状态插槽 -->
             <template slot="empty">
                 <bk-icon type="exclamation-triangle" />
-                <div>请在上方搜索栏筛选</div>
+                <div style="font-weight: 800; font-size: 18px">请在上方搜索栏筛选</div>
             </template>
             <bk-table-column
                 v-for="field in fields"
@@ -49,22 +55,40 @@
                 <template slot-scope="props">
                     <bk-icon type="close-circle-shape" />
                     <bk-button theme="primary" text @click="handleDeleteSingle(props.row)"
-                    >从待添加列表删除</bk-button
+                    >取消</bk-button
                     >
                 </template>
             </bk-table-column>
         </bk-table>
+        <!-- 批量添加确认框，以及添加tag -->
+        <bk-dialog
+            v-model="tagConfig.visible"
+            title="请选择要添加的标签"
+            theme="primary"
+            @confirm="handleImportAccounts"
+            ok-text="确认添加tag"
+        >
+            <bk-select v-model="tagConfig.tag_id">
+                <bk-option
+                    v-for="tag in tagConfig.tags"
+                    :key="tag.id"
+                    :id="tag.id"
+                    :name="tag.tag_value"
+                >
+                </bk-option>
+            </bk-select>
+        </bk-dialog>
     </div>
 </template>
 
 <script>
     import { bkSelect, bkOption } from 'bk-magic-vue'
+    import { vueDebounce } from '../../../common/util'
     /*
     搜索流程:
     1.提供关键字给后端，获得100条以内相关数据
     2.每一个被选中后，都会添加至表格中，且表格默认选中
     */
-    const BASE_UEL = 'api/accounts/'
     export default {
         components: {
             bkSelect,
@@ -72,12 +96,25 @@
         },
         data () {
             return {
+                batch: {
+                    // 下方表格中展示的账户信息
+                    accountList: [],
+                    // 下拉框渲染选项,
+                    selectMap: []
+                },
+                tagConfig: {
+                    visible: false,
+                    tag_id: 1,
+                    // 所有的tag
+                    tags: [
+                        {
+                            id: 1,
+                            tag_value: '学生'
+                        }
+                    ]
+                },
                 // 后端返回的所有数据
                 allAccounts: [],
-                // 下方表格中展示的账户信息
-                accountList: [],
-                // 下拉框渲染选项,
-                selectMap: [],
                 // 表格字段配置
                 fields: [
                     {
@@ -111,32 +148,43 @@
             // 下拉框已选择用户
             selectedUsers: {
                 get () {
-                    return this.accountList.map((e) => e.username)
+                    return this.batch.accountList.map((e) => e.username)
                 },
                 set (newVal) {
                     // 找出被选中的账号展示在表格里
-                    this.accountList = this.allAccounts.filter((x) => {
+                    this.batch.accountList = this.allAccounts.filter((x) => {
                         return newVal.indexOf(x.username) !== -1
                     })
                 }
             }
         },
         mounted () {
-            this.flushAccounts(this.keyWord)
+            this.flushAccounts()
+            this.getTags()
         },
         methods: {
             // 获取accout列表
-            async getAccountlist (keyWord) {
-                await this.$http.get(`${BASE_UEL}?key=${keyWord}`).then((res) => {
+            async getAccountlist () {
+                await this.$http.get(`/api/accounts/?key=${this.keyWord}`).then((res) => {
                     this.allAccounts = res.data
                 })
             },
+            // 获取tag列表
+            async getTags () {
+                await this.$http
+                    .get('/api/tags/?is_built_in=1')
+                    .then((res) => (this.tagConfig.tags = res.data.results))
+            },
             // 搜索
-            flushAccounts (keyWord) {
-                this.getAccountlist(keyWord).then(() => {
+            flushAccounts () {
+                this.getAccountlist().then(() => {
                     // account列表map成下拉框选项
-                    this.selectMap = this.allAccounts.map((item) => {
-                        return { username: item.username, display_name: item.display_name }
+                    this.batch.selectMap = this.allAccounts.map((item) => {
+                        return {
+                            username: item.username,
+                            display_name: item.display_name,
+                            disable: item.is_import
+                        }
                     })
                 })
             },
@@ -148,7 +196,7 @@
                 accountList.map((x) => {
                     form.username_name_map[x.username] = x.display_name
                 })
-                form.tag_id = 2
+                form.tag_id = this.tagConfig.tag_id
                 return this.$http.post(`/api/users/batch/add/`, form)
             },
             handleImportAccounts () {
@@ -159,7 +207,7 @@
                     confirmFn: async () => {
                         try {
                             await new Promise((resolve, reject) => {
-                                this.importUser(this.accountList).then((res) => {
+                                this.importUser(this.batch.accountList).then((res) => {
                                     if (res.code !== 0) {
                                         reject(res)
                                     }
@@ -181,19 +229,17 @@
             },
             // 从下方表格中删除条目
             handleDeleteSingle (row) {
-                this.accountList.forEach((item, i, arr) => {
+                this.batch.accountList.forEach((item, i, arr) => {
                     if (item.username === row.username) {
                         arr.splice(i, 1)
                     }
                 })
             },
-            handleSelectSearch (key) {
-                // 减少请求次数
-                if (key == null) {
-                    return null
-                }
-                this.flushAccounts(key)
-            }
+            handleSelectSearch (keyWord) {
+                this.keyWord = keyWord
+                this.search()
+            },
+            search: vueDebounce('getAccountlist', 2000)
         }
     }
 </script>

@@ -365,3 +365,22 @@ export function saveJSON (data, filename = 'json.json') {
     a.click()
     URL.revokeObjectURL(url)
 }
+
+/**
+ * 防抖包装函数
+ *
+ * @param {String} 要防抖的vue method的名字
+ * @param {wait} 延迟毫秒数
+ * @return {fun} 防抖函数
+ */
+
+export function vueDebounce (funName, wait) {
+    let timer = null
+    return function () {
+        if (timer) clearTimeout(timer)
+        const arg = arguments
+        timer = setTimeout(() => {
+            this[funName](arg)
+        }, wait)
+    }
+}

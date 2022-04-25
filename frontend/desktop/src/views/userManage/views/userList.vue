@@ -9,7 +9,7 @@
                     :clearable="false"
                     ext-cls="select-custom"
                     ext-popover-cls="select-popover-custom"
-                    style="width: 120px;"
+                    style="width: 120px"
                 >
                     <bk-option
                         v-for="option in batch.options"
@@ -121,9 +121,23 @@
                 :width="180"
             ></bk-table-column>
             <bk-table-column label="标签" column-key="tag" prop="tag" :width="100">
-                <template slot-scope="props"
-                >{{ props.row.tag }}
-                    <bk-tag theme="success">demo</bk-tag>
+                <template slot-scope="props">
+                    <!-- 这个保留文字颜色 -->
+                    <!-- <bk-tag
+                        :style="
+                            'color: #' +
+                                props.row.tag[1].tag_color +
+                                '; background-color:' +
+                                colorTransform(props.row.tag[1].tag_color)
+                        "
+                    >{{ props.row.tag[1].tag_value }}</bk-tag
+                    > -->
+                    <bk-tag
+                        :style="
+                            'background-color:' + colorTransform(props.row.tag[1].tag_color)
+                        "
+                    >{{ props.row.tag[1].tag_value }}</bk-tag
+                    >
                 </template>
             </bk-table-column>
             <bk-table-column
@@ -375,6 +389,14 @@
                 } else if (this.batch.opera === 'batchTag') {
                     alert('施工中...')
                 }
+            },
+            colorTransform (color = '66ccff') {
+                // eslint-disable-next-line no-eval
+                const a = eval(`0x${color}`)
+                const r = (a >>> 16) & 255
+                const g = (a >>> 8) & 255
+                const b = a & 255
+                return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.2 + ')'
             }
         }
     }
