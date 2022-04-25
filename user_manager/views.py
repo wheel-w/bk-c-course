@@ -20,12 +20,12 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
 from blueapps.account.models import User as Account
 from common.drf.pagination import GeneralPagination
 from user_manager import serialize
-from user_manager.filters import UserFilter, filter_by_role
+from user_manager.filters import TagFilter, UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
 
 from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS
@@ -280,9 +280,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         """获取用户信息, 并返回"""
         queryset = self.get_queryset()
         # 根据 tag_value 筛选
-        tag_ids = {
-            request.query_params.get("tag_ids"),
-        }
+        tag_ids = set(request.query_params.get("tag_ids", {}))
         tag_ids |= set(request.data.get("tag_ids", {}))
         if tag_ids:
             flag, queryset_or_msg = filter_by_role(tag_ids, queryset)
@@ -311,7 +309,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         for user in users:
             # 遍历每一个获取到user 查看其是否有标签
             if user.get("id") in user_tag_dic:
-                user["tag"] = user_tag_dic.get(user.get("id")).values()
+                user["tag"] = user_tag_dic.get(user.get("id"))
             else:
                 user["tag"] = None
         return users
@@ -353,3 +351,9 @@ class UserView(GenericViewSet, UpdateModelMixin):
         serializer = self.get_serializer(instance)
         instance.delete()
         return Response(serializer.data)
+
+
+class TagView(ModelViewSet):
+    queryset = UserTag.objects.all()
+    serializer_class = serialize.UserTagSerializer
+    filter_class = TagFilter
