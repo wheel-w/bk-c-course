@@ -16,9 +16,9 @@
                             searchable
                             :disabled="false">
                             <bk-option v-for="option in courseList"
-                                :key="option.course_id"
-                                :id="option.course_id"
-                                :name="option.course_name">
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name">
                             </bk-option>
                         </bk-select>
                     </div>
@@ -45,12 +45,9 @@
                     :item-default-bg-color="'#7690D9'"
                     :item-hover-bg-color="'#5E7AC5'"
                     :item-active-bg-color="'#5E7AC5'"
-                    :item-default-color="'#F0F3FD'"
-                    :item-hover-color="'#FAFBFD'"
-                    :item-active-color="'#FAFBFD'"
-                    :item-default-icon-color="'#F0F3FD'"
-                    :item-hover-icon-color="'#FAFBFD'"
-                    :item-active-icon-color="'#FAFBFD'"
+                    :item-default-color="'#f6f6f6'"
+                    :item-hover-color="'#8ae4f5'"
+                    :item-active-color="'#fea3be'"
                     :toggle-active="nav.toggle">
                     <bk-navigation-menu-item
                         v-for="item in nav.list"
@@ -58,7 +55,14 @@
                         :key="item.id"
                         :default-active="item.active"
                         v-bind="item">
-                        <span>{{item.name}}</span>
+                        <bk-icon v-if="item.id === 'home'" type="circle-shape" style="color: #ffdf7e " />
+                        <bk-icon v-if="item.id === 'projectmanage'" type="circle-shape" style="color: #bbde4f " />
+                        <bk-icon v-if="item.id === 'classnumber'" type="circle-shape" style="color: #c7b3ff " />
+                        <bk-icon v-if="item.id === 'set_question_index'" type="circle-shape" style="color: #fea3be " />
+                        <bk-icon v-if="item.id === 'answer_question_index'" type="circle-shape" style="color: #8ae4f5 " />
+                        <bk-icon v-if="item.id === 'displaypaper'" type="circle-shape" style="color: #febb5e " />
+                        <bk-icon v-if="item.id === 'set_question'" type="circle-shape" style="color: #dd75ca " />
+                        <span style="margin-left: 20px">{{item.name}}</span>
                         <div slot="child">
                             <bk-navigation-menu-item
                                 v-for="child in item.children"
@@ -121,31 +125,27 @@
                         {
                             id: 'home',
                             name: '首页',
-                            icon: 'icon-home-shape',
                             pathName: 'home',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'mycourse',
-                            name: '我的课程',
-                            icon: 'icon-tree-module-shape',
+                            id: 'projectmanage',
+                            name: '项目管理',
                             pathName: 'my_course',
                             children: [],
                             group: true
                         },
                         {
                             id: 'classnumber',
-                            name: '课程成员',
-                            icon: 'icon-tree-module-shape',
+                            name: '项目成员',
                             pathName: 'course_number',
                             children: [],
                             group: true
                         },
                         {
                             id: 'set_question_index',
-                            name: '课程题库',
-                            icon: 'icon-tree-process-shape',
+                            name: '任务题库',
                             pathName: 'set_question_index',
                             children: [],
                             group: true
@@ -153,16 +153,20 @@
                         {
                             id: 'answer_question_index',
                             name: '测验与作业',
-                            icon: 'icon-tree-process-shape',
-                            pathName: 'answer_question_index',
                             children: [],
                             group: true
                         },
                         {
                             id: 'displaypaper',
-                            name: '作业管理',
-                            icon: 'icon-tree-process-shape',
+                            name: '任务管理',
                             pathName: 'displaypaper',
+                            children: [],
+                            group: true
+                        },
+                        {
+                            id: 'set_question',
+                            name: '出题',
+                            pathName: 'set_question',
                             children: [],
                             group: true
                         }
@@ -343,6 +347,11 @@
             bus.$on('updateCourseList', () => {
                 self.getCourseList()
             })
+            // 删除原有title-icon
+            this.$nextTick(() => {
+                const span = document.getElementsByClassName('title-icon')[0].innerHTML = ''
+                console.log('span', span)
+            })
         },
         methods: {
             // 点击导航栏跳转对应页面
@@ -367,12 +376,13 @@
             },
             // 获取课程列表
             async getCourseList () {
-                this.$http.get('/course/get_course_list/').then(res => {
-                    if (res.data.length !== 0) {
-                        this.courseList = res.data
+                this.$http.get('/api/project/').then(res => {
+                    console.log('=================================', res)
+                    if (res.data.results.length !== 0) {
+                        this.courseList = res.data.results
                     }
                     if (this.$store.state.currentCourseId === 0) {
-                        this.$store.commit('updateCourseId', res.data[0].course_id)
+                        this.$store.commit('updateCourseId', res.data.results[0].id)
                     }
                 })
             },
@@ -402,7 +412,11 @@
 <style lang="postcss">
     @import './css/reset.css';
     @import './css/app.css';
-
+    /*svg{*/
+    /*    color: #00c873 !important;*/
+    /*    width: 18px;*/
+    /*    height: 18px;*/
+    /*}*/
     .monitor-navigation-header {
         -webkit-box-flex: 1;
         -ms-flex: 1;
@@ -611,6 +625,9 @@
                 margin-right: 6px;
             }
         }
+    }
+    .icon-circle-shape{
+        font-size: 8px !important;
     }
     .monitor-navigation-admin {
         width: 250px #63656E;

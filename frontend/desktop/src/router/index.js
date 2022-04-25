@@ -25,6 +25,7 @@ const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
 const Displaypaper = () => import('@/views/make_paper/display_paper.vue')
 const Selectquestion = () => import('@/views/make_paper/select_question.vue')
+const SetQuestion = () => import('@/views/set_question/set_question.vue')
 
 const routes = [
     {
@@ -88,6 +89,11 @@ const routes = [
                 path: 'selectquestion',
                 name: 'selectquestion',
                 component: Selectquestion
+            },
+            {
+                path: 'set_question',
+                name: 'set_question',
+                component: SetQuestion
             }
         ]
     },

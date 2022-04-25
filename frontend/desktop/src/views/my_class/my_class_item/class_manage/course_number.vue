@@ -12,6 +12,8 @@
                     size="small"
                     :data="data"
                     :key="component"
+                    :max-height="540"
+                    :virtual-render="true"
                     @selection-change="handleSelect"
                     @row-mouse-enter="handleRowMouseEnter"
                     @row-mouse-leave="handleRowMouseLeave"

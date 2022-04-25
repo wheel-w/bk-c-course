@@ -6,15 +6,13 @@
     justify-content: end;
 }
 .wrapper-body {
-    height: 450px;
+    height: 500px;
     
     .bk-table {
         max-height: 86%;
-        overflow-y: auto;
     }
 }
 .dialog-body {
-    overflow: hidden;
     display: flex;
     justify-content: center;
 }

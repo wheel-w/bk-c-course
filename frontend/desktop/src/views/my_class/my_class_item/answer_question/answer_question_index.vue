@@ -3,8 +3,11 @@
         <div class="content">
             <bk-table :data="currentExerciseList"
                 :size="'media'"
-                max-height="560"
+                height="540"
+                :outer-border="false"
+                :header-border="false"
                 :pagination="pagination"
+                :virtual-render="true"
                 @filter-change="changeList"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange">
@@ -30,11 +33,11 @@
                 </bk-table-column>
                 <bk-table-column label="习题状态" width="150" prop="student_status" :filters="statusFilters" :filter-multiple="true">
                     <template slot-scope="props">
-                        <bk-tag v-if="props.row.student_status === 'NOTSTART'" theme="filled" radius="10px" type="filled">未开始</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'REALSUBMITTED'" theme="warning" radius="10px" type="filled">已提交</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'REALMARKED'" theme="info" radius="10px" type="filled">已批改</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'UNDERWAY' || props.row.student_status === 'SAVED'" theme="success" radius="10px" type="filled">进行中</bk-tag>
-                        <bk-tag v-else-if="props.row.student_status === 'FINISHED'" theme="danger" radius="10px" type="filled">已结束</bk-tag>
+                        <bk-tag v-if="props.row.student_status === 'NOTSTART'" ext-cls="custom-tag" radius="10px">未开始</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'REALSUBMITTED'" theme="warning">已提交</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'REALMARKED'" theme="info">已批改</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'UNDERWAY' || props.row.student_status === 'SAVED'" theme="success">进行中</bk-tag>
+                        <bk-tag v-else-if="props.row.student_status === 'FINISHED'" theme="danger">已结束</bk-tag>
                     </template>
                 </bk-table-column>
                 <bk-table-column label="操作">
@@ -273,8 +276,20 @@
     }
 </script>
 
-<style scoped>
+<style lang="postcss">
 .content {
     margin-top: 20px;
-}
+    }
+    .page-button{
+        background-color: #88a2ef !important;
+        color: #f6f6f6;
+        border-radius: 5px;
+    }
+    .bk-page .page-item.cur-page .page-button{
+        color: #f6f6f6 !important;
+    }
+    .custom-tag {
+        color: #531dab;
+        background: #f9f0ff;
+    }
 </style>

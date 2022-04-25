@@ -194,7 +194,6 @@
             return {
                 totalQuestion: {}, // 总习题列表
                 totalScore: 0, // 总分
-
                 disabled: false,
                 count: '', // 计时
                 seconds: 0, // 从0秒开始计数
