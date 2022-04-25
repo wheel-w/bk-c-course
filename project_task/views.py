@@ -11,18 +11,12 @@ specific Language governing permissions and limitations under the License.
 """
 # Create your views here.
 # from django_filters.rest_framework import DjangoFilterBackend
-from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
 
 from project_task.models import ProjectTask
-from project_task.serilizer import (
-    ProjectTaskSerializer,
-    StudentProjectTaskInfoSerializer,
-    TaskCreateSerializer,
-)
-from question.serializer import QuestionSerializer
+from project_task.serilizer import ProjectTaskSerializer, TaskCreateSerializer
 
 
 class ProjectTaskList(generics.ListCreateAPIView):
@@ -33,55 +27,12 @@ class ProjectTaskList(generics.ListCreateAPIView):
         operation_summary="创建项目任务,和其对应的题目与关系表", request_body=TaskCreateSerializer
     )
     def post(self, request, *args, **kwargs):
-        question_data = request.data.pop("questions")
-        student_data = request.data.pop("students")
+        request.data["creator"] = request.user.username
+        request.data["creator_id"] = request.user.id
 
-        with transaction.atomic():
-            # 创建事务保存点
-            save = transaction.savepoint()
-
-            # question生成
-            for i in range(len(question_data)):
-                question_data[i]["project_id"] = request.data["project_id"]
-            questions = QuestionSerializer(data=question_data, many=True)
-            questions.is_valid(raise_exception=True)
-            questions_id_list = questions.save()
-
-            # 创建任务并写入数据库
-            request.data["creator"] = request.user.username
-            request.data["updater"] = request.user.username
-
-            order_scores = request.data.pop("questions_order_scores")
-            questions_id_order_scores = []
-
-            try:
-                for i in range(len(questions_id_list)):
-                    questions_temp = {questions_id_list[i].id: order_scores[i]}
-                    questions_id_order_scores.append(questions_temp)
-            except IndexError:
-                return Response("答案与答案分数个数不匹配", exception=True)
-
-            request.data["questions_id_order_scores"] = questions_id_order_scores
-            task = ProjectTaskSerializer(data=request.data)
-            task.is_valid(raise_exception=True)
-            task_temp = task.save()
-
-            # 创建关系表
-            relation = []
-            for i in student_data:
-                temp = {
-                    "student_id": i,
-                    "project_id": request.data.get("project_id"),
-                    "project_task_id": task_temp.id,
-                    "creator_id": request.user.id,
-                    "updator_id": request.user.id,
-                }
-                relation.append(temp)
-            taskinfo = StudentProjectTaskInfoSerializer(data=relation, many=True)
-            taskinfo.is_valid(raise_exception=True)
-            taskinfo.save()
-
-        transaction.savepoint_commit(save)
+        temp = TaskCreateSerializer(data=request.data)
+        temp.is_valid(raise_exception=True)
+        task = ProjectTaskSerializer(instance=temp.save())
 
         headers = self.get_success_headers(task.data)
         return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
