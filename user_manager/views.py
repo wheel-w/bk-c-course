@@ -309,7 +309,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         for user in users:
             # 遍历每一个获取到user 查看其是否有标签
             if user.get("id") in user_tag_dic:
-                user["tag"] = user_tag_dic.get(user.get("id"))
+                user["tag"] = user_tag_dic.get(user.get("id")).values()
             else:
                 user["tag"] = None
         return users
