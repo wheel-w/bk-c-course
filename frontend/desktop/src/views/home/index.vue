@@ -1,16 +1,18 @@
 <template>
     <div class="wrapper">
         <div class="header">
-            <h2>我的课程</h2>
-            <bk-button v-if="$store.state.user.identity === 'TEACHER'" theme="primary" @click="toMyClass" style="margin-left: 2vw">
+            <h2>我的项目</h2>
+            <bk-button theme="primary" @click="toMyClass" style="margin-left: 2vw">
+                <!--<bk-button v-if="$store.state.user.identity === 'TEACHER'" theme="primary" @click="toMyClass" style="margin-left: 2vw">-->
                 新增课程
             </bk-button>
         </div>
         <div class="content">
-            <div class="content-item" v-for="item in courseList" :key="item.course_id" @click="toMyClassDetail(item.course_id)">
-                <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.course_name }}</h3>
-                <span>课程id：{{ item.course_id }}</span>
-                <span>任教老师：{{ item.teacher }}</span>
+            <div class="content-item" v-for="item in courseList" :key="item.id">
+                <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.name }}</h3>
+                <p>项目id：{{ item.id }}</p>
+                <p>创建人：{{ item.creator }}</p>
+                <a href="#" @click="toMyClassDetail(item.course_id)"><span>查看项目任务</span></a>
             </div>
         </div>
     </div>
@@ -48,9 +50,10 @@
             },
             // 获取课程列表
             async getCourseList () {
-                this.$http.get('/course/find_courses/').then(res => {
-                    if (res.data.length !== 0) {
-                        this.courseList = res.data
+                this.$http.get('/api/project/').then(res => {
+                    console.log('res------')
+                    if (res.data.count !== 0) {
+                        this.courseList = res.data.results
                     }
                 })
             }
@@ -59,38 +62,63 @@
 </script>
 
 <style scoped>
-.wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 580px;
-}
-
-.header {
-    width: 20vw;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-.content {
-    display: flex;
-    flex-wrap: wrap;
-    overflow-y: auto;
-}
-.content-item {
-    width: 20%;
-    margin: 10px 2.5%;
-    height: 100px;
-    border-radius: 3px;
-    background-image: linear-gradient(to right, #f0f1f5, #e4e5e9);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    padding-left: 1%;
-}
-.content-item:hover {
-    cursor: pointer;
-    transition: 300ms;
-    box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.19);
-}
+    .wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 580px;
+    }
+    .header {
+        width: 20vw;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    .bk-button.bk-primary {
+        background: #88a2ef;
+        border-color: #88a2ef;
+        color: #fff;
+    }
+    .content {
+        display: flex;
+        flex-wrap: wrap;
+        overflow-y: auto;
+    }
+    .content-item {
+        /*width: 300px;*/
+        margin: 20px;
+        padding: 20px 40px;
+        background: #ebf5fc;
+        border-radius: 10px;
+        box-shadow: -6px -6px 20px rgba(255, 255, 255, 1),
+    }
+    .content-item:hover {
+        transition: 300ms;
+        box-shadow: inset -6px -6px 10px rgba(255, 255, 255, 0.5), inset 6px 6px 20px rgba(0, 0, 0, 0.05);
+    }
+    .content-item a{
+        display: inline-block;
+        padding: 10px 20px;
+        margin-top: 15px;
+        border-radius: 10px;
+        color: #32a3b1;
+        font-size: 16px;
+        text-decoration: none;
+        box-shadow: -4px -4px 15px rgba(255, 255, 255, 1), 4px 4px 15px rgba(0, 0, 0, .1);
+    }
+    .content-item a:hover{
+        box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.5), inset 4px 4px 10px rgba(0, 0, 0, .1);
+    }
+    .content-item a:hover span{
+        display: block;
+        transform: scale(0.98);
+    }
+    .content-item h3{
+        color: #32a3b1;
+        font-weight: 700;
+        font-size: 1.4em;
+        letter-spacing: 2px;
+    }
+    .content-item p{
+        color: #32a3b1;
+    }
 </style>

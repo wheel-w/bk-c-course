@@ -10,8 +10,9 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from blueapps.account.models import User as Account
 from rest_framework import serializers
+
+from blueapps.account.models import User as Account
 
 from . import models
 
@@ -21,7 +22,14 @@ class UserTagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.UserTag
-        fields = "__all__"
+        fields = [
+            "id",
+            "tag_value",
+            "tag_color",
+            "tag_comment",
+            "sub_project",
+            "is_built_in",
+        ]
 
 
 class UserTagContactSerializer(serializers.ModelSerializer):
@@ -72,13 +80,11 @@ class UserSerSerializer(serializers.ModelSerializer):
     """查找用户信息"""
 
     # 上一次登录信息
-    last_login = serializers.CharField(source="account.last_login", read_only=True)
+    last_login = serializers.DateTimeField(source="account.last_login", read_only=True)
     # 用户名
     username = serializers.CharField(source="account.username", read_only=True)
     # 标签
-    role = serializers.CharField(
-        min_length=2, max_length=2, required=True, write_only=True
-    )
+    role = serializers.CharField(min_length=2, max_length=4, read_only=True)
 
     class Meta:
         model = models.User

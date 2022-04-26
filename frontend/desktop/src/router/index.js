@@ -26,6 +26,7 @@ const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_questi
 const Displaypaper = () => import('@/views/make_paper/display_paper.vue')
 const Selectquestion = () => import('@/views/make_paper/select_question.vue')
 const UserManage = () => import('@/views/userManage/userManage.vue')
+const SetQuestion = () => import('@/views/set_question/set_question.vue')
 
 const routes = [
     {
@@ -94,6 +95,11 @@ const routes = [
                 path: 'userManage',
                 name: 'userManage',
                 component: UserManage
+            },
+            {
+                path: 'set_question',
+                name: 'set_question',
+                component: SetQuestion
             }
         ]
     },
