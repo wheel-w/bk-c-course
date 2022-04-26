@@ -98,10 +98,10 @@
                 position="'top'"
                 :mask-close="false"
                 :header-position="visible.addcourse.headerPosition"
-                :title="'删除除课程'"
+                :title="'删除课程'"
                 @confirm="removeCourse(id)">
                 <div class="dialog-body">
-                    <p>确定要删除{{formData3.name}}这门课程吗</p>
+                    <h3>确定要删除{{formData3.name}}这门课程吗</h3>
                 </div>
             </bk-dialog>
             <!-- 批量删除 -->
@@ -112,7 +112,7 @@
                 :header-position="visible.deleteall.headerPosition"
                 @confirm="removeMultiCourse(id)">
                 <div class="dialog-body">
-                    <p>确定要删除{{id.length}}项内容吗？</p>
+                    <h3>确定要删除{{id.length}}项内容吗？</h3>
                 </div>
             </bk-dialog>
             <!-- 修改课程 -->
