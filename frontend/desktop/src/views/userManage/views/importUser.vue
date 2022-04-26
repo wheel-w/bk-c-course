@@ -27,6 +27,7 @@
                 theme="primary"
                 @click="tagConfig.visible = true"
                 :disabled="batch.accountList.length === 0"
+                icon="folder-plus"
             >导入选中用户</bk-button
             >
         </div>
@@ -237,9 +238,12 @@
             },
             handleSelectSearch (keyWord) {
                 this.keyWord = keyWord
+                if (!keyWord) {
+                    return
+                }
                 this.search()
             },
-            search: vueDebounce('getAccountlist', 2000)
+            search: vueDebounce('flushAccounts', 500)
         }
     }
 </script>

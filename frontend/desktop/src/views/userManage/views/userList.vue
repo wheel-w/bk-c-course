@@ -26,7 +26,9 @@
                     :val="batch.checkedUsers.length"
                     :visible="batch.checkedUsers.length !== 0"
                 >
-                    <bk-button @click="handleBatch" class="ml10"> 执行操作 </bk-button>
+                    <bk-button @click="handleBatch" class="ml10" icon="play2">
+                        执行操作
+                    </bk-button>
                 </bk-badge>
                 <!-- 批量删除操作弹窗 -->
                 <bk-dialog
@@ -49,7 +51,12 @@
                 </bk-dialog>
             </div>
             <div id="tabRight">
-                <bk-button theme="primary" class="mr10" @click="handleDownload">
+                <bk-button
+                    theme="primary"
+                    class="mr10"
+                    icon="download"
+                    @click="handleDownload"
+                >
                     导出
                 </bk-button>
                 <bk-input
@@ -133,10 +140,10 @@
                     >{{ props.row.tag[1].tag_value }}</bk-tag
                     > -->
                     <bk-tag
-                        :style="
-                            'background-color:' + colorTransform(props.row.tag[1].tag_color)
-                        "
-                    >{{ props.row.tag[1].tag_value }}</bk-tag
+                        v-for="tag in props.row.tag"
+                        :key="tag.tag_id"
+                        :style="'background-color:' + colorTransform(tag.tag_color)"
+                    >{{ tag.tag_value }}</bk-tag
                     >
                 </template>
             </bk-table-column>
