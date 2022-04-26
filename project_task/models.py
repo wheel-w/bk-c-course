@@ -39,7 +39,7 @@ class ProjectTask(models.Model):
     start_time = models.DateTimeField("任务开始时间", blank=True, null=True)
     end_time = models.DateTimeField("任务截止时间", blank=True, null=True)
     status = models.CharField("任务状态", max_length=10, choices=STATUS)
-    judge_teachers_weight = models.JSONField("评委老师id及其权重")
+    judge_teachers_info = models.JSONField("评委老师id及其权重")
 
     creator = models.TextField("创建者姓名")
     updater = models.TextField("更新者姓名")
