@@ -184,7 +184,7 @@
         bkTagInput,
         bkTag
     } from 'bk-magic-vue'
-    import { saveJSON } from '../../../common/util'
+    import { saveJSON } from '@/common/util'
     const UserConfig = () => import('../components/userConfig')
     const BASE_UEL = 'api/users/'
     export default {

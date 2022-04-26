@@ -84,7 +84,7 @@
 
 <script>
     import { bkSelect, bkOption } from 'bk-magic-vue'
-    import { vueDebounce } from '../../../common/util'
+    import { vueDebounce } from '@/common/util'
     /*
     搜索流程:
     1.提供关键字给后端，获得100条以内相关数据
