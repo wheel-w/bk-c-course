@@ -111,7 +111,7 @@
 }
 
 .yy-border {
-  border: 1px #d9ecff solid;
+  border: 1px #c2c2c2 solid;
 }
 .yy-descriptions {
   margin: 20px;
@@ -121,7 +121,8 @@
 }
 .yy-descriptions-item-label {
   flex: 1 !important;
-  background-color: #ecf5ff;
+  background-color: #ebf2ff;
+    color: #3a84ff;
   font-weight: 700;
   height: 44px;
   padding: 10px;
@@ -138,6 +139,8 @@
   flex: 2;
   padding-left: 10px;
   line-height: 42px;
+  background-color: #ebf2ff;
+    color: #3a84ff;
   margin: 0px -1px -1px 0px;
 }
 </style>

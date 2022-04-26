@@ -36,8 +36,7 @@
         <YyDescriptions
             title="联系方式"
             :form-config="contactConfig"
-            :is-edit="isEdit"
-        >
+            :is-edit="isEdit">
             <div slot="hander">
                 <bk-button theme="primary" size="small" @click="isEdit = !isEdit">
                     {{ isEdit ? "确定" : "编辑" }}
@@ -117,4 +116,5 @@
     }
 </script>
 
-<style scoped></style>
+<style scoped>
+</style>

@@ -1,11 +1,9 @@
 .wrapper1 {
     height: 600px;
-
     .wrapper-body {
       height: 75%;
-      .bk-table {
+     .bk-table {
         max-height: 86%;
-        overflow-y: auto;
       }
     }
 }
