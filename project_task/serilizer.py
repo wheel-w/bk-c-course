@@ -9,17 +9,7 @@ from question.serializer import QuestionSerializer
 class ProjectTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTask
-        # exclude = ['questions_id_order_scores']
         fields = "__all__"
-
-    # def validate_questions_id_order_scores(self, data):
-    #     for i in data:
-    #         temp = list(i.values())[0]
-    #         try:
-    #             int(list(dict(temp).values())[0])
-    #         except ValueError:
-    #             raise serializers.ValidationError("问题分数-参数校验错误")
-    #     return data
 
 
 class TaskCreateSerializer(serializers.Serializer):
