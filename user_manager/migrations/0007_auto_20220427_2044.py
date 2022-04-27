@@ -15,9 +15,4 @@ class Migration(migrations.Migration):
             name="created_by",
             field=models.CharField(max_length=30, null=True, verbose_name="创建者"),
         ),
-        migrations.AlterField(
-            model_name="usertag",
-            name="tag_value",
-            field=models.CharField(max_length=20, unique=True, verbose_name="标签值"),
-        ),
     ]
