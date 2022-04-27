@@ -54,6 +54,7 @@ class UserTag(models.Model):
     time_created = models.DateTimeField("创建时间", default=timezone.now)
     time_updated = models.DateTimeField("修改时间", auto_now=True)
     tag_comment = models.CharField("备注", max_length=30, null=True)
+    created_by = models.CharField("创建者", max_length=30, null=True)
 
     def __str__(self):
         return f"{self.tag_value}_{self.tag_color}"
