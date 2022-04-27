@@ -9,6 +9,12 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-# from django.shortcuts import render
+from rest_framework import generics
 
-# Create your views here.
+from question.models import Question
+from question.serializer import QuestionSerializer
+
+
+class QuestionList(generics.ListCreateAPIView):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
