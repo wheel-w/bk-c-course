@@ -343,7 +343,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)
-        data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id)
+        data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id).values()
         return Response(data)
 
     def destroy(self, request, *args, **kwargs):
