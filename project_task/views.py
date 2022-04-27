@@ -81,12 +81,12 @@ class ProjectTaskList(generics.ListCreateAPIView):
                     "project_id": data.get("project_id"),
                     "project_task_id": task_temp.id,
                     "creator_id": id,
-                    "updator_id": id,
+                    "updater_id": id,
                 }
                 relation.append(temp)
-            taskinfo = StudentProjectTaskInfoSerializer(data=relation, many=True)
-            taskinfo.is_valid(raise_exception=True)
-            taskinfo.save()
+            task_info = StudentProjectTaskInfoSerializer(data=relation, many=True)
+            task_info.is_valid(raise_exception=True)
+            task_info.save()
 
         transaction.savepoint_commit(save)
 

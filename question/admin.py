@@ -36,7 +36,7 @@ class QuestionTagAdmin(admin.ModelAdmin):
 class QuestionTagContactAdmin(admin.ModelAdmin):
     list_filter = (
         "id",
-        "user_id",
+        "question_id",
         "tag_id",
     )
 

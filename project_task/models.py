@@ -81,7 +81,7 @@ class StudentProjectTaskInfo(models.Model):
     cumulative_time = models.DurationField("任务累计时间", default=timedelta(seconds=0))
 
     creator_id = models.BigIntegerField("创建者id")
-    updator_id = models.BigIntegerField("更新者id")
+    updater_id = models.BigIntegerField("更新者id")
     time_created = models.DateTimeField("创建时间", auto_now_add=True)
     time_updated = models.DateTimeField("更新时间", auto_now=True)
 

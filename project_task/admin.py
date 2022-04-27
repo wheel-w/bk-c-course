@@ -34,7 +34,7 @@ class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
         "status",
         "total_score",
         "creator_id",
-        "updator_id",
+        "updater_id",
     )
 
 
