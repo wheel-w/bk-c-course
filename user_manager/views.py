@@ -196,6 +196,7 @@ class BatchView(ViewSet):
             return Response("请传入一个id列表", exception=True)
         # 获取要删除的用户列表
         queryset = self.queryset.filter(id__in=id_list)
+        tag_conn_queryset = UserTagContact.objects.filter(user_id__in=id_list)
         delete_users = []
         for i in queryset:
             # 记录删除的用户姓名
@@ -206,6 +207,7 @@ class BatchView(ViewSet):
             return Response("没有找到任何对应用户", exception=True)
         # 统一删除
         queryset.delete()
+        tag_conn_queryset.delete()
         return Response(
             {
                 "delete_count": len(delete_users),
