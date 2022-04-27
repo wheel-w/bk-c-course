@@ -351,6 +351,9 @@ class UserView(GenericViewSet, UpdateModelMixin):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+        # 删除标签
+        UserTagContact.objects.filter(user_id=instance.id).delete()
+        # 删除用户
         instance.delete()
         return Response(serializer.data)
 
