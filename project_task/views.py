@@ -12,7 +12,6 @@ specific Language governing permissions and limitations under the License.
 from django.db import transaction
 
 # Create your views here.
-# from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
