@@ -20,21 +20,25 @@ from .perform_task_views import PerformAndJudgeViewSet
 urlpatterns = [
     path(r"project-task/", views.ProjectTaskList.as_view()),
     path(
-        r"relation-info/<int:project_task_id>/all/",
+        r"project-task-info/<int:project_id>/all_task/",
+        PerformAndJudgeViewSet.as_view({"get": "get_all_task"}),
+    ),
+    path(
+        r"project-task-info/<int:project_task_id>/all/",
         PerformAndJudgeViewSet.as_view({"get": "get_all_info"}),
     ),
     path(
-        r"relation-info/<int:project_task_id>/all/<int:student_id>/",
+        r"project-task-info/<int:project_task_id>/all/<int:student_id>/",
         PerformAndJudgeViewSet.as_view({"get": "get_stu_info"}),
     ),
     path(
-        r"relation-info/<int:project_task_id>/",
+        r"project-task-info/<int:student_task_id>/",
         PerformAndJudgeViewSet.as_view(
             {"patch": "perform_task", "get": "get_individual_info"}
         ),
     ),
     path(
-        r"relation-info/<int:project_task_id>/judge/",
+        r"project-task-info/<int:student_task_id>/judge/",
         PerformAndJudgeViewSet.as_view(
             {
                 "patch": "judge_task",

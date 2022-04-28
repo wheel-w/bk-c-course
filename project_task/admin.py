@@ -48,6 +48,7 @@ class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
     )
 
     list_display = (
+        "student_id",
         "project_id",
         "id",
         "project_task_id",

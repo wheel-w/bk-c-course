@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from project_task.models import ProjectTask, StudentProjectTaskInfo
+from question.models import Question
 from question.serializer import QuestionSerializer
 
 
@@ -8,6 +9,64 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTask
         fields = "__all__"
+
+
+class ProjectTaskDetailSerializer(serializers.ModelSerializer):
+    questions_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectTask
+        fields = "__all__"
+
+    def get_questions_info(self, data):
+        raw_questions_info = data.questions_info
+
+        question_score_list = []
+        for item in raw_questions_info.values():
+            for score in item.values():
+                question_score_list.append(score)
+
+        question_id_list = list(raw_questions_info.keys())
+        questions = Question.objects.filter(id__in=question_id_list)
+        questions_info = QuestionSerializer(questions, many=True)
+
+        question_index = 0
+        for item in questions_info.data:
+            item["question_score"] = question_score_list[question_index]
+            question_index += 1
+
+        return questions_info.data
+
+
+class ProjectTaskDetailForStuSerializer(serializers.ModelSerializer):
+    questions_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectTask
+        fields = "__all__"
+
+    def get_questions_info(self, data):
+        raw_questions_info = data.questions_info
+
+        question_score_list = []
+        for item in raw_questions_info.values():
+            for score in item.values():
+                question_score_list.append(score)
+
+        question_id_list = list(raw_questions_info.keys())
+        questions = Question.objects.filter(id__in=question_id_list)
+        questions_info = QuestionSerializer(questions, many=True)
+
+        question_index = 0
+        for item in questions_info.data:
+            item["question_score"] = question_score_list[question_index]
+            item.pop("answer")
+            item.pop("answer_url")
+            item.pop("explain")
+            item.pop("explain_url")
+            question_index += 1
+
+        return questions_info.data
 
 
 # 创建课程的序列化器
@@ -35,6 +94,21 @@ class StudentProjectTaskInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProjectTaskInfo
         exclude = ["id"]
+
+
+class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
+    individual_score = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StudentProjectTaskInfo
+        exclude = ["id"]
+
+    def get_individual_score(self, relation):
+        print(relation.individual_score)
+        individual_score = relation.individual_score
+        for item in individual_score:
+            item.pop("teacher_name")
+        return individual_score
 
 
 class ProjectSearchInfoSerializer(serializers.ModelSerializer):
@@ -80,5 +154,4 @@ class StudentPerformTaskSerializer(serializers.ModelSerializer):
 
 
 class TeacherJudgeSerializer(serializers.Serializer):
-    student_id = serializers.IntegerField()
     score_list = serializers.ListField(child=serializers.IntegerField())
