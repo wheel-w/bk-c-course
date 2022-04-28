@@ -89,7 +89,7 @@
                 </bk-form>
                 <div slot="footer">
                     <bk-button theme="primary" class="mr10" @click="addCourse">创建</bk-button>
-                    <bk-button theme="primary" class="mr10" @click="visible.addcourse.isshow = false">取消</bk-button>
+                    <bk-button class="mr10" @click="visible.addcourse.isshow = false">取消</bk-button>
                 </div>
             </bk-dialog>
             <!-- 删除课程 -->
@@ -386,6 +386,7 @@
                         this.getList()
                     }
                 })
+                this.getList()
                 this.formData3 = ''
             },
             // 修改课程
@@ -414,7 +415,8 @@
                             delay: 1000,
                             theme: 'error',
                             offsetY: 60,
-                            ellipsisLine: 2 })
+                            ellipsisLine: 2
+                        })
                     }
                 })
             },

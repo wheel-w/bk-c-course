@@ -417,6 +417,12 @@
     /*    width: 18px;*/
     /*    height: 18px;*/
     /*}*/
+    .bk-dialog-content{
+        background-image: url('./images/add_dialog_bg.png');
+    }
+    .bk-dialog-footer{
+        background-color: #cbd2e6 !important;
+    }
     .monitor-navigation-header {
         -webkit-box-flex: 1;
         -ms-flex: 1;
