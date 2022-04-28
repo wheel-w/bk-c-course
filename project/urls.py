@@ -29,7 +29,7 @@ urlpatterns = [
         ),
     ),
     path(
-        r"project-user/<int:project_id>/export-info",
+        r"project-user/<int:project_id>/export-info/",
         views.UserProjectContactViewSet.as_view({"get": "export_info"}),
     ),
 ]

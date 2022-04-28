@@ -10,6 +10,7 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# 创建课程的序列化器
 class TaskCreateSerializer(serializers.Serializer):
     questions = QuestionSerializer(many=True)
     students = serializers.ListField(child=serializers.IntegerField())
@@ -52,3 +53,32 @@ class ProjectSearchInfoSerializer(serializers.ModelSerializer):
             "individual_score": {"required": False},
             "total_score": {"required": False},
         }
+
+
+class StudentPerformTaskSerializer(serializers.ModelSerializer):
+    stu_answers = serializers.ListField(child=serializers.CharField(), required=False)
+
+    class Meta:
+        model = StudentProjectTaskInfo
+        fields = [
+            "stu_answers",
+            "cumulative_time",
+            "individual_score",
+            "updater_id",
+            "status",
+            "student_id",
+            "total_score",
+        ]
+
+        extra_kwargs = {
+            "cumulative_time": {"required": False},
+            "individual_score": {"required": False},
+            "student_id": {"required": False},
+            "updater_id": {"required": False},
+            "total_score": {"required": False},
+        }
+
+
+class TeacherJudgeSerializer(serializers.Serializer):
+    student_id = serializers.IntegerField()
+    score_list = serializers.ListField(child=serializers.IntegerField())

@@ -25,9 +25,29 @@ class ProjectTaskAdmin(admin.ModelAdmin):
         "updater",
     )
 
+    list_display = (
+        "project_id",
+        "id",
+        "title",
+        "types",
+        "status",
+        "creator",
+        "updater",
+    )
+
 
 class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
     list_filter = (
+        "project_id",
+        "id",
+        "project_task_id",
+        "status",
+        "total_score",
+        "creator_id",
+        "updater_id",
+    )
+
+    list_display = (
         "project_id",
         "id",
         "project_task_id",
