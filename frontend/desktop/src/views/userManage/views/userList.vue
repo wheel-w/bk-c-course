@@ -2,35 +2,23 @@
     <div id="userlist">
         <div id="tab">
             <div id="batch">
-                <bk-select
-                    v-model="batch.opera"
-                    placeholder="批量操作"
-                    :disabled="false"
-                    :clearable="false"
-                    ext-cls="select-custom"
-                    ext-popover-cls="select-popover-custom"
-                    style="width: 120px"
-                >
-                    <bk-option
-                        v-for="option in batch.options"
-                        :key="option.id"
-                        :id="option.id"
-                        :name="option.name"
-                    >
-                    </bk-option>
-                </bk-select>
-                <bk-badge
-                    class="mr40"
-                    theme="danger"
-                    :max="99"
-                    :val="batch.checkedUsers.length"
-                    :visible="batch.checkedUsers.length !== 0"
-                >
-                    <bk-button @click="handleBatch" class="ml10" icon="play2">
-                        执行操作
-                    </bk-button>
-                </bk-badge>
-                <!-- 批量删除操作弹窗 -->
+                <bk-dropdown-menu>
+                    <div class="dropdown-trigger-btn" slot="dropdown-trigger">
+                        <span>批量操作</span>
+                    </div>
+                    <ul class="bk-dropdown-list" slot="dropdown-content">
+                        <li>
+                            <a href="javascript:;" @click="handleBatch('batchDel')"
+                            >批量删除</a
+                            >
+                        </li>
+                        <li>
+                            <a href="javascript:;" @click="handleBatch('batchTag')"
+                            >批量打tag</a
+                            >
+                        </li>
+                    </ul>
+                </bk-dropdown-menu>
                 <bk-dialog
                     v-model="batch.dialogVisible"
                     theme="primary"
@@ -51,14 +39,6 @@
                 </bk-dialog>
             </div>
             <div id="tabRight">
-                <bk-button
-                    theme="primary"
-                    class="mr10"
-                    icon="download"
-                    @click="handleDownload"
-                >
-                    导出
-                </bk-button>
                 <bk-input
                     left-icon="bk-icon icon-search"
                     placeholder="搜索用户"
@@ -83,9 +63,9 @@
                 }
             "
             :pagination="page"
-            size="large"
-            stripe
+            size="small"
             height="62vh"
+            style="margin-top: 10px"
             auto-scroll-to-top
             @page-change="handlePageChange"
             @selection-change="handleSelect"
@@ -125,20 +105,17 @@
                 label="邮箱"
                 column-key="email"
                 prop="email"
-                :width="180"
+                align="center"
+                width="180"
             ></bk-table-column>
-            <bk-table-column label="标签" column-key="tag" prop="tag" :width="100">
+            <bk-table-column
+                label="标签"
+                column-key="tag"
+                prop="tag"
+                width="200"
+                align="center"
+            >
                 <template slot-scope="props">
-                    <!-- 这个保留文字颜色 -->
-                    <!-- <bk-tag
-                        :style="
-                            'color: #' +
-                                props.row.tag[1].tag_color +
-                                '; background-color:' +
-                                colorTransform(props.row.tag[1].tag_color)
-                        "
-                    >{{ props.row.tag[1].tag_value }}</bk-tag
-                    > -->
                     <bk-tag
                         v-for="tag in props.row.tag"
                         :key="tag.tag_id"
@@ -155,13 +132,13 @@
                 :filters="filters.min_date"
                 :filter-multiple="false"
             ></bk-table-column>
-            <bk-table-column label="用户操作" width="180">
+            <bk-table-column label="用户操作" width="100">
                 <template slot-scope="props">
                     <bk-button theme="primary" text @click="handleDelUser(props.row)"
-                    >删除用户</bk-button
+                    >删除</bk-button
                     >
                     <bk-button theme="primary" text @click="handleEditUser(props.row)"
-                    >修改用户资料</bk-button
+                    >修改</bk-button
                     >
                 </template>
             </bk-table-column>
@@ -180,11 +157,11 @@
         bkTable,
         bkTableColumn,
         bkButton,
-        bkBadge,
         bkTagInput,
-        bkTag
+        bkTag,
+        bkDropdownMenu
     } from 'bk-magic-vue'
-    import { saveJSON } from '@/common/util'
+    import { colorTransform } from '@/common/util'
     const UserConfig = () => import('../components/userConfig')
     const BASE_UEL = 'api/users/'
     export default {
@@ -194,9 +171,9 @@
             bkTableColumn,
             bkButton,
             UserConfig,
-            bkBadge,
             bkTagInput,
-            bkTag
+            bkTag,
+            bkDropdownMenu
         },
         data () {
             const current = new Date().getTime()
@@ -215,8 +192,6 @@
                         { id: 'batchDel', name: '批量删除' },
                         { id: 'batchTag', name: '批量打tag' }
                     ],
-                    // 当前选项
-                    opera: 'batchDel',
                     // 选中条目id
                     checkedUsers: [],
                     // 删除dialog
@@ -369,53 +344,31 @@
                 this.editUserFlag = true
                 this.userConfigCache = row
             },
-            handleDownload () {
-                if (confirm('目前只能保存当前页的用户信息')) {
-                    saveJSON(this.userlist, 'userlist.json')
-                }
-            },
             handleFilterChange (column) {
                 for (const key in column) {
                     // 组件库支持多值条件，所以所有的条件value都是数组，这里转化一下
-                    // if (key === 'last_login') {
-                    //     column.min_date = column[key][0]
-                    //     continue
-                    // }
                     column[key] = column[key][0]
                 }
                 Object.assign(this.search, column)
                 this.getUserlist()
             },
-            handleBatch () {
-                if (this.batch.opera === 'batchDel') {
+            handleBatch (opera) {
+                if (opera === 'batchDel') {
                     if (this.batch.checkedUsers.length === 0) {
                         alert('请选择用户')
                         return
                     }
                     this.batch.dialogVisible = true
-                } else if (this.batch.opera === 'batchTag') {
+                } else if (opera === 'batchTag') {
                     alert('施工中...')
                 }
             },
-            colorTransform (color = '66ccff') {
-                // eslint-disable-next-line no-eval
-                const a = eval(`0x${color}`)
-                const r = (a >>> 16) & 255
-                const g = (a >>> 8) & 255
-                const b = a & 255
-                return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.2 + ')'
-            }
+            colorTransform
         }
     }
 </script>
 
 <style lang="postcss">
-#userlist {
-  table {
-    font-weight: 500;
-    font-size: 15px;
-  }
-}
 #tab {
   display: flex;
   justify-content: space-between;
@@ -424,6 +377,15 @@
   #batch {
     display: flex;
     justify-content: space-between;
+    .bk-dropdown-menu {
+      padding: 8px 14px;
+      border: 1px solid #81aaec;
+      border-radius: 5px;
+      span {
+        font-size: 14px;
+        font-weight: 800;
+      }
+    }
     .bk-select {
       width: 100px;
     }

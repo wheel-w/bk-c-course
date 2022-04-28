@@ -384,3 +384,18 @@ export function vueDebounce (funName, wait) {
         }, wait)
     }
 }
+/**
+ * 16进制颜色字符串转化为css的rgba()函数
+ *
+ * @param {String} 66CCFF
+ * @return {String} rgba(128,128,128,0.2)
+ */
+
+export function colorTransform (colorStr) {
+    // eslint-disable-next-line no-eval
+    const a = eval(`0x${colorStr}`)
+    const r = (a >>> 16) & 255
+    const g = (a >>> 8) & 255
+    const b = a & 255
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.2 + ')'
+}

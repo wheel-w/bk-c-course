@@ -69,6 +69,7 @@
                 <bk-navigation-menu
                     ref="menu"
                     @select="handleSelect"
+                    icon="circle"
                     :default-active="nav.id"
                     :item-default-bg-color="'#7690D9'"
                     :item-hover-bg-color="'#5E7AC5'"
@@ -85,6 +86,7 @@
                         :default-active="item.active"
                         v-bind="item"
                     >
+                        <!-- 这里的处理不好,为什么不使用原生icon配置项,配合css实现效果呢？ -->
                         <bk-icon
                             v-if="item.id === 'home'"
                             type="circle-shape"
@@ -114,6 +116,11 @@
                             v-if="item.id === 'displaypaper'"
                             type="circle-shape"
                             style="color: #febb5e"
+                        />
+                        <bk-icon
+                            v-if="item.id === 'user_manage'"
+                            type="circle-shape"
+                            style="color: #66ccff"
                         />
                         <bk-icon
                             v-if="item.id === 'set_question'"
@@ -228,10 +235,9 @@
                             group: true
                         },
                         {
-                            id: 'userManage',
+                            id: 'user_manage',
                             name: '用户管理',
-                            icon: 'icon-tree-process-shape',
-                            pathName: 'userManage',
+                            pathName: 'user_manage',
                             children: [],
                             group: true
                         },
@@ -299,10 +305,9 @@
                             group: true
                         },
                         {
-                            id: 'userManage',
+                            id: 'user_manage',
                             name: '用户管理',
-                            icon: 'icon-tree-process-shape',
-                            pathName: 'userManage',
+                            pathName: 'user_manage',
                             children: [],
                             group: true
                         }
@@ -432,12 +437,6 @@
             // 其他页面更新课程下拉选框
             bus.$on('updateCourseList', () => {
                 self.getCourseList()
-            })
-            // 删除原有title-icon
-            this.$nextTick(() => {
-                const span = (document.getElementsByClassName('title-icon')[0].innerHTML
-                    = '')
-                console.log('span', span)
             })
         },
         methods: {
@@ -799,5 +798,10 @@
 }
 .nav-slider {
   background-image: url("./images/nav_bg.png");
+}
+/* 删除原有title-icon */
+/* 这里原本使用nexttick实现，我觉得很没必要，所以改了 */
+span.title-icon > i {
+  display: none;
 }
 </style>

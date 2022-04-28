@@ -5,7 +5,7 @@
             <bk-tab-panel v-bind="{ name: 'userlist', label: '用户列表' }">
                 <user-list v-if="active === 'userlist'"></user-list>
             </bk-tab-panel>
-            <bk-tab-panel v-bind="{ name: 'accounts', label: '可导入用户' }">
+            <bk-tab-panel v-bind="{ name: 'accounts', label: '导入用户' }">
                 <import-user v-if="active === 'accounts'"></import-user>
             </bk-tab-panel>
         </bk-tab>

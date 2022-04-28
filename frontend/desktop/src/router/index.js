@@ -90,8 +90,8 @@ const routes = [
                 component: Selectquestion
             },
             {
-                path: 'userManage',
-                name: 'userManage',
+                path: 'user_manage',
+                name: 'user_manage',
                 component: UserManage
             },
             {

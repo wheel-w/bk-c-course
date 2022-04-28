@@ -18,7 +18,7 @@
                     v-for="option in batch.selectMap"
                     :key="option.username"
                     :id="option.username"
-                    :name="option.display_name + ' --- ' + option.username"
+                    :name="option.username + '(' + option.display_name + ')'"
                     :disabled="option.disable"
                 >
                 </bk-option>
@@ -27,7 +27,6 @@
                 theme="primary"
                 @click="tagConfig.visible = true"
                 :disabled="batch.accountList.length === 0"
-                icon="folder-plus"
             >导入选中用户</bk-button
             >
         </div>
@@ -41,7 +40,7 @@
         >
             <!-- 表格空状态插槽 -->
             <template slot="empty">
-                <bk-icon type="exclamation-triangle" />
+                <!-- <bk-icon type="exclamation-triangle" /> -->
                 <div style="font-weight: 800; font-size: 18px">请在上方搜索栏筛选</div>
             </template>
             <bk-table-column
@@ -54,9 +53,9 @@
             </bk-table-column>
             <bk-table-column label="操作">
                 <template slot-scope="props">
-                    <bk-icon type="close-circle-shape" />
+                    <!-- <bk-icon type="close-circle-shape" /> -->
                     <bk-button theme="primary" text @click="handleDeleteSingle(props.row)"
-                    >取消</bk-button
+                    >删除</bk-button
                     >
                 </template>
             </bk-table-column>
@@ -64,27 +63,26 @@
         <!-- 批量添加确认框，以及添加tag -->
         <bk-dialog
             v-model="tagConfig.visible"
-            title="请选择要添加的标签"
+            title="请选择导入用户身份"
             theme="primary"
             @confirm="handleImportAccounts"
-            ok-text="确认添加tag"
+            ok-text="确认导入"
         >
-            <bk-select v-model="tagConfig.tag_id">
-                <bk-option
-                    v-for="tag in tagConfig.tags"
-                    :key="tag.id"
-                    :id="tag.id"
-                    :name="tag.tag_value"
-                >
-                </bk-option>
-            </bk-select>
+            <bk-radio-group v-model="tagConfig.tag_id">
+                <bk-radio v-for="tag in tagConfig.tags" :key="tag.id" :value="tag.id">
+                    <bk-tag
+                        :style="'background-color:' + colorTransform(tag.tag_color)"
+                    >{{ tag.tag_value }}</bk-tag
+                    >
+                </bk-radio>
+            </bk-radio-group>
         </bk-dialog>
     </div>
 </template>
 
 <script>
-    import { bkSelect, bkOption } from 'bk-magic-vue'
-    import { vueDebounce } from '@/common/util'
+    import { bkRadio } from 'bk-magic-vue'
+    import { vueDebounce, colorTransform } from '@/common/util'
     /*
     搜索流程:
     1.提供关键字给后端，获得100条以内相关数据
@@ -92,8 +90,7 @@
     */
     export default {
         components: {
-            bkSelect,
-            bkOption
+            bkRadio
         },
         data () {
             return {
@@ -109,7 +106,7 @@
                     // 所有的tag
                     tags: [
                         {
-                            id: 1,
+                            tag_id: 1,
                             tag_value: '学生'
                         }
                     ]
@@ -167,7 +164,11 @@
             // 获取accout列表
             async getAccountlist () {
                 await this.$http.get(`/api/accounts/?key=${this.keyWord}`).then((res) => {
-                    this.allAccounts = res.data
+                    if (res.data !== 'empty') {
+                        this.allAccounts = res.data
+                    } else {
+                        this.allAccounts = []
+                    }
                 })
             },
             // 获取tag列表
@@ -243,7 +244,8 @@
                 }
                 this.search()
             },
-            search: vueDebounce('flushAccounts', 500)
+            search: vueDebounce('flushAccounts', 500),
+            colorTransform
         }
     }
 </script>
@@ -256,5 +258,10 @@
   align-items: center;
   margin-top: 5px;
   margin-bottom: 5px;
+}
+/* 选择标签居中 */
+.bk-form-control {
+  display: flex;
+  justify-content: space-evenly;
 }
 </style>
