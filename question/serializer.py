@@ -9,35 +9,12 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
-from django.contrib import admin
+from rest_framework import serializers
 
-from .models import ProjectTask, StudentProjectTaskInfo
-
-
-class ProjectTaskAdmin(admin.ModelAdmin):
-    list_filter = (
-        "project_id",
-        "id",
-        "title",
-        "types",
-        "status",
-        "creator",
-        "updater",
-    )
+from question.models import Question
 
 
-class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
-    list_filter = (
-        "project_id",
-        "id",
-        "project_task_id",
-        "status",
-        "total_score",
-        "creator_id",
-        "updater_id",
-    )
-
-
-# Register your models here.
-admin.site.register(ProjectTask, ProjectTaskAdmin)
-admin.site.register(StudentProjectTaskInfo, StudentProjectTaskInfoAdmin)
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = "__all__"
