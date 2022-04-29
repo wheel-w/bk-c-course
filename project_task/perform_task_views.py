@@ -86,7 +86,6 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
             serializer = StudentProjectTaskInfoSerializer(relation_info)
         return Response(serializer.data)
 
-    # FIXME:学生答题之后的客观题给分通过celery任务去跑，不要出现在答题逻辑里
     @swagger_auto_schema(
         request_body=StudentPerformTaskSerializer,
         operation_summary="学生答题以及提交",
@@ -131,8 +130,6 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
     def judge_task(self, request, *args, **kwargs):
         project_task_id = kwargs["project_task_id"]
         student_id = kwargs["student_id"]
-
-        request.user.id = 4
 
         request.data["updater_id"] = request.user.id
         request.data["updater"] = request.user.username
