@@ -42,7 +42,7 @@ class ProjectTaskList(generics.CreateAPIView):
 
         data = temp.validated_data
         # 构建参数
-        questions_id_order_scores = data.pop("questions_id_order_scores")
+        questions_detail = data.pop("questions_detail")
         questions_temp = data.pop("questions")
 
         project_id = data["project_id"]
@@ -59,15 +59,15 @@ class ProjectTaskList(generics.CreateAPIView):
             questions.is_valid(raise_exception=True)
             questions_id_list = questions.save()
 
-            questions_info = {}
+            questions_info = []
             try:
                 for i in range(len(questions_id_list)):
-                    questions_temp = {
-                        questions_id_list[i].id: questions_id_order_scores[i]
-                    }
-                    questions_info.update(questions_temp)
+                    questions_detail[i]["id"] = questions_id_list[i].id
+                    questions_info.append(questions_detail[i])
             except IndexError:
                 return Response("答案与答案分数个数不匹配", exception=True)
+
+            print(questions_info)
 
             data["questions_info"] = questions_info
             task = ProjectTaskSerializer(data=data)

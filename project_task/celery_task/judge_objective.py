@@ -28,14 +28,10 @@ def judge_objective(relation_id):
     judge_teachers_info = task_info.judge_teachers_info
 
     questions_info = task_info.questions_info
-    question_id_list = list(questions_info.keys())
-    # 问题的分值
-    questions_score = []
+    question_id_list = []
 
-    # 整理 question_info
-    for question_info in questions_info.values():
-        for score in question_info.values():
-            questions_score.append(score)
+    for item in questions_info:
+        question_id_list.append(item["id"])
 
     # question's type and answer
     question_type_ans_list = list(
@@ -49,14 +45,13 @@ def judge_objective(relation_id):
         score = []
         question_index = 0
         for answer, question in zip(stu_answers, question_type_ans_list):
-            print(answer, question)
             if (
                 question[0] == TYPES.SINGLE
                 or question[0] == TYPES.JUDGE
                 or question[0] == TYPES.MULTIPLE
             ):
                 if answer == question[1]:
-                    score.append(questions_score[question_index])
+                    score.append(questions_info[question_index]["score"])
                 else:
                     score.append(SCORE.WRONG)
             else:

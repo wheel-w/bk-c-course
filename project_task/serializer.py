@@ -135,18 +135,16 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
     def get_questions_info(self, data):
         raw_questions_info = data.questions_info
 
-        question_score_list = []
-        for item in raw_questions_info.values():
-            for score in item.values():
-                question_score_list.append(score)
+        question_id_list = []
+        for item in raw_questions_info:
+            question_id_list.append(item["id"])
 
-        question_id_list = list(raw_questions_info.keys())
         questions = Question.objects.filter(id__in=question_id_list)
         questions_info = QuestionSerializer(questions, many=True)
 
         question_index = 0
         for item in questions_info.data:
-            item["question_score"] = question_score_list[question_index]
+            item.update(raw_questions_info[question_index])
             question_index += 1
 
         return questions_info.data
@@ -171,18 +169,16 @@ class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer)
     def get_questions_info(self, data):
         raw_questions_info = data.questions_info
 
-        question_score_list = []
-        for item in raw_questions_info.values():
-            for score in item.values():
-                question_score_list.append(score)
+        question_id_list = []
+        for item in raw_questions_info:
+            question_id_list.append(item["id"])
 
-        question_id_list = list(raw_questions_info.keys())
         questions = Question.objects.filter(id__in=question_id_list)
         questions_info = QuestionSerializer(questions, many=True)
 
         question_index = 0
         for item in questions_info.data:
-            item["question_score"] = question_score_list[question_index]
+            item.update(raw_questions_info[question_index])
             item.pop("answer")
             item.pop("answer_url")
             item.pop("explain")
@@ -210,18 +206,16 @@ class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
     def get_questions_info(self, data):
         raw_questions_info = data.questions_info
 
-        question_score_list = []
-        for item in raw_questions_info.values():
-            for score in item.values():
-                question_score_list.append(score)
+        question_id_list = []
+        for item in raw_questions_info:
+            question_id_list.append(item["id"])
 
-        question_id_list = list(raw_questions_info.keys())
         questions = Question.objects.filter(id__in=question_id_list)
         questions_info = QuestionSerializer(questions, many=True)
 
         question_index = 0
         for item in questions_info.data:
-            item["question_score"] = question_score_list[question_index]
+            item.update(raw_questions_info[question_index])
             question_index += 1
 
         return questions_info.data
@@ -237,9 +231,7 @@ class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
 class TaskCreateSerializer(serializers.Serializer):
     questions = QuestionSerializer(many=True)
     students = serializers.ListField(child=serializers.IntegerField())
-    questions_id_order_scores = serializers.ListField(
-        child=serializers.DictField(child=serializers.IntegerField())
-    )
+    questions_detail = serializers.ListField(child=serializers.DictField())
 
     project_id = serializers.IntegerField()
     types = serializers.CharField(max_length=10)

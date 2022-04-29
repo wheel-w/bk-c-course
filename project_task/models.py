@@ -34,7 +34,7 @@ class ProjectTask(models.Model):
     types = models.CharField("任务类型", max_length=10, choices=TYPES)
     title = models.CharField("任务名称", max_length=255)
     describe = models.CharField("任务描述", max_length=255)
-    questions_info = models.JSONField("题目id及其顺序与分值", blank=True, null=True)
+    questions_info = models.JSONField("题目相关信息(id,顺序,分值等)", blank=True, null=True)
 
     start_time = models.DateTimeField("任务开始时间", blank=True, null=True)
     end_time = models.DateTimeField("任务截止时间", blank=True, null=True)
