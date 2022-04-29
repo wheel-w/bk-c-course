@@ -24,6 +24,7 @@ from .serializer import (
     ProjectTaskDetailForStuHasSubmitSerializer,
     ProjectTaskDetailForTeacherSerializer,
     ProjectTaskForTeacherSerializer,
+    ProjectTaskInfoForStuSerializer,
     StudentPerformTaskSerializer,
     StudentProjectTaskInfoForStuSerializer,
     StudentProjectTaskInfoSerializer,
@@ -35,6 +36,24 @@ from .serializer import (
 class PerformAndJudgeViewSet(viewsets.ViewSet):
     queryset = StudentProjectTaskInfo.objects.all()
     serializer_class = StudentPerformTaskSerializer
+
+    @swagger_auto_schema(
+        operation_summary="获取学生该项目下自己的所有任务",
+    )
+    def get_all_stu_task(self, request, *args, **kwargs):
+        project_id = kwargs["project_id"]
+        student_id = request.user.id
+        task_id_list = list(
+            StudentProjectTaskInfo.objects.filter(
+                student_id=student_id,
+                project_id=project_id,
+            ).values_list("project_task_id", flat=True)
+        )
+
+        tasks = ProjectTask.objects.filter(id__in=task_id_list)
+        task_info = ProjectTaskInfoForStuSerializer(tasks, many=True)
+
+        return Response(task_info.data)
 
     # TODO: 拆成两个接口，获取任务信息和获取单个任务详情
     @swagger_auto_schema(
@@ -90,7 +109,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         return Response(task_info.data)
 
     @swagger_auto_schema(
-        operation_summary="老师获取指定学生任务详情",
+        operation_summary="老师获取指定学生任务答题详情",
     )
     def get_stu_info(self, request, *args, **kwargs):
         task_id = kwargs["project_task_id"]
@@ -108,7 +127,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        operation_summary="获取学生自己的任务详情",
+        operation_summary="获取学生自己的任务答题详情",
     )
     def get_individual_info(self, request, *args, **kwargs):
         project_task_id = kwargs["project_task_id"]

@@ -16,9 +16,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.response import Response
 
-from project_task.models import ProjectTask, StudentProjectTaskInfo
+from project_task.models import ProjectTask
 from project_task.serializer import (
-    ProjectTaskInfoForStuSerializer,
     ProjectTaskSerializer,
     StudentProjectTaskInfoSerializer,
     TaskCreateSerializer,
@@ -26,25 +25,9 @@ from project_task.serializer import (
 from question.serializer import QuestionSerializer
 
 
-class ProjectTaskList(generics.ListCreateAPIView):
+class ProjectTaskList(generics.CreateAPIView):
     queryset = ProjectTask.objects.all()
     serializer_class = ProjectTaskSerializer
-
-    @swagger_auto_schema(
-        operation_summary="获取学生自己的所有任务",
-    )
-    def get(self, request, *args, **kwargs):
-        student_id = request.user.id
-        task_id_list = list(
-            StudentProjectTaskInfo.objects.filter(student_id=student_id).values_list(
-                "project_task_id", flat=True
-            )
-        )
-
-        tasks = ProjectTask.objects.filter(id__in=task_id_list)
-        task_info = ProjectTaskInfoForStuSerializer(tasks, many=True)
-
-        return Response(task_info.data)
 
     @swagger_auto_schema(
         operation_summary="创建项目任务,和其对应的题目与关系表", request_body=TaskCreateSerializer
