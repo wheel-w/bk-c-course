@@ -15,25 +15,17 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.response import Response
 
-from question.models import Question
+from project_task.celery_task.judge_objective import judge_objective
 
+from .constants import STATUS
 from .models import ProjectTask, StudentProjectTaskInfo
 from .serializer import (
-    ProjectTaskDetailSerializer,
+    ProjectTaskDetailForTeacherSerializer,
     StudentPerformTaskSerializer,
     StudentProjectTaskInfoForStuSerializer,
     StudentProjectTaskInfoSerializer,
     TeacherJudgeSerializer,
 )
-
-
-class SCORE:
-    WRONG = 0  # 错误时的得分
-    NOT_JUDGE = -1  # 未批改时的得分
-
-
-STATUS = StudentProjectTaskInfo.Status
-TYPES = Question.QuestionTypes
 
 
 # 答题和判卷的视图集
@@ -42,7 +34,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
     serializer_class = StudentPerformTaskSerializer
 
     @swagger_auto_schema(
-        operation_summary="获取所有该项目下的任务",
+        operation_summary="老师获取所有该项目下的任务",
     )
     def get_all_task(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
@@ -52,23 +44,11 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
             )
         )
         tasks = ProjectTask.objects.filter(id__in=task_id_list)
-        task_info = ProjectTaskDetailSerializer(tasks, many=True)
+        task_info = ProjectTaskDetailForTeacherSerializer(tasks, many=True)
         return Response(task_info.data)
 
     @swagger_auto_schema(
-        operation_summary="老师获取所有已提交或已批改的关系表",
-    )
-    def get_all_info(self, request, *args, **kwargs):
-        task_id = kwargs["project_task_id"]
-        data = StudentProjectTaskInfo.objects.filter(
-            Q(project_task_id=task_id),
-            Q(status=STATUS.SUBMITTED) | Q(status=STATUS.MARKED),
-        )
-        serializer = StudentProjectTaskInfoSerializer(data, many=True)
-        return Response(serializer.data)
-
-    @swagger_auto_schema(
-        operation_summary="老师获取学生关系表",
+        operation_summary="老师获取指定学生关系表",
     )
     def get_stu_info(self, request, *args, **kwargs):
         task_id = kwargs["project_task_id"]
@@ -80,7 +60,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
                 Q(status=STATUS.SUBMITTED) | Q(status=STATUS.MARKED),
             )
         except StudentProjectTaskInfo.DoesNotExist:
-            return Response("当前任务还没有学生提交!!!", exception=True)
+            return Response("当前学生还未提交!!!", exception=True)
 
         serializer = StudentProjectTaskInfoSerializer(data)
         return Response(serializer.data)
@@ -89,29 +69,39 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         operation_summary="获取学生的关系表(只能获取自己的)",
     )
     def get_individual_info(self, request, *args, **kwargs):
-        student_task_id = kwargs["student_task_id"]
-        relation_info = StudentProjectTaskInfo.objects.get(id=student_task_id)
+        project_task_id = kwargs["project_task_id"]
+        try:
+            relation_info = StudentProjectTaskInfo.objects.get(
+                project_task_id=project_task_id, student_id=request.user.id
+            )
+        except StudentProjectTaskInfo.DoesNotExist:
+            return Response("查找的关系表不存在!", exception=True)
+
         task = ProjectTask.objects.get(id=relation_info.project_task_id)
 
-        if relation_info.student_id == request.user.id:
-            if task.students_visible:
-                serializer = StudentProjectTaskInfoForStuSerializer(relation_info)
-            else:
-                serializer = StudentProjectTaskInfoSerializer(relation_info)
-            return Response(serializer.data)
+        # 老师评分学生是否可见
+        if not task.students_visible:
+            serializer = StudentProjectTaskInfoForStuSerializer(relation_info)
         else:
-            return Response("不能获取别人的任务信息!!!", exception=True)
+            serializer = StudentProjectTaskInfoSerializer(relation_info)
+        return Response(serializer.data)
 
+    # FIXME:学生答题之后的客观题给分通过celery任务去跑，不要出现在答题逻辑里
     @swagger_auto_schema(
         request_body=StudentPerformTaskSerializer,
         operation_summary="学生答题以及提交",
     )
     def perform_task(self, request, *args, **kwargs):
-        student_task_id = kwargs["student_task_id"]
-        relation_info = StudentProjectTaskInfo.objects.get(id=student_task_id)
-        task_id = relation_info.project_task_id
+        project_task_id = kwargs["project_task_id"]
+        try:
+            relation_info = StudentProjectTaskInfo.objects.get(
+                project_task_id=project_task_id, student_id=request.user.id
+            )
+        except StudentProjectTaskInfo.DoesNotExist:
+            return Response("查找的关系表不存在!", exception=True)
 
         request.data["updater_id"] = request.user.id
+        request.data["updater"] = request.user.username
 
         data = request.data
 
@@ -125,60 +115,12 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
             else:
                 return Response("请先保存再提交!!!", exception=True)
 
-        task_info = ProjectTask.objects.get(id=task_id)
-        questions_info = task_info.questions_info
-        question_id_list = list(questions_info.keys())
-        # 问题的分值
-        questions_score = []
-
-        # 批阅老师信息
-        judge_teachers_info = task_info.judge_teachers_info
-
-        # 整理 question_info
-        for question_info in questions_info.values():
-            for score in question_info.values():
-                questions_score.append(score)
-
-        # question's type and answer
-        question_type_ans_list = list(
-            Question.objects.filter(id__in=question_id_list).values_list(
-                "types", "answer"
-            )
-        )
-
-        stu_answers = data["stu_answers"]
-        individual_score = []
-
-        for teacher_id, teacher_weight in judge_teachers_info.items():
-            score = []
-            question_index = 0
-            for answer, question in zip(stu_answers, question_type_ans_list):
-                if (
-                    question[0] == TYPES.SINGLE
-                    or question[0] == TYPES.JUDGE
-                    or question[0] == TYPES.MULTIPLE
-                ):
-                    if answer == question[1]:
-                        score.append(questions_score[question_index])
-                    else:
-                        score.append(SCORE.WRONG)
-                else:
-                    score.append(SCORE.NOT_JUDGE)
-                question_index += 1
-            score_info = {
-                "teacher_id": int(teacher_id),
-                "teacher_weight": float(teacher_weight),
-                "teacher_name": "",
-                "is_judge": False,
-                "score": score,
-            }
-            individual_score.append(score_info)
-
-        data["individual_score"] = individual_score
-
         perform_info = StudentPerformTaskSerializer(relation_info, data)
         perform_info.is_valid(raise_exception=True)
         perform_info.save()
+
+        # celery ----> 客观题评分
+        judge_objective.delay(relation_info.id)
 
         return Response()
 
@@ -187,12 +129,19 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         operation_summary="老师判卷",
     )
     def judge_task(self, request, *args, **kwargs):
-        student_task_id = kwargs["student_task_id"]
+        project_task_id = kwargs["project_task_id"]
+        student_id = kwargs["student_id"]
+
+        request.user.id = 4
 
         request.data["updater_id"] = request.user.id
+        request.data["updater"] = request.user.username
         data = request.data
 
-        relation_info = StudentProjectTaskInfo.objects.get(id=student_task_id)
+        relation_info = StudentProjectTaskInfo.objects.get(
+            project_task_id=project_task_id,
+            student_id=student_id,
+        )
 
         individual_score = relation_info.individual_score
 

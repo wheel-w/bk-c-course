@@ -3,6 +3,9 @@ from rest_framework import serializers
 from project_task.models import ProjectTask, StudentProjectTaskInfo
 from question.models import Question
 from question.serializer import QuestionSerializer
+from user_manager.models import User
+
+from .constants import STATUS
 
 
 class ProjectTaskSerializer(serializers.ModelSerializer):
@@ -11,12 +14,98 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ProjectTaskDetailSerializer(serializers.ModelSerializer):
+class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
     questions_info = serializers.SerializerMethodField()
+    submitted_count = serializers.SerializerMethodField()  # 已提交的人数
+    marked_count = serializers.SerializerMethodField()  # 已批阅的人数
+    student_total_count = serializers.SerializerMethodField()  # 学生总数
+    student_info = serializers.SerializerMethodField()  # 学生信息列表
+    marked_student_info = serializers.SerializerMethodField()  # # 已批阅的学生信息列表
+    submitted_student_info = serializers.SerializerMethodField()  # 已提交的学生信息列表
 
     class Meta:
         model = ProjectTask
         fields = "__all__"
+
+    def get_submitted_count(self, data):
+        return StudentProjectTaskInfo.objects.filter(
+            project_task_id=data.id, status=STATUS.SUBMITTED
+        ).count()
+
+    def get_marked_count(self, data):
+        return StudentProjectTaskInfo.objects.filter(
+            project_task_id=data.id, status=STATUS.MARKED
+        ).count()
+
+    def get_student_total_count(self, data):
+        return StudentProjectTaskInfo.objects.filter(project_task_id=data.id).count()
+
+    def get_student_info(self, data):
+        student_id_list = list(
+            StudentProjectTaskInfo.objects.filter(project_task_id=data.id).values_list(
+                "student_id", flat=True
+            )
+        )
+        student_name_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        )
+
+        student_info = []
+
+        for student_id, student_name in zip(student_id_list, student_name_list):
+            single_info = {
+                "student_id": student_id,
+                "student_name": student_name,
+            }
+            student_info.append(single_info)
+
+        return student_info
+
+    def get_submitted_student_info(self, data):
+        student_id_list = list(
+            StudentProjectTaskInfo.objects.filter(
+                project_task_id=data.id,
+                status=STATUS.SUBMITTED,
+            ).values_list("student_id", flat=True)
+        )
+
+        student_name_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        )
+
+        student_info = []
+
+        for student_id, student_name in zip(student_id_list, student_name_list):
+            single_info = {
+                "student_id": student_id,
+                "student_name": student_name,
+            }
+            student_info.append(single_info)
+
+        return student_info
+
+    def get_marked_student_info(self, data):
+        student_id_list = list(
+            StudentProjectTaskInfo.objects.filter(
+                project_task_id=data.id,
+                status=STATUS.MARKED,
+            ).values_list("student_id", flat=True)
+        )
+
+        student_name_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        )
+
+        student_info = []
+
+        for student_id, student_name in zip(student_id_list, student_name_list):
+            single_info = {
+                "student_id": student_id,
+                "student_name": student_name,
+            }
+            student_info.append(single_info)
+
+        return student_info
 
     def get_questions_info(self, data):
         raw_questions_info = data.questions_info
@@ -38,8 +127,9 @@ class ProjectTaskDetailSerializer(serializers.ModelSerializer):
         return questions_info.data
 
 
-class ProjectTaskDetailForStuSerializer(serializers.ModelSerializer):
+class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer):
     questions_info = serializers.SerializerMethodField()
+    judge_teachers_info = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectTask
@@ -67,6 +157,46 @@ class ProjectTaskDetailForStuSerializer(serializers.ModelSerializer):
             question_index += 1
 
         return questions_info.data
+
+    def get_judge_teachers_info(self, data):
+        if data.students_visible:
+            return data.judge_teachers_info
+        else:
+            return "老师评分信息不可见"
+
+
+class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
+    questions_info = serializers.SerializerMethodField()
+    judge_teachers_info = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProjectTask
+        fields = "__all__"
+
+    def get_questions_info(self, data):
+        raw_questions_info = data.questions_info
+
+        question_score_list = []
+        for item in raw_questions_info.values():
+            for score in item.values():
+                question_score_list.append(score)
+
+        question_id_list = list(raw_questions_info.keys())
+        questions = Question.objects.filter(id__in=question_id_list)
+        questions_info = QuestionSerializer(questions, many=True)
+
+        question_index = 0
+        for item in questions_info.data:
+            item["question_score"] = question_score_list[question_index]
+            question_index += 1
+
+        return questions_info.data
+
+    def get_judge_teachers_info(self, data):
+        if data.students_visible:
+            return data.judge_teachers_info
+        else:
+            return "老师评分信息不可见"
 
 
 # 创建课程的序列化器
@@ -104,10 +234,10 @@ class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
         exclude = ["id"]
 
     def get_individual_score(self, relation):
-        print(relation.individual_score)
         individual_score = relation.individual_score
         for item in individual_score:
             item.pop("teacher_name")
+            item.pop("teacher_id")
         return individual_score
 
 

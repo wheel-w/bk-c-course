@@ -46,7 +46,7 @@ class ProjectTask(models.Model):
     time_created = models.DateTimeField("任务创建时间", auto_now_add=True)
     time_updated = models.DateTimeField("任务更新时间", auto_now=True)
 
-    students_visible = models.BooleanField("导师评分是否开启匿名", default=False)
+    students_visible = models.BooleanField("导师评分学生是否可见", default=False)
 
     def __str__(self):
         return self.title
@@ -80,6 +80,8 @@ class StudentProjectTaskInfo(models.Model):
     )
     cumulative_time = models.DurationField("任务累计时间", default=timedelta(seconds=0))
 
+    creator = models.TextField("创建者姓名")
+    updater = models.TextField("更新者姓名")
     creator_id = models.BigIntegerField("创建者id")
     updater_id = models.BigIntegerField("更新者id")
     time_created = models.DateTimeField("创建时间", auto_now_add=True)

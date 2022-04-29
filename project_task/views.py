@@ -18,8 +18,8 @@ from rest_framework.response import Response
 
 from project_task.models import ProjectTask, StudentProjectTaskInfo
 from project_task.serializer import (
-    ProjectTaskDetailForStuSerializer,
-    ProjectTaskDetailSerializer,
+    ProjectTaskDetailForStuHasNotSubmitSerializer,
+    ProjectTaskDetailForStuHasSubmitSerializer,
     ProjectTaskSerializer,
     StudentProjectTaskInfoSerializer,
     TaskCreateSerializer,
@@ -52,9 +52,9 @@ class ProjectTaskList(generics.ListCreateAPIView):
 
         for relation, task in zip(relation_info, task_info):
             if relation.status == StudentProjectTaskInfo.Status.MARKED:
-                serializer = ProjectTaskDetailSerializer(task)
+                serializer = ProjectTaskDetailForStuHasSubmitSerializer(task)
             else:
-                serializer = ProjectTaskDetailForStuSerializer(task)
+                serializer = ProjectTaskDetailForStuHasNotSubmitSerializer(task)
             data.append(serializer.data)
 
         return Response(data)
@@ -109,8 +109,12 @@ class ProjectTaskList(generics.ListCreateAPIView):
                     "student_id": i,
                     "project_id": data.get("project_id"),
                     "project_task_id": task_temp.id,
+                    "creator": request.user.username,
+                    "updater": request.user.username,
                     "creator_id": id,
                     "updater_id": id,
+                    "stu_answers": [],
+                    "individual_score": [],
                 }
                 relation.append(temp)
             task_info = StudentProjectTaskInfoSerializer(data=relation, many=True)
