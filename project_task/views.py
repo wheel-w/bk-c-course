@@ -18,8 +18,7 @@ from rest_framework.response import Response
 
 from project_task.models import ProjectTask, StudentProjectTaskInfo
 from project_task.serializer import (
-    ProjectTaskDetailForStuHasNotSubmitSerializer,
-    ProjectTaskDetailForStuHasSubmitSerializer,
+    ProjectTaskInfoForStuSerializer,
     ProjectTaskSerializer,
     StudentProjectTaskInfoSerializer,
     TaskCreateSerializer,
@@ -32,7 +31,7 @@ class ProjectTaskList(generics.ListCreateAPIView):
     serializer_class = ProjectTaskSerializer
 
     @swagger_auto_schema(
-        operation_summary="获取学生的任务",
+        operation_summary="获取学生自己的所有任务",
     )
     def get(self, request, *args, **kwargs):
         student_id = request.user.id
@@ -41,23 +40,11 @@ class ProjectTaskList(generics.ListCreateAPIView):
                 "project_task_id", flat=True
             )
         )
-        task_info = list(ProjectTask.objects.filter(id__in=task_id_list))
 
-        data = []
-        relation_info = list(
-            StudentProjectTaskInfo.objects.filter(
-                student_id=student_id, project_task_id__in=task_id_list
-            )
-        )
+        tasks = ProjectTask.objects.filter(id__in=task_id_list)
+        task_info = ProjectTaskInfoForStuSerializer(tasks, many=True)
 
-        for relation, task in zip(relation_info, task_info):
-            if relation.status == StudentProjectTaskInfo.Status.MARKED:
-                serializer = ProjectTaskDetailForStuHasSubmitSerializer(task)
-            else:
-                serializer = ProjectTaskDetailForStuHasNotSubmitSerializer(task)
-            data.append(serializer.data)
-
-        return Response(data)
+        return Response(task_info.data)
 
     @swagger_auto_schema(
         operation_summary="创建项目任务,和其对应的题目与关系表", request_body=TaskCreateSerializer

@@ -20,8 +20,16 @@ from .perform_task_views import PerformAndJudgeViewSet
 urlpatterns = [
     path(r"project-task/", views.ProjectTaskList.as_view()),
     path(
-        r"project-task-info/<int:project_id>/all_task/",
+        r"project-task/<int:project_id>/all/",
         PerformAndJudgeViewSet.as_view({"get": "get_all_task"}),
+    ),
+    path(
+        r"project-task/<int:project_task_id>/teacher/",
+        PerformAndJudgeViewSet.as_view({"get": "get_single_task_detail_tea"}),
+    ),
+    path(
+        r"project-task/<int:project_task_id>/student/",
+        PerformAndJudgeViewSet.as_view({"get": "get_single_task_detail_stu"}),
     ),
     path(
         r"project-task-info/<int:project_task_id>/stu-info/<int:student_id>/",

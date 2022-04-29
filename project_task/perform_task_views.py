@@ -20,7 +20,10 @@ from project_task.celery_task.judge_objective import judge_objective
 from .constants import STATUS
 from .models import ProjectTask, StudentProjectTaskInfo
 from .serializer import (
+    ProjectTaskDetailForStuHasNotSubmitSerializer,
+    ProjectTaskDetailForStuHasSubmitSerializer,
     ProjectTaskDetailForTeacherSerializer,
+    ProjectTaskForTeacherSerializer,
     StudentPerformTaskSerializer,
     StudentProjectTaskInfoForStuSerializer,
     StudentProjectTaskInfoSerializer,
@@ -33,6 +36,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
     queryset = StudentProjectTaskInfo.objects.all()
     serializer_class = StudentPerformTaskSerializer
 
+    # TODO: 拆成两个接口，获取任务信息和获取单个任务详情
     @swagger_auto_schema(
         operation_summary="老师获取所有该项目下的任务",
     )
@@ -44,11 +48,49 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
             )
         )
         tasks = ProjectTask.objects.filter(id__in=task_id_list)
-        task_info = ProjectTaskDetailForTeacherSerializer(tasks, many=True)
+        task_info = ProjectTaskForTeacherSerializer(tasks, many=True)
         return Response(task_info.data)
 
     @swagger_auto_schema(
-        operation_summary="老师获取指定学生关系表",
+        operation_summary="老师获取单个任务的详情",
+    )
+    def get_single_task_detail_tea(self, request, *args, **kwargs):
+        project_task_id = kwargs["project_task_id"]
+        try:
+            task = ProjectTask.objects.get(id=project_task_id)
+        except ProjectTask.DoesNotExist:
+            return Response("任务不存在!!!", exception=True)
+
+        task_info = ProjectTaskDetailForTeacherSerializer(task)
+        return Response(task_info.data)
+
+    @swagger_auto_schema(
+        operation_summary="学生获取单个任务的详情",
+    )
+    def get_single_task_detail_stu(self, request, *args, **kwargs):
+        project_task_id = kwargs["project_task_id"]
+        try:
+            task = ProjectTask.objects.get(id=project_task_id)
+        except ProjectTask.DoesNotExist:
+            return Response("任务不存在!!!", exception=True)
+
+        try:
+            relation_info = StudentProjectTaskInfo.objects.get(
+                student_id=request.user.id,
+                project_task_id=project_task_id,
+            )
+        except StudentProjectTaskInfo.DoesNotExist:
+            return Response("关系表中不存在该条记录!!!", exception=True)
+
+        if relation_info.status == StudentProjectTaskInfo.Status.MARKED:
+            task_info = ProjectTaskDetailForStuHasSubmitSerializer(task)
+        else:
+            task_info = ProjectTaskDetailForStuHasNotSubmitSerializer(task)
+
+        return Response(task_info.data)
+
+    @swagger_auto_schema(
+        operation_summary="老师获取指定学生任务详情",
     )
     def get_stu_info(self, request, *args, **kwargs):
         task_id = kwargs["project_task_id"]
@@ -66,7 +108,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
-        operation_summary="获取学生的关系表(只能获取自己的)",
+        operation_summary="获取学生自己的任务详情",
     )
     def get_individual_info(self, request, *args, **kwargs):
         project_task_id = kwargs["project_task_id"]
@@ -135,10 +177,13 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         request.data["updater"] = request.user.username
         data = request.data
 
-        relation_info = StudentProjectTaskInfo.objects.get(
-            project_task_id=project_task_id,
-            student_id=student_id,
-        )
+        try:
+            relation_info = StudentProjectTaskInfo.objects.get(
+                project_task_id=project_task_id,
+                student_id=student_id,
+            )
+        except StudentProjectTaskInfo.DoesNotExist:
+            return Response("关系表中不存在该条记录!!!", exception=True)
 
         individual_score = relation_info.individual_score
 

@@ -14,6 +14,29 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ProjectTaskForTeacherSerializer(serializers.ModelSerializer):
+    submitted_count = serializers.SerializerMethodField()  # 已提交的人数
+    marked_count = serializers.SerializerMethodField()  # 已批阅的人数
+    student_total_count = serializers.SerializerMethodField()  # 学生总数
+
+    class Meta:
+        model = ProjectTask
+        exclude = ["questions_info", "judge_teachers_info", "project_id"]
+
+    def get_submitted_count(self, data):
+        return StudentProjectTaskInfo.objects.filter(
+            project_task_id=data.id, status=STATUS.SUBMITTED
+        ).count()
+
+    def get_marked_count(self, data):
+        return StudentProjectTaskInfo.objects.filter(
+            project_task_id=data.id, status=STATUS.MARKED
+        ).count()
+
+    def get_student_total_count(self, data):
+        return StudentProjectTaskInfo.objects.filter(project_task_id=data.id).count()
+
+
 class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
     questions_info = serializers.SerializerMethodField()
     submitted_count = serializers.SerializerMethodField()  # 已提交的人数
@@ -125,6 +148,12 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
             question_index += 1
 
         return questions_info.data
+
+
+class ProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectTask
+        exclude = ["questions_info", "judge_teachers_info"]
 
 
 class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer):
