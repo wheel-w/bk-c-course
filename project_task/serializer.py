@@ -14,6 +14,7 @@ class ProjectTaskSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# 为老师提供的任务基本信息的序列化器
 class ProjectTaskForTeacherSerializer(serializers.ModelSerializer):
     submitted_count = serializers.SerializerMethodField()  # 已提交的人数
     marked_count = serializers.SerializerMethodField()  # 已批阅的人数
@@ -37,6 +38,7 @@ class ProjectTaskForTeacherSerializer(serializers.ModelSerializer):
         return StudentProjectTaskInfo.objects.filter(project_task_id=data.id).count()
 
 
+# 为老师提供的Task的详情序列化器
 class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
     questions_info = serializers.SerializerMethodField()
     submitted_count = serializers.SerializerMethodField()  # 已提交的人数
@@ -150,12 +152,14 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
         return questions_info.data
 
 
+# 为学生提供的任务基本信息的序列化器
 class ProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTask
         exclude = ["questions_info", "judge_teachers_info"]
 
 
+# 学生任务状态不为已提交时的任务详情序列化器
 class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer):
     questions_info = serializers.SerializerMethodField()
     judge_teachers_info = serializers.SerializerMethodField()
@@ -194,6 +198,7 @@ class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer)
             return "老师评分信息不可见"
 
 
+# 学生任务状态为已提交时的任务详情序列化器
 class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
     questions_info = serializers.SerializerMethodField()
     judge_teachers_info = serializers.SerializerMethodField()
@@ -249,12 +254,14 @@ class TaskCreateSerializer(serializers.Serializer):
     creator_id = serializers.IntegerField(required=False)
 
 
+# normal的Relation序列化器
 class StudentProjectTaskInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProjectTaskInfo
         exclude = ["id"]
 
 
+# 老师评分开启匿名时的Relation序列化器
 class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
     individual_score = serializers.SerializerMethodField()
 

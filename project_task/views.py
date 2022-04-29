@@ -25,6 +25,7 @@ from project_task.serializer import (
 from question.serializer import QuestionSerializer
 
 
+# 出题接口
 class ProjectTaskList(generics.CreateAPIView):
     queryset = ProjectTask.objects.all()
     serializer_class = ProjectTaskSerializer

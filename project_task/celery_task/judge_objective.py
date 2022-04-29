@@ -22,15 +22,15 @@ from question.models import Question
 @task()
 def judge_objective(relation_id):
     relation_info = StudentProjectTaskInfo.objects.get(id=relation_id)
-
     task_info = ProjectTask.objects.get(id=relation_info.project_task_id)
+
+    # 批阅老师信息
+    judge_teachers_info = task_info.judge_teachers_info
+
     questions_info = task_info.questions_info
     question_id_list = list(questions_info.keys())
     # 问题的分值
     questions_score = []
-
-    # 批阅老师信息
-    judge_teachers_info = task_info.judge_teachers_info
 
     # 整理 question_info
     for question_info in questions_info.values():
