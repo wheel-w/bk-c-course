@@ -159,11 +159,13 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
                 "total_score": total_score,
                 "individual_score": individual_score,
                 "updater_id": request.user.id,
+                "updater": request.user.username,
             }
         else:
             judge_info = {
                 "individual_score": individual_score,
                 "updater_id": request.user.id,
+                "updater": request.user.username,
             }
 
         ret = StudentPerformTaskSerializer(relation_info, judge_info)
