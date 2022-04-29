@@ -64,16 +64,27 @@ class OriginAccountView(ViewSet):
         ).values_list("account_id__username", flat=True)
         # 重构数据
         store_list = []
+        exist_user_list = []
         for elem in src_data:
-            store_list.append(
-                {
-                    "username": elem["username"],
-                    "display_name": elem["display_name"],
-                    "departments": elem["departments"][0]["name"],
-                    "is_import": True if elem["username"] in exist_user else False,
-                }
-            )
-
+            if elem["username"] in exist_user:
+                exist_user_list.append(
+                    {
+                        "username": elem["username"],
+                        "display_name": elem["display_name"],
+                        "departments": elem["departments"][0]["name"],
+                        "is_import": True,
+                    }
+                )
+            else:
+                store_list.append(
+                    {
+                        "username": elem["username"],
+                        "display_name": elem["display_name"],
+                        "departments": elem["departments"][0]["name"],
+                        "is_import": False,
+                    }
+                )
+        store_list.extend(exist_user_list)
         return Response(store_list)
 
     def retrieve(self, request, *args, **kwargs):
