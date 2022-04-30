@@ -55,7 +55,6 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
 
         return Response(task_info.data)
 
-    # TODO: 拆成两个接口，获取任务信息和获取单个任务详情
     @swagger_auto_schema(
         operation_summary="老师获取所有该项目下的任务",
     )

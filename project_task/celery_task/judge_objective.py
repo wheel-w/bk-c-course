@@ -28,10 +28,7 @@ def judge_objective(relation_id):
     judge_teachers_info = task_info.judge_teachers_info
 
     questions_info = task_info.questions_info
-    question_id_list = []
-
-    for item in questions_info:
-        question_id_list.append(item["id"])
+    question_id_list = [item["id"] for item in questions_info]
 
     # question's type and answer
     question_type_ans_list = list(
@@ -44,6 +41,7 @@ def judge_objective(relation_id):
     for teacher_id, teacher_weight in judge_teachers_info.items():
         score = []
         question_index = 0
+        # question[0]为题型,question[1]为答案
         for answer, question in zip(stu_answers, question_type_ans_list):
             if (
                 question[0] == TYPES.SINGLE
@@ -57,6 +55,7 @@ def judge_objective(relation_id):
             else:
                 score.append(SCORE.NOT_JUDGE)
             question_index += 1
+
         score_info = {
             "teacher_id": int(teacher_id),
             "teacher_weight": float(teacher_weight),
