@@ -9,31 +9,38 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
+from celery.result import AsyncResult
 from django.db import transaction
 
 # Create your views here.
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 
-from project_task.models import ProjectTask
+from project_task.models import CeleryTaskInfo, ProjectTask, StudentProjectTaskInfo
 from project_task.serializer import (
+    CeleryTaskInfoCreateSerializer,
     ProjectTaskSerializer,
+    ProjectTaskUpdateSerializer,
     StudentProjectTaskInfoSerializer,
     TaskCreateSerializer,
+    TaskDeleteSerializer,
 )
+from question.models import Question
 from question.serializer import QuestionSerializer
+
+from .celery_task.auto_submit import auto_submit
 
 
 # 出题接口
-class ProjectTaskList(generics.CreateAPIView):
+class ProjectTaskList(viewsets.ViewSet):
     queryset = ProjectTask.objects.all()
     serializer_class = ProjectTaskSerializer
 
     @swagger_auto_schema(
         operation_summary="创建项目任务,和其对应的题目与关系表", request_body=TaskCreateSerializer
     )
-    def post(self, request, *args, **kwargs):
+    def create_task(self, request, *args, **kwargs):
         request.data["creator"] = request.user.username
         request.data["creator_id"] = request.user.id
 
@@ -43,6 +50,9 @@ class ProjectTaskList(generics.CreateAPIView):
         data = temp.validated_data
         # 构建参数
         questions_detail = data.pop("questions_detail")
+        questions_detail = sorted(
+            questions_detail, key=lambda question: question["index"]
+        )
         questions_temp = data.pop("questions")
 
         project_id = data["project_id"]
@@ -67,8 +77,6 @@ class ProjectTaskList(generics.CreateAPIView):
             except IndexError:
                 return Response("答案与答案分数个数不匹配", exception=True)
 
-            print(questions_info)
-
             data["questions_info"] = questions_info
             task = ProjectTaskSerializer(data=data)
             task.is_valid(raise_exception=True)
@@ -92,9 +100,136 @@ class ProjectTaskList(generics.CreateAPIView):
             task_info.is_valid(raise_exception=True)
             task_info.save()
 
+            # celery ----> 截止时自动提交所有已保存的记录
+            auto_submit_task = auto_submit.apply_async(
+                args=[task_temp.id], eta=task_temp.end_time
+            )
+            celery_task_data = {
+                "project_task_id": task_temp.id,
+                "celery_task_id": auto_submit_task.id,
+            }
+            celery_task = CeleryTaskInfoCreateSerializer(data=celery_task_data)
+            celery_task.is_valid(raise_exception=True)
+            celery_task.save()
+
         transaction.savepoint_commit(save)
 
-        task = ProjectTaskSerializer(instance=task_temp)
+        return Response(status=status.HTTP_201_CREATED)
 
-        headers = self.get_success_headers(task.data)
-        return Response(task.data, status=status.HTTP_201_CREATED, headers=headers)
+    @swagger_auto_schema(
+        operation_summary="更新任务的信息",
+        request_body=ProjectTaskUpdateSerializer,
+    )
+    def update_task(self, request, *args, **kwargs):
+        project_task_id = kwargs["project_task_id"]
+        try:
+            task = ProjectTask.objects.get(id=project_task_id)
+        except ProjectTask.DoesNotExist:
+            return Response("该任务不存在!!!", exception=True)
+
+        data = request.data
+
+        # questions 和 questions_detail 必须一块传
+        if "questions" in data:
+            questions = data.pop("questions")
+            questions_detail = data.pop("questions_detail")
+
+            questions = QuestionSerializer(data=questions, many=True)
+            questions.is_valid(raise_exception=True)
+            questions_id_list = questions.save()
+
+            questions_info = []
+            try:
+                for i in range(len(questions_id_list)):
+                    questions_detail[i]["id"] = questions_id_list[i].id
+                    questions_info.append(questions_detail[i])
+            except IndexError:
+                return Response("信息中的答案与答案分数个数不匹配", exception=True)
+
+            data["questions_info"] = questions_info
+
+        info = ProjectTaskUpdateSerializer(task, data)
+        info.is_valid()
+        task_info = info.save()
+
+        # 如果更改截止时间，重开一个celery任务并把原来的任务revoke
+        if "end_time" in data:
+            try:
+                celery_task = CeleryTaskInfo.objects.get(
+                    project_task_id=project_task_id
+                )
+                celery_id = celery_task.celery_task_id
+            except CeleryTaskInfo.DoesNotExist:
+                return Response("该条celery任务记录不存在!!!", exception=True)
+            AsyncResult(celery_id).revoke()
+            celery_task.delete()
+
+            auto_submit_task = auto_submit.apply_async(
+                args=[task_info.id], eta=task_info.end_time
+            )
+            celery_task_data = {
+                "project_task_id": task_info.id,
+                "celery_task_id": auto_submit_task.id,
+            }
+            celery_task = CeleryTaskInfoCreateSerializer(data=celery_task_data)
+            celery_task.is_valid(raise_exception=True)
+            celery_task.save()
+
+        return Response()
+
+    @swagger_auto_schema(
+        operation_summary="删除单个任务",
+    )
+    def delete_task(self, request, *args, **kwargs):
+        project_task_id = kwargs["project_task_id"]
+        try:
+            task = ProjectTask.objects.get(id=project_task_id)
+            question_id_list = [question["id"] for question in task.questions_info]
+            task.delete()
+            StudentProjectTaskInfo.objects.filter(
+                project_task_id=project_task_id
+            ).delete()
+            Question.objects.filter(id__in=question_id_list).delete()
+            celery_task_info = CeleryTaskInfo.objects.filter(
+                project_task_id=project_task_id
+            )
+            if celery_task_info.exists():
+                celery_task = AsyncResult(celery_task_info[0].celery_task_id)
+                celery_task.revoke()
+                celery_task_info.delete()
+        except ProjectTask.DoesNotExist:
+            return Response("任务不存在!!!", exception=True)
+
+        return Response("删除成功!")
+
+    @swagger_auto_schema(
+        operation_summary="根据传入的任务id列表批量删除任务",
+        request_body=TaskDeleteSerializer,
+    )
+    def bulk_delete_task(self, request, *args, **kwargs):
+        task_id_list = request.data["task_id_list"]
+        tasks_questions_info = list(
+            ProjectTask.objects.filter(id__in=task_id_list).values_list(
+                "questions_info", flat=True
+            )
+        )
+        question_id_list = []
+        for question_info in tasks_questions_info:
+            question_id_list.extend([question["id"] for question in question_info])
+        ProjectTask.objects.filter(id__in=task_id_list).delete()
+        Question.objects.filter(id__in=question_id_list).delete()
+        StudentProjectTaskInfo.objects.filter(project_task_id__in=task_id_list).delete()
+
+        celery_task_info = CeleryTaskInfo.objects.filter(
+            project_task_id__in=task_id_list
+        )
+        if celery_task_info.exists():
+            celery_id_list = list(
+                celery_task_info.values_list("celery_task_id", flat=True)
+            )
+            for celery_id in celery_id_list:
+                celery_task = AsyncResult(celery_id)
+                celery_task.revoke()
+            celery_task_info.delete()
+
+        return Response("删除成功!")

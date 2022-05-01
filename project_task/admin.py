@@ -11,7 +11,7 @@ specific Language governing permissions and limitations under the License.
 """
 from django.contrib import admin
 
-from .models import ProjectTask, StudentProjectTaskInfo
+from .models import CeleryTaskInfo, ProjectTask, StudentProjectTaskInfo
 
 
 class ProjectTaskAdmin(admin.ModelAdmin):
@@ -59,6 +59,13 @@ class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
     )
 
 
+class CeleryTaskInfoAdmin(admin.ModelAdmin):
+    list_display = ("project_task_id", "celery_task_id")
+
+    list_filter = ("project_task_id", "celery_task_id")
+
+
 # Register your models here.
 admin.site.register(ProjectTask, ProjectTaskAdmin)
 admin.site.register(StudentProjectTaskInfo, StudentProjectTaskInfoAdmin)
+admin.site.register(CeleryTaskInfo, CeleryTaskInfoAdmin)

@@ -18,7 +18,18 @@ from project_task import views
 from .perform_task_views import PerformAndJudgeViewSet
 
 urlpatterns = [
-    path(r"project-task/", views.ProjectTaskList.as_view()),
+    path(
+        r"project-task/",
+        views.ProjectTaskList.as_view(
+            {"post": "create_task", "delete": "bulk_delete_task"}
+        ),
+    ),
+    path(
+        r"project-task/<int:project_task_id>/",
+        views.ProjectTaskList.as_view(
+            {"patch": "update_task", "delete": "delete_task"}
+        ),
+    ),
     path(
         r"project-task/<int:project_id>/student/all/",
         PerformAndJudgeViewSet.as_view({"get": "get_all_stu_task"}),

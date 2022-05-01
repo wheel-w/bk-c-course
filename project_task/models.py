@@ -13,8 +13,6 @@ from datetime import timedelta
 
 from django.db import models
 
-# Create your models here.
-
 
 class ProjectTask(models.Model):
     class Status:
@@ -89,3 +87,11 @@ class StudentProjectTaskInfo(models.Model):
 
     def __str__(self):
         return "{}-{}-{}".format(self.project_id, self.project_task_id, self.student_id)
+
+
+class CeleryTaskInfo(models.Model):
+    project_task_id = models.BigIntegerField("任务id")
+    celery_task_id = models.CharField("celery任务id", max_length=60)
+
+    def __str__(self):
+        return "{}-{}".format(self.project_task_id, self.celery_task_id)

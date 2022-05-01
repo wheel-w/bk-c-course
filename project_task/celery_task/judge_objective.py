@@ -10,6 +10,8 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific Language governing permissions and limitations under the License.
 """
 
+import logging
+
 from celery.task import task
 
 from project_task.constants import SCORE, TYPES
@@ -17,10 +19,13 @@ from project_task.models import ProjectTask, StudentProjectTaskInfo
 from project_task.serializer import StudentPerformTaskSerializer
 from question.models import Question
 
+logger = logging.getLogger("root")
+
 
 # 客观题评分
 @task()
 def judge_objective(relation_id):
+    logger.info("客观题评分任务开始执行")
     relation_info = StudentProjectTaskInfo.objects.get(id=relation_id)
     task_info = ProjectTask.objects.get(id=relation_info.project_task_id)
 
@@ -72,3 +77,4 @@ def judge_objective(relation_id):
     perform_info = StudentPerformTaskSerializer(relation_info, data)
     perform_info.is_valid(raise_exception=True)
     perform_info.save()
+    logger.info("客观题评分任务执行完毕")

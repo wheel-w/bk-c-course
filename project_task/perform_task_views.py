@@ -17,7 +17,7 @@ from rest_framework.response import Response
 
 from project_task.celery_task.judge_objective import judge_objective
 
-from .constants import STATUS
+from .constants import STATUS, TASK_STATUS
 from .models import ProjectTask, StudentProjectTaskInfo
 from .serializer import (
     ProjectTaskDetailForStuHasNotSubmitSerializer,
@@ -50,7 +50,10 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
             ).values_list("project_task_id", flat=True)
         )
 
-        tasks = ProjectTask.objects.filter(id__in=task_id_list)
+        tasks = ProjectTask.objects.filter(
+            Q(id__in=task_id_list),
+            ~Q(status=TASK_STATUS.DRAFT),
+        )
         task_info = ProjectTaskInfoForStuSerializer(tasks, many=True)
 
         return Response(task_info.data)
@@ -171,7 +174,12 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
                 temp.is_valid(raise_exception=True)
                 temp.save()
                 return Response()
-            else:
+            elif (
+                relation_info.status == STATUS.SUBMITTED
+                or relation_info.status == STATUS.MARKED
+            ):
+                return Response("请勿重复提交!!!", exception=True)
+            elif relation_info.status == STATUS.NOT_ANSWER:
                 return Response("请先保存再提交!!!", exception=True)
 
         perform_info = StudentPerformTaskSerializer(relation_info, data)

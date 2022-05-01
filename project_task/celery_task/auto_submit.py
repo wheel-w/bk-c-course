@@ -10,29 +10,26 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific Language governing permissions and limitations under the License.
 """
 
+import logging
 
-class SCORE:
-    WRONG = 0  # 错误时的得分
-    NOT_JUDGE = -1  # 未批改时的得分
+from celery.task import task
 
+from project_task.constants import STATUS
+from project_task.models import CeleryTaskInfo, StudentProjectTaskInfo
 
-class TYPES:
-    SINGLE = "SINGLE"
-    MULTIPLE = "MULTIPLE"
-    COMPLETION = "COMPLETION"
-    JUDGE = "JUDGE"
-    SHORT_ANSWER = "SHORT_ANSWER"
+logger = logging.getLogger("root")
 
 
-class STATUS:
-    NOT_ANSWER = "NOT_ANSWER"
-    SAVED = "SAVED"
-    SUBMITTED = "SUBMITTED"
-    MARKED = "MARKED"
-    CANCEL = "CANCEL"
-
-
-class TASK_STATUS:
-    DRAFT = "DRAFT"
-    RELEASE = "RELEASE"
-    MARKED = "MARKED"
+# 任务截止时把所有已保存的relation自动提交
+@task()
+def auto_submit(project_task_id):
+    logger.info("自动提交任务开始执行")
+    relations = StudentProjectTaskInfo.objects.filter(
+        project_task_id=project_task_id,
+        status=STATUS.SAVED,
+    )
+    relations.update(status=STATUS.SUBMITTED)
+    celery_task = CeleryTaskInfo.objects.filter(project_task_id=project_task_id)
+    if celery_task.exists():
+        celery_task.delete()
+    logger.info("自动提交任务执行完毕")
