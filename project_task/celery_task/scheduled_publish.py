@@ -19,9 +19,12 @@ def scheduled_publish(project_task_id):
     except ProjectTask.DoesNotExist as error:
         logger.exception(error)
 
-    CeleryTaskInfo.objects.get(
-        project_task_id=project_task_id,
-        celery_task_type=CELERY_TASK_TYPE.SCHEDULED_PUBLISH,
-    ).delete()
+    try:
+        CeleryTaskInfo.objects.get(
+            project_task_id=project_task_id,
+            celery_task_type=CELERY_TASK_TYPE.SCHEDULED_PUBLISH,
+        ).delete()
+    except CeleryTaskInfo.DoesNotExist as error:
+        logger.exception(error)
 
     logger.info(f"id为{project_task_id}的任务的定时发布异步任务执行完毕")

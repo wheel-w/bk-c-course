@@ -30,9 +30,12 @@ def auto_submit(project_task_id):
         status=STATUS.SAVED,
     ).update(status=STATUS.SUBMITTED)
 
-    CeleryTaskInfo.objects.get(
-        project_task_id=project_task_id,
-        celery_task_type=CELERY_TASK_TYPE.AUTO_SUBMIT,
-    ).delete()
+    try:
+        CeleryTaskInfo.objects.get(
+            project_task_id=project_task_id,
+            celery_task_type=CELERY_TASK_TYPE.AUTO_SUBMIT,
+        ).delete()
+    except CeleryTaskInfo.DoesNotExist as error:
+        logger.exception(error)
 
     logger.info("自动提交任务执行完毕")
