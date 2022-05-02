@@ -9,6 +9,7 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
+
 from celery.result import AsyncResult
 from django.db import transaction
 
@@ -17,6 +18,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 
+from project_task.constants import CELERY_TASK_TYPE
 from project_task.models import CeleryTaskInfo, ProjectTask, StudentProjectTaskInfo
 from project_task.serializer import (
     CeleryTaskInfoCreateSerializer,
@@ -25,11 +27,13 @@ from project_task.serializer import (
     StudentProjectTaskInfoSerializer,
     TaskCreateSerializer,
     TaskDeleteSerializer,
+    TimeTransferSerializer,
 )
 from question.models import Question
 from question.serializer import QuestionSerializer
 
 from .celery_task.auto_submit import auto_submit
+from .celery_task.scheduled_publish import scheduled_publish
 
 
 # 出题接口
@@ -104,10 +108,13 @@ class ProjectTaskList(viewsets.ViewSet):
             auto_submit_task = auto_submit.apply_async(
                 args=[task_temp.id], eta=task_temp.end_time
             )
+
             celery_task_data = {
                 "project_task_id": task_temp.id,
                 "celery_task_id": auto_submit_task.id,
+                "celery_task_type": CELERY_TASK_TYPE.AUTO_SUBMIT,
             }
+
             celery_task = CeleryTaskInfoCreateSerializer(data=celery_task_data)
             celery_task.is_valid(raise_exception=True)
             celery_task.save()
@@ -128,6 +135,38 @@ class ProjectTaskList(viewsets.ViewSet):
             return Response("该任务不存在!!!", exception=True)
 
         data = request.data
+
+        # 设置定时发布
+        if "scheduled_publish_time" in data:
+            scheduled_publish_time = data.pop("scheduled_publish_time")
+            time_transfer = TimeTransferSerializer(
+                data={"scheduled_publish_time": scheduled_publish_time}
+            )
+            time_transfer.is_valid(raise_exception=True)
+
+            # 定时发布celery任务
+            scheduled_publish_task = scheduled_publish.apply_async(
+                args=[project_task_id], eta=time_transfer.data["scheduled_publish_time"]
+            )
+
+            celery_task_info = CeleryTaskInfo.objects.filter(
+                project_task_id=project_task_id,
+                celery_task_type=CELERY_TASK_TYPE.SCHEDULED_PUBLISH,
+            )
+
+            if celery_task_info.exists():
+                celery_id = celery_task_info[0].celery_task_id
+                AsyncResult(celery_id).revoke()
+                celery_task_info.update(celery_task_id=scheduled_publish_task.id)
+            else:
+                celery_task_data = {
+                    "project_task_id": project_task_id,
+                    "celery_task_id": scheduled_publish_task.id,
+                    "celery_task_type": CELERY_TASK_TYPE.SCHEDULED_PUBLISH,
+                }
+                celery_task = CeleryTaskInfoCreateSerializer(data=celery_task_data)
+                celery_task.is_valid(raise_exception=True)
+                celery_task.save()
 
         # questions 和 questions_detail 必须一块传
         if "questions" in data:
@@ -152,28 +191,20 @@ class ProjectTaskList(viewsets.ViewSet):
         info.is_valid()
         task_info = info.save()
 
-        # 如果更改截止时间，重开一个celery任务并把原来的任务revoke
+        # 如果更改截止时间，更新celery任务id并把原来的任务revoke
         if "end_time" in data:
-            try:
-                celery_task = CeleryTaskInfo.objects.get(
-                    project_task_id=project_task_id
-                )
-                celery_id = celery_task.celery_task_id
-            except CeleryTaskInfo.DoesNotExist:
-                return Response("该条celery任务记录不存在!!!", exception=True)
-            AsyncResult(celery_id).revoke()
-            celery_task.delete()
-
             auto_submit_task = auto_submit.apply_async(
                 args=[task_info.id], eta=task_info.end_time
             )
-            celery_task_data = {
-                "project_task_id": task_info.id,
-                "celery_task_id": auto_submit_task.id,
-            }
-            celery_task = CeleryTaskInfoCreateSerializer(data=celery_task_data)
-            celery_task.is_valid(raise_exception=True)
-            celery_task.save()
+
+            celery_task = CeleryTaskInfo.objects.filter(
+                project_task_id=project_task_id,
+                celery_task_type=CELERY_TASK_TYPE.AUTO_SUBMIT,
+            )
+            celery_id = celery_task[0].celery_task_id
+
+            AsyncResult(celery_id).revoke()
+            celery_task.update(celery_task_id=auto_submit_task.id)
 
         return Response()
 
@@ -190,12 +221,15 @@ class ProjectTaskList(viewsets.ViewSet):
                 project_task_id=project_task_id
             ).delete()
             Question.objects.filter(id__in=question_id_list).delete()
+            # 都删
             celery_task_info = CeleryTaskInfo.objects.filter(
                 project_task_id=project_task_id
             )
             if celery_task_info.exists():
-                celery_task = AsyncResult(celery_task_info[0].celery_task_id)
-                celery_task.revoke()
+                for celery_id in celery_task_info.values_list(
+                    "celery_task_id", flat=True
+                ):
+                    AsyncResult(celery_id).revoke()
                 celery_task_info.delete()
         except ProjectTask.DoesNotExist:
             return Response("任务不存在!!!", exception=True)
@@ -223,6 +257,7 @@ class ProjectTaskList(viewsets.ViewSet):
         celery_task_info = CeleryTaskInfo.objects.filter(
             project_task_id__in=task_id_list
         )
+        # 都删
         if celery_task_info.exists():
             celery_id_list = list(
                 celery_task_info.values_list("celery_task_id", flat=True)

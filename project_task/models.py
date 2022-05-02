@@ -93,5 +93,16 @@ class CeleryTaskInfo(models.Model):
     project_task_id = models.BigIntegerField("任务id")
     celery_task_id = models.CharField("celery任务id", max_length=60)
 
+    class CELERY_TASK_TYPE:
+        AUTO_SUBMIT = "AUTO_SUBMIT"
+        SCHEDULED_PUBLISH = "SCHEDULED_PUBLISH"
+
+    TYPES = [
+        (CELERY_TASK_TYPE.AUTO_SUBMIT, "自动提交任务"),
+        (CELERY_TASK_TYPE.SCHEDULED_PUBLISH, "定时发布任务"),
+    ]
+
+    celery_task_type = models.CharField("celery任务类型", max_length=30, choices=TYPES)
+
     def __str__(self):
         return "{}-{}".format(self.project_task_id, self.celery_task_id)

@@ -14,7 +14,7 @@ import logging
 
 from celery.task import task
 
-from project_task.constants import STATUS
+from project_task.constants import CELERY_TASK_TYPE, STATUS
 from project_task.models import CeleryTaskInfo, StudentProjectTaskInfo
 
 logger = logging.getLogger("root")
@@ -24,12 +24,15 @@ logger = logging.getLogger("root")
 @task()
 def auto_submit(project_task_id):
     logger.info("自动提交任务开始执行")
-    relations = StudentProjectTaskInfo.objects.filter(
+
+    StudentProjectTaskInfo.objects.filter(
         project_task_id=project_task_id,
         status=STATUS.SAVED,
-    )
-    relations.update(status=STATUS.SUBMITTED)
-    celery_task = CeleryTaskInfo.objects.filter(project_task_id=project_task_id)
-    if celery_task.exists():
-        celery_task.delete()
+    ).update(status=STATUS.SUBMITTED)
+
+    CeleryTaskInfo.objects.get(
+        project_task_id=project_task_id,
+        celery_task_type=CELERY_TASK_TYPE.AUTO_SUBMIT,
+    ).delete()
+
     logger.info("自动提交任务执行完毕")

@@ -56,6 +56,17 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         )
         task_info = ProjectTaskInfoForStuSerializer(tasks, many=True)
 
+        task_detail = list(
+            StudentProjectTaskInfo.objects.filter(
+                project_task_id__in=list(tasks.values_list("id", flat=True)),
+                student_id=student_id,
+            ).values_list("total_score", "status")
+        )
+
+        for info, detail in zip(task_info.data, task_detail):
+            info["total_score"] = detail[0]
+            info["status"] = detail[1]
+
         return Response(task_info.data)
 
     @swagger_auto_schema(

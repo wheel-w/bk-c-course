@@ -60,9 +60,9 @@ class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
 
 
 class CeleryTaskInfoAdmin(admin.ModelAdmin):
-    list_display = ("project_task_id", "celery_task_id")
+    list_display = ("project_task_id", "celery_task_id", "celery_task_type")
 
-    list_filter = ("project_task_id", "celery_task_id")
+    list_filter = ("project_task_id", "celery_task_id", "celery_task_type")
 
 
 # Register your models here.

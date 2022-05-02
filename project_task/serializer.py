@@ -22,6 +22,8 @@ class ProjectTaskUpdateSerializer(serializers.ModelSerializer):
         child=serializers.DictField(), required=False
     )
     questions = QuestionSerializer(many=True, required=False)
+    # 定时发布
+    scheduled_publish_time = serializers.DateTimeField(required=False)
 
     class Meta:
         model = ProjectTask
@@ -35,6 +37,7 @@ class ProjectTaskUpdateSerializer(serializers.ModelSerializer):
             "students_visible",
             "questions_detail",
             "questions",
+            "scheduled_publish_time",
         ]
 
         extra_kwargs = {
@@ -368,3 +371,7 @@ class CeleryTaskInfoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CeleryTaskInfo
         fields = "__all__"
+
+
+class TimeTransferSerializer(serializers.Serializer):
+    scheduled_publish_time = serializers.DateTimeField()
