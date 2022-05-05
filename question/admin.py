@@ -22,9 +22,24 @@ class QuestionAdmin(admin.ModelAdmin):
         "types",
     )
 
+    list_display = (
+        "project_id",
+        "id",
+        "title",
+        "types",
+    )
+
 
 class QuestionTagAdmin(admin.ModelAdmin):
     list_filter = (
+        "id",
+        "value",
+        "text",
+        "time_created",
+        "time_updated",
+    )
+
+    list_display = (
         "id",
         "value",
         "text",
@@ -36,7 +51,13 @@ class QuestionTagAdmin(admin.ModelAdmin):
 class QuestionTagContactAdmin(admin.ModelAdmin):
     list_filter = (
         "id",
-        "user_id",
+        "question_id",
+        "tag_id",
+    )
+
+    list_display = (
+        "id",
+        "question_id",
         "tag_id",
     )
 

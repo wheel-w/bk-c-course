@@ -60,8 +60,8 @@ class QuestionTag(models.Model):
 
 
 class QuestionTagContact(models.Model):
-    user_id = models.BigIntegerField("用户id")
+    question_id = models.BigIntegerField("问题id")
     tag_id = models.BigIntegerField("标签id")
 
     def __str__(self):
-        return "{}-{}".format(self.user_id, self.tag_id)
+        return "{}-{}".format(self.question_id, self.tag_id)

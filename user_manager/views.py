@@ -64,16 +64,27 @@ class OriginAccountView(ViewSet):
         ).values_list("account_id__username", flat=True)
         # 重构数据
         store_list = []
+        exist_user_list = []
         for elem in src_data:
-            store_list.append(
-                {
-                    "username": elem["username"],
-                    "display_name": elem["display_name"],
-                    "departments": elem["departments"][0]["name"],
-                    "is_import": True if elem["username"] in exist_user else False,
-                }
-            )
-
+            if elem["username"] in exist_user:
+                exist_user_list.append(
+                    {
+                        "username": elem["username"],
+                        "display_name": elem["display_name"],
+                        "departments": elem["departments"][0]["name"],
+                        "is_import": True,
+                    }
+                )
+            else:
+                store_list.append(
+                    {
+                        "username": elem["username"],
+                        "display_name": elem["display_name"],
+                        "departments": elem["departments"][0]["name"],
+                        "is_import": False,
+                    }
+                )
+        store_list.extend(exist_user_list)
         return Response(store_list)
 
     def retrieve(self, request, *args, **kwargs):
@@ -196,6 +207,7 @@ class BatchView(ViewSet):
             return Response("请传入一个id列表", exception=True)
         # 获取要删除的用户列表
         queryset = self.queryset.filter(id__in=id_list)
+        tag_conn_queryset = UserTagContact.objects.filter(user_id__in=id_list)
         delete_users = []
         for i in queryset:
             # 记录删除的用户姓名
@@ -206,6 +218,7 @@ class BatchView(ViewSet):
             return Response("没有找到任何对应用户", exception=True)
         # 统一删除
         queryset.delete()
+        tag_conn_queryset.delete()
         return Response(
             {
                 "delete_count": len(delete_users),
@@ -343,12 +356,15 @@ class UserView(GenericViewSet, UpdateModelMixin):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)
-        data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id)
+        data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id).values()
         return Response(data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+        # 删除标签
+        UserTagContact.objects.filter(user_id=instance.id).delete()
+        # 删除用户
         instance.delete()
         return Response(serializer.data)
 

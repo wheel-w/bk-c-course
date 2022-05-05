@@ -11,10 +11,7 @@ specific Language governing permissions and limitations under the License.
 """
 from datetime import timedelta
 
-from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
-
-# Create your models here.
 
 
 class ProjectTask(models.Model):
@@ -35,27 +32,19 @@ class ProjectTask(models.Model):
     types = models.CharField("任务类型", max_length=10, choices=TYPES)
     title = models.CharField("任务名称", max_length=255)
     describe = models.CharField("任务描述", max_length=255)
-    question_order = models.CharField(
-        "存储题目顺序",
-        validators=[validate_comma_separated_integer_list],
-        max_length=200,
-        blank=True,
-        null=True,
-        default="",
-    )
+    questions_info = models.JSONField("题目相关信息(id,顺序,分值等)", blank=True, null=True)
 
-    create_time = models.DateTimeField("创建时间", auto_now_add=True)
-    start_time = models.DateTimeField("开始时间", blank=True, null=True)
-    end_time = models.DateTimeField("截止时间", blank=True, null=True)
+    start_time = models.DateTimeField("任务开始时间", blank=True, null=True)
+    end_time = models.DateTimeField("任务截止时间", blank=True, null=True)
     status = models.CharField("任务状态", max_length=10, choices=STATUS)
-    judge_teachers = models.JSONField("评委老师id及其权重")
+    judge_teachers_info = models.JSONField("评委老师id及其权重")
 
     creator = models.TextField("创建者姓名")
     updater = models.TextField("更新者姓名")
-    time_created = models.DateTimeField("创建时间", auto_now_add=True)
-    time_updated = models.DateTimeField("更新时间", auto_now=True)
+    time_created = models.DateTimeField("任务创建时间", auto_now_add=True)
+    time_updated = models.DateTimeField("任务更新时间", auto_now=True)
 
-    students_visible = models.BooleanField("导师评分是否开启匿名", default=False)
+    students_visible = models.BooleanField("导师评分学生是否可见", default=False)
 
     def __str__(self):
         return self.title
@@ -65,8 +54,8 @@ class StudentProjectTaskInfo(models.Model):
     student_id = models.BigIntegerField("学生id")
     project_id = models.BigIntegerField("项目id")
     project_task_id = models.BigIntegerField("任务id")
-    stu_answers = models.JSONField("学生提交答案列表")
-    individual_score = models.JSONField("学生题目单项得分")
+    stu_answers = models.JSONField("学生提交答案列表", blank=True, null=True)
+    individual_score = models.JSONField("学生题目单项得分", blank=True, null=True)
     total_score = models.FloatField("学生总体得分", blank=True, null=True, default=0)
 
     class Status:
@@ -84,13 +73,36 @@ class StudentProjectTaskInfo(models.Model):
         (Status.CANCEL, "已撤销"),
     ]
 
-    status = models.CharField("学生完成任务状态", max_length=10, choices=STATUS)
+    status = models.CharField(
+        "学生完成任务状态", max_length=10, choices=STATUS, default=Status.NOT_ANSWER
+    )
     cumulative_time = models.DurationField("任务累计时间", default=timedelta(seconds=0))
 
-    created_id = models.BigIntegerField("创建者id")
-    updated_id = models.BigIntegerField("更新者id")
+    creator = models.TextField("创建者姓名")
+    updater = models.TextField("更新者姓名")
+    creator_id = models.BigIntegerField("创建者id")
+    updater_id = models.BigIntegerField("更新者id")
     time_created = models.DateTimeField("创建时间", auto_now_add=True)
     time_updated = models.DateTimeField("更新时间", auto_now=True)
 
     def __str__(self):
         return "{}-{}-{}".format(self.project_id, self.project_task_id, self.student_id)
+
+
+class CeleryTaskInfo(models.Model):
+    project_task_id = models.BigIntegerField("任务id")
+    celery_task_id = models.CharField("celery任务id", max_length=60)
+
+    class CELERY_TASK_TYPE:
+        AUTO_SUBMIT = "AUTO_SUBMIT"
+        SCHEDULED_PUBLISH = "SCHEDULED_PUBLISH"
+
+    TYPES = [
+        (CELERY_TASK_TYPE.AUTO_SUBMIT, "自动提交任务"),
+        (CELERY_TASK_TYPE.SCHEDULED_PUBLISH, "定时发布任务"),
+    ]
+
+    celery_task_type = models.CharField("celery任务类型", max_length=30, choices=TYPES)
+
+    def __str__(self):
+        return "{}-{}".format(self.project_task_id, self.celery_task_id)
