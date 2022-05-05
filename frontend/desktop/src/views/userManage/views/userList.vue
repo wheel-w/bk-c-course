@@ -5,6 +5,7 @@
                 <bk-dropdown-menu>
                     <div class="dropdown-trigger-btn" slot="dropdown-trigger">
                         <span>批量操作</span>
+                        <i class="bk-icon icon-angle-down"></i>
                     </div>
                     <ul class="bk-dropdown-list" slot="dropdown-content">
                         <li>
@@ -379,8 +380,9 @@
     justify-content: space-between;
     .bk-dropdown-menu {
       padding: 8px 14px;
-      border: 1px solid #81aaec;
-      border-radius: 5px;
+      background: #3a84ff;
+      border-color: #3a84ff;
+      color: #fff;
       span {
         font-size: 14px;
         font-weight: 800;
