@@ -60,7 +60,7 @@ class QuestionTag(models.Model):
 
 
 class QuestionTagContact(models.Model):
-    question_id = models.BigIntegerField("用户id")
+    question_id = models.BigIntegerField("问题id")
     tag_id = models.BigIntegerField("标签id")
 
     def __str__(self):

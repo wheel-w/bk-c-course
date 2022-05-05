@@ -13,8 +13,6 @@ from datetime import timedelta
 
 from django.db import models
 
-# Create your models here.
-
 
 class ProjectTask(models.Model):
     class Status:
@@ -34,7 +32,7 @@ class ProjectTask(models.Model):
     types = models.CharField("任务类型", max_length=10, choices=TYPES)
     title = models.CharField("任务名称", max_length=255)
     describe = models.CharField("任务描述", max_length=255)
-    questions_info = models.JSONField("题目id及其顺序与分值", blank=True, null=True)
+    questions_info = models.JSONField("题目相关信息(id,顺序,分值等)", blank=True, null=True)
 
     start_time = models.DateTimeField("任务开始时间", blank=True, null=True)
     end_time = models.DateTimeField("任务截止时间", blank=True, null=True)
@@ -46,7 +44,7 @@ class ProjectTask(models.Model):
     time_created = models.DateTimeField("任务创建时间", auto_now_add=True)
     time_updated = models.DateTimeField("任务更新时间", auto_now=True)
 
-    students_visible = models.BooleanField("导师评分是否开启匿名", default=False)
+    students_visible = models.BooleanField("导师评分学生是否可见", default=False)
 
     def __str__(self):
         return self.title
@@ -80,6 +78,8 @@ class StudentProjectTaskInfo(models.Model):
     )
     cumulative_time = models.DurationField("任务累计时间", default=timedelta(seconds=0))
 
+    creator = models.TextField("创建者姓名")
+    updater = models.TextField("更新者姓名")
     creator_id = models.BigIntegerField("创建者id")
     updater_id = models.BigIntegerField("更新者id")
     time_created = models.DateTimeField("创建时间", auto_now_add=True)
@@ -87,3 +87,22 @@ class StudentProjectTaskInfo(models.Model):
 
     def __str__(self):
         return "{}-{}-{}".format(self.project_id, self.project_task_id, self.student_id)
+
+
+class CeleryTaskInfo(models.Model):
+    project_task_id = models.BigIntegerField("任务id")
+    celery_task_id = models.CharField("celery任务id", max_length=60)
+
+    class CELERY_TASK_TYPE:
+        AUTO_SUBMIT = "AUTO_SUBMIT"
+        SCHEDULED_PUBLISH = "SCHEDULED_PUBLISH"
+
+    TYPES = [
+        (CELERY_TASK_TYPE.AUTO_SUBMIT, "自动提交任务"),
+        (CELERY_TASK_TYPE.SCHEDULED_PUBLISH, "定时发布任务"),
+    ]
+
+    celery_task_type = models.CharField("celery任务类型", max_length=30, choices=TYPES)
+
+    def __str__(self):
+        return "{}-{}".format(self.project_task_id, self.celery_task_id)
