@@ -14,7 +14,7 @@
 
 <script>
     import { bkTab, bkTabPanel } from 'bk-magic-vue'
-    const userList = () => import('./views/userlist')
+    const userList = () => import('./views/userList')
     const importUser = () => import('./views/importUser')
     export default {
         components: {
