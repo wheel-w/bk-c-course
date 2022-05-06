@@ -23,7 +23,8 @@ from project.serializer import (
     ProjectSerializer,
     UserProjectContactSerializer,
 )
-from user_manager.models import User
+from user_manager.models import User, UserTag, UserTagContact
+from user_manager.serialize import UserSerSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -42,6 +43,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
+        UserProjectContact.objects.create(
+            project_id=serializer.data["id"], user_id=request.user.id
+        )
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
@@ -106,16 +110,89 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         return Response()
 
     @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有用户信息")
-    def list(self, request, *args, **kwargs):
+    def get_all_user_info(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
         data = UserProjectContact.objects.filter(project_id=project_id)
         page = self.paginate_queryset(data)
         user_id_list = [user.user_id for user in page]
         users = User.objects.filter(id__in=user_id_list)
-        user_info = [
-            {"id": user.id, "user_name": user.name, "gender": user.gender}
-            for user in users
-        ]
+        user_info = UserSerSerializer(users, many=True)
+        self.add_tag(user_info.data)
+        return self.get_paginated_response(user_info.data)
+
+    def add_tag(self, users):
+        """给每一个返回的 User 增加一个tag字段"""
+        user_ids = [user.get("id") for user in users]
+        user_tag_dic = self.get_user_tag_map(user_ids)
+        for user in users:
+            # 遍历每一个获取到user 查看其是否有标签
+            if user.get("id") in user_tag_dic:
+                user["tag"] = user_tag_dic.get(user.get("id")).values()
+            else:
+                user["tag"] = None
+        return users
+
+    @staticmethod
+    def get_user_tag_map(user_ids):
+        """获取每一个返回的 User 所拥有的标签列表"""
+        tag_conns = UserTagContact.objects.filter(user_id__in=user_ids)
+        tag_ids = {tag_conn.tag_id for tag_conn in tag_conns}
+        tags = UserTag.objects.filter(id__in=tag_ids)
+        tags_dic = {}  # key: 标签id  value: tag_value, tag_color
+        for tag in tags:
+            tags_dic[tag.id] = {
+                "tag_id": tag.id,
+                "tag_value": tag.tag_value,
+                "tag_color": tag.tag_color,
+            }
+        user_tag_dic = {}  # key: user_id  value: {tags_dic ...}
+        for tag_conn in tag_conns:
+            if user_tag_dic.get(tag_conn.user_id):
+                user_tag_dic[tag_conn.user_id][tag_conn.tag_id] = tags_dic.get(
+                    tag_conn.tag_id
+                )
+            else:
+                user_tag_dic[tag_conn.user_id] = {
+                    tag_conn.tag_id: tags_dic.get(tag_conn.tag_id)
+                }
+        return user_tag_dic
+
+    @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有的学生的信息")
+    def get_all_stu_info(self, request, *args, **kwargs):
+        project_id = kwargs["project_id"]
+        data = UserProjectContact.objects.filter(project_id=project_id)
+        user_id_list = [relation.user_id for relation in data]
+        users = User.objects.filter(id__in=user_id_list)
+        user_info = UserSerSerializer(users, many=True)
+        self.add_tag(user_info.data)
+        actual_user_id_list = []
+        for user in user_info.data:
+            if user["tag"]:
+                for tag_info in user["tag"]:
+                    if tag_info["tag_value"] == "学生":
+                        actual_user_id_list.append(user["id"])
+        users = User.objects.filter(id__in=actual_user_id_list)
+        page = self.paginate_queryset(users)
+        user_info = [{"id": user.id, "name": user.name} for user in page]
+        return self.get_paginated_response(user_info)
+
+    @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有的老师的信息")
+    def get_all_tea_info(self, request, *args, **kwargs):
+        project_id = kwargs["project_id"]
+        data = UserProjectContact.objects.filter(project_id=project_id)
+        user_id_list = [relation.user_id for relation in data]
+        users = User.objects.filter(id__in=user_id_list)
+        user_info = UserSerSerializer(users, many=True)
+        self.add_tag(user_info.data)
+        actual_user_id_list = []
+        for user in user_info.data:
+            if user["tag"]:
+                for tag_info in user["tag"]:
+                    if tag_info["tag_value"] == "教师":
+                        actual_user_id_list.append(user["id"])
+        users = User.objects.filter(id__in=actual_user_id_list)
+        page = self.paginate_queryset(users)
+        user_info = [{"id": user.id, "name": user.name} for user in page]
         return self.get_paginated_response(user_info)
 
     # 向项目中批量导入用户
