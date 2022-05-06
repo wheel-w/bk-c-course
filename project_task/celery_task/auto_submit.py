@@ -23,7 +23,7 @@ logger = logging.getLogger("root")
 # 任务截止时把所有已保存的relation自动提交
 @task()
 def auto_submit(project_task_id):
-    logger.info("自动提交任务开始执行")
+    logger.info(f"自动提交任务开始执行，所属任务的id为{project_task_id}")
 
     StudentProjectTaskInfo.objects.filter(
         project_task_id=project_task_id,
@@ -38,4 +38,4 @@ def auto_submit(project_task_id):
     except CeleryTaskInfo.DoesNotExist as error:
         logger.exception(error)
 
-    logger.info("自动提交任务执行完毕")
+    logger.info(f"自动提交任务执行完毕，所属任务的id为{project_task_id}")
