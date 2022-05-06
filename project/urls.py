@@ -25,8 +25,16 @@ urlpatterns = [
     path(
         r"project-user/<int:project_id>/",
         views.UserProjectContactViewSet.as_view(
-            {"post": "bulk_import", "get": "list", "delete": "destroy"}
+            {"post": "bulk_import", "get": "get_all_user_info", "delete": "destroy"}
         ),
+    ),
+    path(
+        r"project-user/<int:project_id>/student/",
+        views.UserProjectContactViewSet.as_view({"get": "get_all_stu_info"}),
+    ),
+    path(
+        r"project-user/<int:project_id>/teacher/",
+        views.UserProjectContactViewSet.as_view({"get": "get_all_tea_info"}),
     ),
     path(
         r"project-user/<int:project_id>/export-info/",

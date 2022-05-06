@@ -43,7 +43,7 @@ def judge_objective(relation_id):
     stu_answers = relation_info.stu_answers
     individual_score = []
 
-    for teacher_id, teacher_weight in judge_teachers_info.items():
+    for teacher_info in judge_teachers_info:
         score = []
         question_index = 0
         # question[0]为题型,question[1]为答案
@@ -62,8 +62,8 @@ def judge_objective(relation_id):
             question_index += 1
 
         score_info = {
-            "teacher_id": int(teacher_id),
-            "teacher_weight": float(teacher_weight),
+            "teacher_id": teacher_info["id"],
+            "teacher_weight": teacher_info["weight"],
             "teacher_name": "",
             "is_judge": False,
             "score": score,
