@@ -56,8 +56,9 @@ class ProjectTaskUpdateSerializer(serializers.ModelSerializer):
             return end_time
 
 
-# 为老师提供的任务基本信息的序列化器
 class ProjectTaskForTeacherSerializer(serializers.ModelSerializer):
+    """为老师提供的任务基本信息的序列化器"""
+
     submitted_count = serializers.SerializerMethodField()  # 已提交的人数
     marked_count = serializers.SerializerMethodField()  # 已批阅的人数
     student_total_count = serializers.SerializerMethodField()  # 学生总数
@@ -80,8 +81,9 @@ class ProjectTaskForTeacherSerializer(serializers.ModelSerializer):
         return StudentProjectTaskInfo.objects.filter(project_task_id=data.id).count()
 
 
-# 为老师提供的Task的详情序列化器
 class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
+    """为老师提供的Task的详情序列化器"""
+
     questions_info = serializers.SerializerMethodField()
     submitted_count = serializers.SerializerMethodField()  # 已提交的人数
     marked_count = serializers.SerializerMethodField()  # 已批阅的人数
@@ -192,15 +194,17 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
         return questions_info.data
 
 
-# 为学生提供的任务基本信息的序列化器
 class ProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
+    """为学生提供的任务基本信息的序列化器"""
+
     class Meta:
         model = ProjectTask
         exclude = ["questions_info", "judge_teachers_info"]
 
 
-# 学生任务状态不为已提交时的任务详情序列化器
 class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer):
+    """学生任务状态不为已提交时的任务详情序列化器"""
+
     questions_info = serializers.SerializerMethodField()
     judge_teachers_info = serializers.SerializerMethodField()
 
@@ -236,8 +240,9 @@ class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer)
             return "老师评分信息不可见"
 
 
-# 学生任务状态为已提交时的任务详情序列化器
 class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
+    """学生任务状态为已提交时的任务详情序列化器"""
+
     questions_info = serializers.SerializerMethodField()
     judge_teachers_info = serializers.SerializerMethodField()
 
@@ -269,8 +274,9 @@ class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
             return "老师评分信息不可见"
 
 
-# 创建课程的序列化器
 class TaskCreateSerializer(serializers.Serializer):
+    """创建课程的序列化器"""
+
     questions = QuestionSerializer(many=True)
     students = serializers.ListField(child=serializers.IntegerField())
     questions_detail = serializers.ListField(child=serializers.DictField())
@@ -293,15 +299,17 @@ class TaskCreateSerializer(serializers.Serializer):
         return end_time
 
 
-# normal的Relation序列化器
 class StudentProjectTaskInfoSerializer(serializers.ModelSerializer):
+    """normal的Relation序列化器"""
+
     class Meta:
         model = StudentProjectTaskInfo
         exclude = ["id"]
 
 
-# 老师评分开启匿名时的Relation序列化器
 class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
+    """老师评分开启匿名时的Relation序列化器"""
+
     individual_score = serializers.SerializerMethodField()
 
     class Meta:
@@ -334,8 +342,9 @@ class ProjectSearchInfoSerializer(serializers.ModelSerializer):
         }
 
 
-# 学生答题使用的序列化器
 class StudentPerformTaskSerializer(serializers.ModelSerializer):
+    """学生答题使用的序列化器"""
+
     stu_answers = serializers.ListField(child=serializers.CharField(), required=False)
 
     class Meta:
