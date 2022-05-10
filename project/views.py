@@ -118,10 +118,10 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     def get_all_user_info(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
         data = UserProjectContact.objects.filter(project_id=project_id)
-        page = self.paginate_queryset(data)
-        user_id_list = [user.user_id for user in page]
+        user_id_list = [user.user_id for user in data]
         users = User.objects.filter(id__in=user_id_list)
-        user_info = UserSerSerializer(users, many=True)
+        page = self.paginate_queryset(users)
+        user_info = UserSerSerializer(page, many=True)
         self.add_tag(user_info.data)
         return self.get_paginated_response(user_info.data)
 
