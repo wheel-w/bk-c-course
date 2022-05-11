@@ -27,6 +27,8 @@ from project.serializer import (
 from user_manager.models import User, UserTag, UserTagContact
 from user_manager.serialize import UserSerSerializer
 
+from .filters import ProjectUserFilter
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
     """项目管理"""
@@ -104,6 +106,7 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
 
     queryset = UserProjectContact.objects.all()
     serializer_class = UserProjectContactSerializer
+    filter_class = ProjectUserFilter
 
     @swagger_auto_schema(
         operation_summary="传入project_id和user_id创建一条UserProjectContact记录"
@@ -119,7 +122,9 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         project_id = kwargs["project_id"]
         data = UserProjectContact.objects.filter(project_id=project_id)
         user_id_list = [user.user_id for user in data]
-        users = User.objects.filter(id__in=user_id_list)
+        # 过滤
+        users = self.filter_queryset(User.objects.filter(id__in=user_id_list))
+        # 分页
         page = self.paginate_queryset(users)
         user_info = UserSerSerializer(page, many=True)
         self.add_tag(user_info.data)
@@ -175,7 +180,9 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
                 for tag_info in user["tag"]:
                     if tag_info["tag_value"] == scope:
                         actual_user_id_list.append(user["id"])
-        users = User.objects.filter(id__in=actual_user_id_list)
+        # 过滤
+        users = self.filter_queryset(User.objects.filter(id__in=user_id_list))
+        # 分页
         page = self.paginate_queryset(users)
         user_info = [{"id": user.id, "name": user.name} for user in page]
         return user_info
