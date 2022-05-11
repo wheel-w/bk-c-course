@@ -17,9 +17,8 @@ import django_filters
 class ProjectUserFilter(django_filters.FilterSet):
     """Project下User的过滤器"""
 
-    name = django_filters.CharFilter(
-        field_name="name", lookup_expr="icontains"
-    )  # icontains 包含,忽略大小写
+    name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
+    gender = django_filters.CharFilter(field_name="gender")
 
     class Meta:
-        fields = ["name", "gender", "min_date", "max_date"]  # 过滤的字段
+        fields = ["name", "gender"]

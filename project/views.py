@@ -184,7 +184,10 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         users = self.filter_queryset(User.objects.filter(id__in=user_id_list))
         # 分页
         page = self.paginate_queryset(users)
-        user_info = [{"id": user.id, "name": user.name} for user in page]
+        user_info = [
+            {"id": user.id, "name": user.name, "gender": user.get_gender_display()}
+            for user in page
+        ]
         return user_info
 
     @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有的学生的信息")
