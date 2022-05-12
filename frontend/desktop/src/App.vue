@@ -3,16 +3,14 @@
         class="monitor-navigation"
         :class="systemCls"
         v-title
-        data-title="课程管理系统"
-    >
+        data-title="课程管理系统">
         <bk-navigation
             :header-title="nav.id"
             :side-title="nav.title"
             :default-open="true"
             :navigation-type="'left-right'"
             :theme-color="'#7090D9'"
-            :need-menu="true"
-        >
+            :need-menu="true">
             <template slot="header">
                 <div class="monitor-navigation-header">
                     <div class="header-select">
@@ -28,14 +26,12 @@
                             ext-cls="select-custom"
                             ext-popover-cls="select-popover-custom"
                             searchable
-                            :disabled="false"
-                        >
+                            :disabled="false">
                             <bk-option
                                 v-for="option in courseList"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.name"
-                            >
+                                :name="option.name">
                             </bk-option>
                         </bk-select>
                     </div>
@@ -44,8 +40,7 @@
                         :arrow="false"
                         offset="-20, 10"
                         placement="bottom-start"
-                        :tippy-options="{ hideOnClick: false }"
-                    >
+                        :tippy-options="{ hideOnClick: false }">
                         <div class="header-user">
                             {{ $store.state.user.username }}
                             <i class="bk-icon icon-down-shape"></i>
@@ -56,8 +51,7 @@
                                     class="nav-item"
                                     v-for="userItem in user.list"
                                     :key="userItem"
-                                    @click="handleSelect(userItem.id, userItem)"
-                                >
+                                    @click="handleSelect(userItem.id, userItem)">
                                     {{ userItem.name }}
                                 </li>
                             </ul>
@@ -77,63 +71,52 @@
                     :item-default-color="'#f6f6f6'"
                     :item-hover-color="'#8ae4f5'"
                     :item-active-color="'#fea3be'"
-                    :toggle-active="nav.toggle"
-                >
+                    :toggle-active="nav.toggle">
                     <bk-navigation-menu-item
                         v-for="item in nav.list"
                         :has-child="item.children.length === 0 ? false : true"
                         :key="item.id"
                         :default-active="item.active"
-                        v-bind="item"
-                    >
+                        v-bind="item">
                         <!-- 这里的处理不好,为什么不使用原生icon配置项,配合css实现效果呢？ -->
                         <bk-icon
                             v-if="item.id === 'home'"
                             type="circle-shape"
-                            style="color: #ffdf7e"
-                        />
+                            style="color: #ffdf7e" />
                         <bk-icon
                             v-if="item.id === 'projectmanage'"
                             type="circle-shape"
-                            style="color: #bbde4f"
-                        />
+                            style="color: #bbde4f" />
                         <bk-icon
                             v-if="item.id === 'classnumber'"
                             type="circle-shape"
-                            style="color: #c7b3ff"
-                        />
+                            style="color: #c7b3ff" />
                         <bk-icon
                             v-if="item.id === 'set_question_index'"
                             type="circle-shape"
-                            style="color: #fea3be"
-                        />
+                            style="color: #fea3be" />
                         <bk-icon
                             v-if="item.id === 'answer_question_index'"
                             type="circle-shape"
-                            style="color: #8ae4f5"
-                        />
+                            style="color: #8ae4f5" />
                         <bk-icon
                             v-if="item.id === 'displaypaper'"
                             type="circle-shape"
-                            style="color: #febb5e"
-                        />
+                            style="color: #febb5e" />
                         <bk-icon
                             v-if="item.id === 'user_manage'"
                             type="circle-shape"
-                            style="color: #66ccff"
-                        />
+                            style="color: #66ccff" />
                         <bk-icon
                             v-if="item.id === 'set_question'"
                             type="circle-shape"
-                            style="color: #dd75ca"
-                        />
+                            style="color: #dd75ca" />
                         <span style="margin-left: 20px">{{ item.name }}</span>
                         <div slot="child">
                             <bk-navigation-menu-item
                                 v-for="child in item.children"
                                 :key="child.id"
-                                v-bind="child"
-                            >
+                                v-bind="child">
                                 <span>{{ child.name }}</span>
                             </bk-navigation-menu-item>
                         </div>
@@ -143,8 +126,7 @@
             <div class="monitor-navigation-content" id="a">
                 <main
                     class="main-content"
-                    v-bkloading="{ isLoading: mainContentLoading, opacity: 1 }"
-                >
+                    v-bkloading="{ isLoading: mainContentLoading, opacity: 1 }">
                     <router-view :key="routerKey" v-show="!mainContentLoading" />
                 </main>
             </div>
@@ -162,8 +144,7 @@
             ok-text="去认证"
             :confirm-fn="toRegister"
             :header-position="register.primary.headerPosition"
-            title="去认证"
-        >
+            title="去认证">
             您还没有进行身份认证，点击去认证按钮即可跳转至认证页面。
         </bk-dialog>
         <app-auth ref="bkAuth"></app-auth>
