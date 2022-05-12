@@ -17,6 +17,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from common.export_excel import export_excel
+from project.constants import USER_TYPE
 from project.models import Project, UserProjectContact
 from project.serializer import (
     PartialProjectSerializer,
@@ -26,8 +27,12 @@ from project.serializer import (
 from user_manager.models import User, UserTag, UserTagContact
 from user_manager.serialize import UserSerSerializer
 
+from .filters import ProjectUserFilter
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
+    """项目管理"""
+
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     filter_fields = ["property", "category", "organization", "creator"]
@@ -97,8 +102,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class UserProjectContactViewSet(viewsets.ModelViewSet):
+    """项目人员管理"""
+
     queryset = UserProjectContact.objects.all()
     serializer_class = UserProjectContactSerializer
+    filter_class = ProjectUserFilter
 
     @swagger_auto_schema(
         operation_summary="传入project_id和user_id创建一条UserProjectContact记录"
@@ -113,10 +121,12 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
     def get_all_user_info(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
         data = UserProjectContact.objects.filter(project_id=project_id)
-        page = self.paginate_queryset(data)
-        user_id_list = [user.user_id for user in page]
-        users = User.objects.filter(id__in=user_id_list)
-        user_info = UserSerSerializer(users, many=True)
+        user_id_list = [user.user_id for user in data]
+        # 过滤
+        users = self.filter_queryset(User.objects.filter(id__in=user_id_list))
+        # 分页
+        page = self.paginate_queryset(users)
+        user_info = UserSerSerializer(page, many=True)
         self.add_tag(user_info.data)
         return self.get_paginated_response(user_info.data)
 
@@ -157,9 +167,8 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
                 }
         return user_tag_dic
 
-    @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有的学生的信息")
-    def get_all_stu_info(self, request, *args, **kwargs):
-        project_id = kwargs["project_id"]
+    # 获取拥有指定的tag_value的用户的信息
+    def get_user_info(self, project_id, scope):
         data = UserProjectContact.objects.filter(project_id=project_id)
         user_id_list = [relation.user_id for relation in data]
         users = User.objects.filter(id__in=user_id_list)
@@ -169,30 +178,28 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         for user in user_info.data:
             if user["tag"]:
                 for tag_info in user["tag"]:
-                    if tag_info["tag_value"] == "学生":
+                    if tag_info["tag_value"] == scope:
                         actual_user_id_list.append(user["id"])
-        users = User.objects.filter(id__in=actual_user_id_list)
+        # 过滤
+        users = self.filter_queryset(User.objects.filter(id__in=user_id_list))
+        # 分页
         page = self.paginate_queryset(users)
-        user_info = [{"id": user.id, "name": user.name} for user in page]
+        user_info = [
+            {"id": user.id, "name": user.name, "gender": user.get_gender_display()}
+            for user in page
+        ]
+        return user_info
+
+    @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有的学生的信息")
+    def get_all_stu_info(self, request, *args, **kwargs):
+        project_id = kwargs["project_id"]
+        user_info = self.get_user_info(project_id, USER_TYPE.STUDENT)
         return self.get_paginated_response(user_info)
 
     @swagger_auto_schema(operation_summary="获取id为project_id的项目下的所有的老师的信息")
     def get_all_tea_info(self, request, *args, **kwargs):
         project_id = kwargs["project_id"]
-        data = UserProjectContact.objects.filter(project_id=project_id)
-        user_id_list = [relation.user_id for relation in data]
-        users = User.objects.filter(id__in=user_id_list)
-        user_info = UserSerSerializer(users, many=True)
-        self.add_tag(user_info.data)
-        actual_user_id_list = []
-        for user in user_info.data:
-            if user["tag"]:
-                for tag_info in user["tag"]:
-                    if tag_info["tag_value"] == "教师":
-                        actual_user_id_list.append(user["id"])
-        users = User.objects.filter(id__in=actual_user_id_list)
-        page = self.paginate_queryset(users)
-        user_info = [{"id": user.id, "name": user.name} for user in page]
+        user_info = self.get_user_info(project_id, USER_TYPE.TEACHER)
         return self.get_paginated_response(user_info)
 
     # 向项目中批量导入用户

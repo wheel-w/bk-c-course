@@ -32,8 +32,9 @@ from .serializer import (
 )
 
 
-# 答题和判卷的视图集
 class PerformAndJudgeViewSet(viewsets.ViewSet):
+    """答题和判卷"""
+
     queryset = StudentProjectTaskInfo.objects.all()
     serializer_class = StudentPerformTaskSerializer
 

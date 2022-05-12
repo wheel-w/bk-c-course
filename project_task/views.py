@@ -38,6 +38,8 @@ from .celery_task.scheduled_publish import scheduled_publish
 
 # 出题接口
 class ProjectTaskList(viewsets.ViewSet):
+    """任务管理"""
+
     queryset = ProjectTask.objects.all()
     serializer_class = ProjectTaskSerializer
 
