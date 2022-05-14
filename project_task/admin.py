@@ -11,11 +11,21 @@ specific Language governing permissions and limitations under the License.
 """
 from django.contrib import admin
 
-from .models import ProjectTask, StudentProjectTaskInfo
+from .models import CeleryTaskInfo, ProjectTask, StudentProjectTaskInfo
 
 
 class ProjectTaskAdmin(admin.ModelAdmin):
     list_filter = (
+        "project_id",
+        "id",
+        "title",
+        "types",
+        "status",
+        "creator",
+        "updater",
+    )
+
+    list_display = (
         "project_id",
         "id",
         "title",
@@ -37,7 +47,25 @@ class StudentProjectTaskInfoAdmin(admin.ModelAdmin):
         "updater_id",
     )
 
+    list_display = (
+        "student_id",
+        "project_id",
+        "id",
+        "project_task_id",
+        "status",
+        "total_score",
+        "creator_id",
+        "updater_id",
+    )
+
+
+class CeleryTaskInfoAdmin(admin.ModelAdmin):
+    list_display = ("project_task_id", "celery_task_id", "celery_task_type")
+
+    list_filter = ("project_task_id", "celery_task_id", "celery_task_type")
+
 
 # Register your models here.
 admin.site.register(ProjectTask, ProjectTaskAdmin)
 admin.site.register(StudentProjectTaskInfo, StudentProjectTaskInfoAdmin)
+admin.site.register(CeleryTaskInfo, CeleryTaskInfoAdmin)

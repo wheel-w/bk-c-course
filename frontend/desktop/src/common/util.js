@@ -173,8 +173,8 @@ export function json2Query (param, key) {
     let paramStr = ''
 
     if (param instanceof String || typeof param === 'string'
-            || param instanceof Number || typeof param === 'number'
-            || param instanceof Boolean || typeof param === 'boolean'
+        || param instanceof Number || typeof param === 'number'
+        || param instanceof Boolean || typeof param === 'boolean'
     ) {
         paramStr += separator + key + mappingOperator + encodeURIComponent(param)
     } else {
@@ -341,4 +341,61 @@ export function loadScript (url, callback) {
     }
 
     document.getElementsByTagName('head')[0].appendChild(script)
+}
+
+/**
+ * 导出对象到本地json文件
+ *
+ * @param {Object} 要保存的对象
+ * @param {String} filename文件名
+ */
+export function saveJSON (data, filename = 'json.json') {
+    if (!data) {
+        console.warn('要保存的数据为空')
+        return
+    }
+    if (typeof data === 'object') {
+        data = JSON.stringify(data, undefined, 3)
+    }
+    const blob = new Blob([data], { type: 'text/json' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.download = filename
+    a.href = url
+    a.click()
+    URL.revokeObjectURL(url)
+}
+
+/**
+ * 防抖包装函数
+ *
+ * @param {String} 要防抖的vue method的名字
+ * @param {wait} 延迟毫秒数
+ * @return {fun} 防抖函数
+ */
+
+export function vueDebounce (funName, wait) {
+    let timer = null
+    return function () {
+        if (timer) clearTimeout(timer)
+        const arg = arguments
+        timer = setTimeout(() => {
+            this[funName](arg)
+        }, wait)
+    }
+}
+/**
+ * 16进制颜色字符串转化为css的rgba()函数
+ *
+ * @param {String} 66CCFF
+ * @return {String} rgba(128,128,128,0.2)
+ */
+
+export function colorTransform (colorStr) {
+    // eslint-disable-next-line no-eval
+    const a = eval(`0x${colorStr}`)
+    const r = (a >>> 16) & 255
+    const g = (a >>> 8) & 255
+    const b = a & 255
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + 0.2 + ')'
 }

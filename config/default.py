@@ -154,6 +154,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "common.drf.pagination.GeneralPagination",
 }
 
+DEFAULT_FILE_STORAGE = "bkstorages.backends.bkrepo.BKRepoStorage"
+
+# 对象存储配置
+BKREPO_ENDPOINT_URL = os.environ["BKREPO_ENDPOINT_URL"]
+BKREPO_USERNAME = os.environ["BKREPO_USERNAME"]
+BKREPO_PASSWORD = os.environ["BKREPO_PASSWORD"]
+BKREPO_PROJECT = os.environ["BKREPO_PROJECT"]
+BKREPO_BUCKET = os.environ["BKREPO_BUCKET"]
+
 """
 以下为框架代码 请勿修改
 """
