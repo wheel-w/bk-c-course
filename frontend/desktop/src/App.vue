@@ -444,7 +444,6 @@
             // 获取课程列表
             async getCourseList () {
                 this.$http.get('/api/project/').then((res) => {
-                    console.log('=================================', res)
                     if (res.data.results.length !== 0) {
                         this.courseList = res.data.results
                     }
