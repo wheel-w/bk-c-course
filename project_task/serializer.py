@@ -300,7 +300,7 @@ class TaskCreateSerializer(serializers.Serializer):
     describe = serializers.CharField(max_length=255)
     start_time = serializers.DateTimeField(required=False)
     end_time = serializers.DateTimeField(required=False)
-    status = serializers.CharField(max_length=10)
+    status = serializers.CharField(max_length=10, required=False)
     judge_teachers_info = serializers.JSONField()
     students_visible = serializers.BooleanField(required=False)
     creator = serializers.CharField(required=False)

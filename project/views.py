@@ -181,7 +181,7 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
                     if tag_info["tag_value"] == scope:
                         actual_user_id_list.append(user["id"])
         # 过滤
-        users = self.filter_queryset(User.objects.filter(id__in=user_id_list))
+        users = self.filter_queryset(User.objects.filter(id__in=actual_user_id_list))
         # 分页
         page = self.paginate_queryset(users)
         user_info = [
