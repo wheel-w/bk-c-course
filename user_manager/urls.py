@@ -16,15 +16,14 @@ from rest_framework.routers import DefaultRouter
 
 from user_manager import views
 
+# users
 router = DefaultRouter()
 router.register("", views.UserView)
-# router.register("add_tag", views.AddTagToUserView)
-# router.register("tag", views.UserTagView)
 router.register("batch", views.BatchView)
-
+# accounts
 router_account = DefaultRouter()
 router_account.register("", views.OriginAccountView)
-
+# tags
 router_tag = DefaultRouter()
 router_tag.register("", views.TagView)
 urlpatterns = [
