@@ -21,7 +21,7 @@ from question.models import Question
 from question.serializer import QuestionSerializer
 from user_manager.models import User
 
-from .constants import STATUS
+from .constants import STATUS, TASK_STATUS
 
 
 class ProjectTaskSerializer(serializers.ModelSerializer):
@@ -288,19 +288,30 @@ class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
 
 
 class TaskCreateSerializer(serializers.Serializer):
-    """创建课程的序列化器"""
+    """
+    创建课程的序列化器
+    """
+
+    class TASK_TYPES:
+        DAILY = "DAILY"
+        ASSESSMENT = "ASSESSMENT"
 
     questions = QuestionSerializer(many=True)
     students = serializers.ListField(child=serializers.IntegerField())
     questions_detail = serializers.ListField(child=serializers.DictField())
 
     project_id = serializers.IntegerField()
-    types = serializers.CharField(max_length=10)
+    types = serializers.ChoiceField(
+        choices=((TASK_TYPES.DAILY, "日常任务"), (TASK_TYPES.ASSESSMENT, "考核任务"))
+    )
     title = serializers.CharField(max_length=255)
     describe = serializers.CharField(max_length=255)
     start_time = serializers.DateTimeField(required=False)
     end_time = serializers.DateTimeField(required=False)
-    status = serializers.CharField(max_length=10, required=False)
+    status = serializers.ChoiceField(
+        choices=((TASK_STATUS.DRAFT, "草稿"), (TASK_STATUS.RELEASE, "已发布")),
+        default=TASK_STATUS.DRAFT,
+    )
     judge_teachers_info = serializers.JSONField()
     students_visible = serializers.BooleanField(required=False)
     creator = serializers.CharField(required=False)
