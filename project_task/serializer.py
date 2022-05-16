@@ -313,7 +313,7 @@ class TaskCreateSerializer(serializers.Serializer):
     start_time = serializers.DateTimeField(required=False)
     end_time = serializers.DateTimeField(required=False)
     status = serializers.ChoiceField(
-        choices=((Status.DRAFT, "草稿"), (Status.RELEASE, "已发布")), default="DRAFT"
+        choices=((Status.DRAFT, "草稿"), (Status.RELEASE, "已发布")), default=Status.DRAFT
     )
     judge_teachers_info = serializers.JSONField()
     students_visible = serializers.BooleanField(required=False)
