@@ -3,13 +3,11 @@
  * @author wheel-w
  */
 
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-
-import store from '@/store'
 import http from '@/api'
 import preload from '@/common/preload'
-
+import store from '@/store'
+import Vue from 'vue'
+import VueRouter from 'vue-router'
 Vue.use(VueRouter)
 
 const MainEntry = () => import(/* webpackChunkName: 'entry' */'@/views')
@@ -25,6 +23,9 @@ const AnswerQuestionDetail = () => import('@/views/my_class/my_class_item/answer
 const SetQuestionIndex = () => import('@/views/my_class/my_class_item/set_question/set_question_index')
 const Displaypaper = () => import('@/views/make_paper/display_paper.vue')
 const Selectquestion = () => import('@/views/make_paper/select_question.vue')
+const UserManage = () => import('@/views/userManage/userManage.vue')
+const tagManage = () => import('@/views/tag_manage/tag_manage')
+const SetQuestion = () => import('@/views/set_question/set_question.vue')
 
 const routes = [
     {
@@ -88,6 +89,21 @@ const routes = [
                 path: 'selectquestion',
                 name: 'selectquestion',
                 component: Selectquestion
+            },
+            {
+                path: 'user_manage',
+                name: 'user_manage',
+                component: UserManage
+            },
+            {
+                path: 'set_question',
+                name: 'set_question',
+                component: SetQuestion
+            },
+            {
+                path: 'tag_manage',
+                name: 'tag_manage',
+                component: tagManage
             }
         ]
     },

@@ -3,3 +3,4 @@ __pycache__
 node_modules
 local_settings.py
 .DS_Store
+staticfiles/

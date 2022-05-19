@@ -1,24 +1,38 @@
-.wrapper1 {
+.wrapper {
     height: 600px;
-
-    .wrapper-body {
-      height: 75%;
-      .bk-table {
-        max-height: 86%;
-        overflow-y: auto;
-      }
+    .bk-tab{
+        .bk-tab-panel{
+            .bk-table::-webkit-scrollbar {
+                /*滚动条整体样式*/
+                width : 5px;  /*高宽分别对应横竖滚动条的尺寸*/
+                height: 1px;
+            }
+            .bk-table::-webkit-scrollbar-thumb {
+                /*滚动条里面小方块*/
+                border-radius: 10px;
+                box-shadow   : inset 0 0 5px rgb(255, 255, 255);
+                background   : #868686;
+            }
+            .bk-table::-webkit-scrollbar-track {
+                /*滚动条里面轨道*/
+                box-shadow   : inset 0 0 5px rgba(0, 0, 0, 0.2);
+                border-radius: 10px;
+                background   : #ededed;
+            }
+        }
     }
+
 }
-.wrapper-head1 {
-  display: flex;
-  justify-content: end;
-}
-.dialog-body {
-    display: flex;
-    justify-content: center;
-}
-.excel-dialog-body {
-  text-align: center;
-  height: 100px;
-  overflow: hidden;
-}
+/*.wrapper-head1 {*/
+/*  display: flex;*/
+/*  justify-content: end;*/
+/*}*/
+/*.dialog-body {*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*}*/
+/*.excel-dialog-body {*/
+/*  text-align: center;*/
+/*  height: 100px;*/
+/*  overflow: hidden;*/
+/*}*/

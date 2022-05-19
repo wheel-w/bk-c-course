@@ -89,10 +89,11 @@
             </bk-form>
         </bk-dialog>
         <bk-button @click="dialogsetting.custom.visible = true" theme="primary">新增试卷</bk-button>
-        <bk-table
+        <bk-table style="margin-top: 15px;"
             ref="table"
-            height="500px"
+            max-height="500px"
             :data="paperlist"
+            :virtual-render="true"
             :pagination="pagination">
             <bk-table-column align="center" label="试卷名" prop="papername"></bk-table-column>
             <bk-table-column

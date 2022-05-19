@@ -3,16 +3,15 @@
  * @author wheel-w
  */
 
-import Vue from 'vue'
+import { messageError } from '@/common/bkmagic'
 import axios from 'axios'
 import cookie from 'cookie'
-
+import queryString from 'query-string'
+import UrlParse from 'url-parse'
+import Vue from 'vue'
+import { bus } from '../common/bus'
 import CachedPromise from './cached-promise'
 import RequestQueue from './request-queue'
-import { bus } from '../common/bus'
-import { messageError } from '@/common/bkmagic'
-import UrlParse from 'url-parse'
-import queryString from 'query-string'
 
 const BASE_URL = window.PROJECT_CONFIG.SITE_URL + AJAX_URL_PREFIX
 
@@ -122,6 +121,9 @@ async function getPromise (method, url, data, userConfig = {}) {
 
         try {
             const response = await axiosRequest
+            // 如果response没有data,补一个防止产生错误提示框
+            // eslint-disable-next-line no-unused-expressions
+            response.data === null ? response.data = 'empty' : null
             Object.assign(config, response.config || {})
             handleResponse({ config, response, resolve, reject })
         } catch (error) {
@@ -179,6 +181,12 @@ function handleReject (error, config) {
         const nextError = { message: error.message, response: error.response }
         if (status === 401) {
             bus.$emit('show-login-modal', nextError.response)
+            // 这里方便开发服务器登录
+            if (NODE_ENV === 'development') {
+                setTimeout(() => {
+                    window.open('https://paas-edu.bktencent.com/login/?c_url=/')
+                }, 500)
+            }
         } else if (status === 500) {
             nextError.message = '系统出现异常'
         } else if (data && data.message) {
