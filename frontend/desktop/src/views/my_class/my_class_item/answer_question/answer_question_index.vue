@@ -237,7 +237,6 @@
             },
             // 删除任务
             removeBefor (e) {
-                console.log('删除')
                 this.project_task_id = ''
                 this.project_task_id = e.id
                 this.deleteTaskDialog.primary.visible = true
@@ -245,7 +244,6 @@
             // 确认删除任务
             removeTask (e) {
                 this.$http.delete(`/api/project-task/${this.project_task_id}/`).then(res => {
-                    console.log('删除项目res', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '删除成功',
@@ -275,7 +273,6 @@
                 })
             },
             removeMultiBefor () {
-                console.log('this.task_list:', this.task_id_list)
                 if (this.task_id_list.length !== 0) {
                     this.deleteAllTaskDialog.primary.visible = true
                 }
@@ -283,7 +280,6 @@
             // 确认删除多项
             removeMultiTask (e) {
                 this.$http.delete('/api/project-task/', { data: { 'task_id_list': this.task_id_list } }).then(res => {
-                    console.log('删除项目res', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '批量删除成功',
@@ -307,8 +303,6 @@
             },
             // 发布任务
             releaseBefor (e) {
-                console.log('发布')
-                console.log('e========', e)
                 this.publishTaskForm = e
                 this.project_task_id = e.id
                 this.releaseTaskDialog.primary.visible = true
@@ -316,9 +310,7 @@
             // 确认发布任务
             releaseTask (e) {
                 this.publishTaskForm.scheduled_publish_time = this.scheduledPublishTime
-                console.log('this.publishTaskForm', this.publishTaskForm)
                 this.$http.patch(`/api/project-task/${this.project_task_id}/`, { data: this.publishTaskForm }).then(res => {
-                    console.log('发布项目res', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '发布成功',
@@ -342,8 +334,6 @@
             },
             // 发布任务
             cancleBefor (e) {
-                console.log('取消发布')
-                console.log('e========', e)
                 this.publishTaskForm = e
                 this.project_task_id = e.id
                 this.cancleReleaseTaskDialog.primary.visible = true
@@ -351,7 +341,6 @@
             // 确认发布任务
             cancleReleaseTask (e) {
                 this.publishTaskForm.status = 'DRAFT'
-                console.log('this.publishTaskForm', this.publishTaskForm)
                 this.$http.patch(`/api/project-task/${this.project_task_id}/`, { data: this.publishTaskForm }).then(res => {
                     if (res.result) {
                         this.$bkMessage({
@@ -492,10 +481,7 @@
             },
             async getTaskList () {
                 this.taskList = []
-                console.log('执行获取任务列表函数')
-                console.log('this.course_id', this.project_id)
                 this.$http.get(`/api/project-task/${this.project_id}/teacher/all/`).then(res => {
-                    console.log('获取任务列表', res)
                     this.taskList = res.data
                     this.timeReverse()
                 })

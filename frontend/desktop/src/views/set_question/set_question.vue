@@ -391,7 +391,6 @@
                 }
                 this.formData.questions_detail.push(details)
                 for (const item of this.formData.questions) {
-                    console.log(item)
                     item['project_id'] = this.course_id
                 }
             },
@@ -443,12 +442,10 @@
             },
             addJudgeQuestion () {
                 const insertIndex = this.comIndex + 1
-
                 this.comName.splice(insertIndex, 0, judge)
             },
             // 删除组件
             getContent () {
-                console.log('删除index', this.delIndex)
                 this.comName.splice(this.delIndex, 1)
             },
             nodeClickOne (node) {
@@ -460,14 +457,11 @@
             },
             //  获取下拉选框学生列表
             getSelectList () {
-                console.log('this.course_id', this.course_id)
                 this.$http.get(`/api/project-user/${this.course_id}/student/`).then(res => {
-                    console.log('res=======student', res)
                     this.studentList = res.data.results
                 })
 
                 this.$http.get(`/api/project-user/${this.course_id}/teacher/`).then(res => {
-                    // console.log('res=======teacher', res)
                     this.teacherList = res.data.results
                 })
             },
@@ -487,11 +481,9 @@
                     this.formData.judge_teachers_info.push({ id: e.id, weight: e.weight
                     })
                 })
-                console.log('this.formData', this.formData)
                 this.formData.project_id = this.course_id
 
                 this.$http.post('/api/project-task/', this.formData).then(res => {
-                    console.log('生成试卷：', res)
                     if (res.result) {
                         this.$bkMessage({
                             theme: 'success',

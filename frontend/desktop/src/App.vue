@@ -79,38 +79,39 @@
                         :default-active="item.active"
                         v-bind="item">
                         <!-- 这里的处理不好,为什么不使用原生icon配置项,配合css实现效果呢？ -->
-                        <bk-icon
-                            v-if="item.id === 'home'"
-                            type="circle-shape"
-                            style="color: #ffdf7e" />
-                        <bk-icon
-                            v-else-if="item.id === 'projectmanage'"
-                            type="circle-shape"
-                            style="color: #bbde4f" />
-                        <bk-icon
-                            v-else-if="item.id === 'classnumber'"
-                            type="circle-shape"
-                            style="color: #c7b3ff" />
-                        <bk-icon
-                            v-else-if="item.id === 'set_question_index'"
-                            type="circle-shape"
-                            style="color: #fea3be" />
-                        <bk-icon
-                            v-else-if="item.id === 'answer_question_index'"
-                            type="circle-shape"
-                            style="color: #8ae4f5" />
-                        <bk-icon
-                            v-else-if="item.id === 'displaypaper'"
-                            type="circle-shape"
-                            style="color: #febb5e" />
-                        <bk-icon
-                            v-else-if="item.id === 'user_manage'"
-                            type="circle-shape"
-                            style="color: #66ccff" />
-                        <bk-icon
-                            v-else-if="item.id === 'set_question'"
-                            type="circle-shape"
-                            style="color: #dd75ca" />
+                        <bk-icon type="circle-shape" :color="item.color"></bk-icon>
+                        <!--                        <bk-icon-->
+                        <!--                            v-if="item.id === 'home'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #ffdf7e" />-->
+                        <!--                        <bk-icon-->
+                        <!--                            v-else-if="item.id === 'projectmanage'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #bbde4f" />-->
+                        <!--                        <bk-icon-->
+                        <!--                            v-else-if="item.id === 'classnumber'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #c7b3ff" />-->
+                        <!--                        <bk-icon-->
+                        <!--                            v-else-if="item.id === 'set_question_index'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #fea3be" />-->
+                        <!--                        <bk-icon-->
+                        <!--                            v-else-if="item.id === 'answer_question_index'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #8ae4f5" />-->
+                        <!--                        <bk-icon-->
+                        <!--                            v-else-if="item.id === 'displaypaper'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #febb5e" />-->
+                        <!--                        <bk-icon-->
+                        <!--                            v-else-if="item.id === 'user_manage'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #66ccff" />-->
+                        <!--                        <bk-icon-->
+                        <!--                            v-else-if="item.id === 'set_question'"-->
+                        <!--                            type="circle-shape"-->
+                        <!--                            style="color: #dd75ca" />-->
                         <span style="margin-left: 20px">{{ item.name }}</span>
                         <div slot="child">
                             <bk-navigation-menu-item
@@ -179,55 +180,63 @@
                             name: '首页',
                             pathName: 'home',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#ffdf7e'
                         },
                         {
                             id: 'projectmanage',
                             name: '项目管理',
                             pathName: 'my_course',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#bbde4f'
                         },
                         {
                             id: 'classnumber',
                             name: '项目成员',
                             pathName: 'course_number',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#c7b3ff'
                         },
                         {
                             id: 'set_question_index',
                             name: '任务题库',
                             pathName: 'set_question_index',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#fea3be'
                         },
                         {
                             id: 'answer_question_index',
                             name: '测验与作业',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#8ae4f5'
                         },
                         {
                             id: 'displaypaper',
                             name: '任务管理',
                             pathName: 'displaypaper',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#febb5e'
                         },
                         {
                             id: 'user_manage',
                             name: '用户管理',
                             pathName: 'user_manage',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#66ccff'
                         },
                         {
                             id: 'set_question',
                             name: '出题',
                             pathName: 'set_question',
                             children: [],
-                            group: true
+                            group: true,
+                            color: '#fea3be'
                         }
                     ],
                     id: 'home',
@@ -444,7 +453,6 @@
             },
             // 获取课程列表
             async getCourseList () {
-                console.log('获取课程列表')
                 this.$http.get('/api/project/').then((res) => {
                     if (res.data.results.length !== 0) {
                         this.courseList = res.data.results

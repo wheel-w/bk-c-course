@@ -248,9 +248,7 @@
             getList () {
                 // 拿到课程信息
                 this.$http.get('/api/project/', { params: { page: this.pagingConfigTwo.current, page_size: this.pagingConfigTwo.limit } }).then(res => {
-                    console.log('获取项目列表', res)
                     if (res.result) {
-                        console.log('res', res)
                         this.pagingConfigTwo.count = res.data.count
                         this.List = res.data.results
                         this.timeReverse()
@@ -309,7 +307,6 @@
                     this.visible.addcourse.isshow = true
                 } else {
                     this.$http.post('/api/project/', this.formData).then(res => {
-                        console.log('createProject', res)
                         if (res.result) {
                             this.$bkMessage({
                                 message: '创建成功',
@@ -379,12 +376,10 @@
                 this.formData3 = e
                 this.id.push(e.id)
                 this.visible.deletcourse.isshow = true
-                console.log('id', this.id)
             },
             // 删除项目
             removeCourse (e) {
                 this.$http.delete('/api/project/' + this.id[0] + '/').then(res => {
-                    console.log('删除项目res', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '删除成功',
