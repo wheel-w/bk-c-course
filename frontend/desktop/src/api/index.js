@@ -181,6 +181,12 @@ function handleReject (error, config) {
         const nextError = { message: error.message, response: error.response }
         if (status === 401) {
             bus.$emit('show-login-modal', nextError.response)
+            // 这里方便开发服务器登录
+            if (NODE_ENV === 'development') {
+                setTimeout(() => {
+                    window.open('https://paas-edu.bktencent.com/login/?c_url=/')
+                }, 500)
+            }
         } else if (status === 500) {
             nextError.message = '系统出现异常'
         } else if (data && data.message) {

@@ -111,6 +111,10 @@
                             v-if="item.id === 'set_question'"
                             type="circle-shape"
                             style="color: #dd75ca" />
+                        <bk-icon
+                            v-if="item.id === 'tag_manage'"
+                            type="circle-shape"
+                            style="color: #66ffcc" />
                         <span style="margin-left: 20px">{{ item.name }}</span>
                         <div slot="child">
                             <bk-navigation-menu-item
@@ -228,9 +232,16 @@
                             pathName: 'set_question',
                             children: [],
                             group: true
+                        },
+                        {
+                            id: 'tag_manage',
+                            name: 'tag管理',
+                            pathName: 'tag_manage',
+                            children: [],
+                            group: true
                         }
                     ],
-                    id: 'home',
+                    id: window.location.pathname.split('/').pop(),
                     toggle: true,
                     submenuActive: false,
                     title: '课程管理系统'
