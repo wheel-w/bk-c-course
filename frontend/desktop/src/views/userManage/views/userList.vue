@@ -99,7 +99,7 @@
                         ? "女"
                         : props.row.gender === "MALE"
                             ? "男"
-                            : "未知"
+                            : null
                 }}</template>
             </bk-table-column>
             <bk-table-column
@@ -253,6 +253,9 @@
                     .then((res) => {
                         this.page.count = res.data.count
                         this.userlist = res.data.results.map((item) => {
+                            if (!item.last_login) {
+                                return item
+                            }
                             item.last_login = new Date(item.last_login).toLocaleString()
                             return item
                         })
