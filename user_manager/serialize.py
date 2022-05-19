@@ -13,6 +13,7 @@ specific Language governing permissions and limitations under the License.
 from rest_framework import serializers
 
 from blueapps.account.models import User as Account
+from project.models import Project
 
 from . import models
 
@@ -28,8 +29,17 @@ class UserTagSerializer(serializers.ModelSerializer):
             "tag_color",
             "tag_comment",
             "sub_project",
+            "created_by",
             "is_built_in",
         ]
+        extra_kwargs = {"is_built_in": {"read_only": True}}
+
+    def validate_sub_project(self, sub_project):
+        print("in")
+        if Project.objects.filter(id=sub_project).exists():
+            return sub_project
+        else:
+            raise serializers.ValidationError("所属项目不存在")
 
 
 class UserTagContactSerializer(serializers.ModelSerializer):
