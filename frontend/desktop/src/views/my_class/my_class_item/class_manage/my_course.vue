@@ -2,7 +2,6 @@
     <div class="wrapper">
         <!--   <div class="wrapper-head" v-if="userIdentify === 'TEACHER'">-->
         <div class="wrapper-head">
-
             <bk-button theme="primary" class="mr10" :outline="true" @click="beforeAdd">创建项目</bk-button>
             <bk-button theme="primary" :outline="true" @click="removeallBefore">批量删除</bk-button>
         </div>
@@ -20,11 +19,29 @@
                 <bk-table-column type="selection" width="60" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="项目id" prop="id" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="项目名称" prop="name" align="center" header-align="center"></bk-table-column>
-                <bk-table-column label="项目简介" prop="introduction" align="center" header-align="center"></bk-table-column>
+                <bk-table-column label="项目简介" prop="introduction" align="center" header-align="center">
+                    <template slot-scope="props">
+                        <bk-popover placement="top" v-if="props.row.introduction.length !== 0">
+                            <span>{{props.row.introduction.toString().slice(0,12) + (props.row.introduction.toString().length > 12 ? '...' : '')}}</span>
+                            <div slot="content">
+                                <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.introduction}}</div>
+                            </div>
+                        </bk-popover>
+                    </template>
+                </bk-table-column>
                 <bk-table-column label="项目性质" prop="property" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="项目归属" prop="category" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="组织名称" prop="organization" align="center" header-align="center"></bk-table-column>
-                <bk-table-column label="创建人" prop="creator" align="center" header-align="center"></bk-table-column>
+                <bk-table-column label="创建人" prop="creator" align="center" header-align="center">
+                    <template slot-scope="props">
+                        <bk-popover placement="top" v-if="props.row.creator.length !== 0">
+                            <span>{{props.row.creator.toString().slice(0,12) + (props.row.creator.toString().length > 12 ? '...' : '')}}</span>
+                            <div slot="content">
+                                <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.creator}}</div>
+                            </div>
+                        </bk-popover>
+                    </template>
+                </bk-table-column>
                 <bk-table-column label="创建时间" prop="create_time" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="更新时间" prop="update_time" align="center" header-align="center"></bk-table-column>
                 <!-- v-if="userIdentify === 'TEACHER'"-->
@@ -485,8 +502,8 @@
             },
             timeReverse () {
                 for (const item in this.List) {
-                    this.List[item]['create_time'] = this.msToDate((this.List[item]['create_time'])).hasTime
-                    this.List[item]['update_time'] = this.msToDate((this.List[item]['update_time'])).hasTime
+                    this.List[item]['create_time'] = this.msToDate((this.List[item]['create_time'])).withoutTime
+                    this.List[item]['update_time'] = this.msToDate((this.List[item]['update_time'])).withoutTime
                 }
             }
         }

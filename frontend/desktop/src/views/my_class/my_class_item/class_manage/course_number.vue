@@ -29,7 +29,6 @@
                             }"
                             :pagination="pagingConfigOne"
                             size="small"
-                            :virtual-render="true"
                             height="62vh"
                             style="margin-top: 10px"
                             auto-scroll-to-top
@@ -131,7 +130,6 @@
                             height="62vh"
                             style="margin-top: 10px"
                             auto-scroll-to-top
-                            :virtual-render="true"
                             @page-change="pageTwoChange"
                             @selection-change="handleSelectImport"
                             @page-limit-change="limitTwoChange">
@@ -357,8 +355,8 @@
         methods: {
             // 获取系统所有用户
             async getAllUserlist () {
-                console.log('page', this.pagingConfigTwo.current)
-                console.log('page_size', this.pagingConfigTwo.limit)
+                this.userlist = []
+                console.log('刷新获取用户名单之前===========的userlist：', this.userlist)
                 this.$http.get(`api/users/`, {
                     params: {
                         page: this.pagingConfigTwo.current,
@@ -415,6 +413,8 @@
             },
             // 获取项目成员
             getProjectUser () {
+                this.projectUserList = []
+                console.log('刷新获取用户名单之前===========的userProjectlist：', this.projectUserList)
                 this.$http.get(`api/project-user/${this.course_id}/`, {
                     params: {
                         page: this.pagingConfigOne.current,
@@ -633,34 +633,4 @@ span {
     margin-top: 5px;
     margin-bottom: 5px;
 }
-
-/* 选择标签居中 */
-.bk-form-control {
-    display: flex;
-    justify-content: space-evenly;
-}
-/*.bk-table{*/
-/*    overflow: auto;*/
-/*}*/
-
-/*.bk-table::-webkit-scrollbar {*/
-/*    !*滚动条整体样式*!*/
-/*    width: 5px !important; !*高宽分别对应横竖滚动条的尺寸*!*/
-/*    height: 1px !important;*/
-/*}*/
-
-/*.bk-table::-webkit-scrollbar-thumb {*/
-/*    !*滚动条里面小方块*!*/
-/*    border-radius: 10px !important;*/
-/*    box-shadow: inset 0 0 5px rgb(255, 255, 255) !important;*/
-/*    background: #868686 !important;*/
-/*}*/
-
-/*.bk-table::-webkit-scrollbar-track {*/
-/*    !*滚动条里面轨道*!*/
-/*    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2) !important;*/
-/*    border-radius: 10px !important;*/
-/*    background: #ededed !important;*/
-/*}*/
-
 </style>
