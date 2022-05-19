@@ -34,7 +34,6 @@ from question.serializer import QuestionSerializer
 
 from .celery_task.auto_submit import auto_submit
 from .celery_task.scheduled_publish import scheduled_publish
-from .constants import TASK_STATUS
 
 
 # 出题接口
@@ -85,7 +84,6 @@ class ProjectTaskList(viewsets.ViewSet):
                 return Response("答案与答案分数个数不匹配", exception=True)
 
             data["questions_info"] = questions_info
-            data["status"] = TASK_STATUS.DRAFT
             task = ProjectTaskSerializer(data=data)
             task.is_valid(raise_exception=True)
             task_temp = task.save()

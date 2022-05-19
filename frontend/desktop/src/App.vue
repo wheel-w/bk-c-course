@@ -284,6 +284,7 @@
     }
         },
         created () {
+            this.getCourseList()
             // this.getUserInfo()
             if (sessionStorage.getItem('courseId')) {
                 this.$store.commit(

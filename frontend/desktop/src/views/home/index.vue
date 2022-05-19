@@ -12,7 +12,7 @@
                 <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.name }}</h3>
                 <p>项目id：{{ item.id }}</p>
                 <p>创建人：{{ item.creator }}</p>
-                <a href="#" @click="toMyClassDetail(item.course_id)"><span>查看项目任务</span></a>
+                <a @click="toMyClassDetail(item.course_id)"><span>查看项目任务</span></a>
             </div>
         </div>
     </div>
@@ -45,13 +45,15 @@
                 bus.$emit('updateNavId', 'answer_question_index')
                 this.$store.commit('updateCourseId', id)
                 this.$router.replace({
-                    name: 'answer_question_index'
+                    name: 'answer_question_index',
+                    params: {
+                        courseId: id
+                    }
                 })
             },
             // 获取课程列表
             async getCourseList () {
                 this.$http.get('/api/project/').then(res => {
-                    console.log('res------')
                     if (res.data.count !== 0) {
                         this.courseList = res.data.results
                     }
@@ -89,7 +91,7 @@
         padding: 20px 40px;
         background: #ebf5fc;
         border-radius: 10px;
-        box-shadow: -6px -6px 20px rgba(255, 255, 255, 1),
+        box-shadow: -6px -6px 20px rgba(255, 255, 255, 1);
     }
     .content-item:hover {
         transition: 300ms;

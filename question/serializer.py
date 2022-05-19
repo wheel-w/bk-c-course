@@ -18,3 +18,14 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = "__all__"
+
+
+class QuestionShowSerializer(serializers.ModelSerializer):
+    types = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = "__all__"
+
+    def get_types(self, data):
+        return data.get_types_display()

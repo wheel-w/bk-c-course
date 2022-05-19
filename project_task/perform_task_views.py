@@ -27,7 +27,7 @@ from .serializer import (
     ProjectTaskInfoForStuSerializer,
     StudentPerformTaskSerializer,
     StudentProjectTaskInfoForStuSerializer,
-    StudentProjectTaskInfoSerializer,
+    StudentProjectTaskInfoShowSerializer,
     TeacherJudgeSerializer,
 )
 
@@ -137,7 +137,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         except StudentProjectTaskInfo.DoesNotExist:
             return Response("当前学生还未提交!!!", exception=True)
 
-        serializer = StudentProjectTaskInfoSerializer(data)
+        serializer = StudentProjectTaskInfoShowSerializer(data)
         return Response(serializer.data)
 
     @swagger_auto_schema(
@@ -158,7 +158,7 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
         if not task.students_visible:
             serializer = StudentProjectTaskInfoForStuSerializer(relation_info)
         else:
-            serializer = StudentProjectTaskInfoSerializer(relation_info)
+            serializer = StudentProjectTaskInfoShowSerializer(relation_info)
         return Response(serializer.data)
 
     @swagger_auto_schema(
