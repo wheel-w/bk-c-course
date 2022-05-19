@@ -29,7 +29,6 @@
                             }"
                             :pagination="pagingConfigOne"
                             size="small"
-                            :virtual-render="true"
                             height="62vh"
                             style="margin-top: 10px"
                             auto-scroll-to-top
@@ -131,7 +130,6 @@
                             height="62vh"
                             style="margin-top: 10px"
                             auto-scroll-to-top
-                            :virtual-render="true"
                             @page-change="pageTwoChange"
                             @selection-change="handleSelectImport"
                             @page-limit-change="limitTwoChange">
@@ -357,8 +355,7 @@
         methods: {
             // 获取系统所有用户
             async getAllUserlist () {
-                console.log('page', this.pagingConfigTwo.current)
-                console.log('page_size', this.pagingConfigTwo.limit)
+                this.userlist = []
                 this.$http.get(`api/users/`, {
                     params: {
                         page: this.pagingConfigTwo.current,
@@ -415,6 +412,7 @@
             },
             // 获取项目成员
             getProjectUser () {
+                this.projectUserList = []
                 this.$http.get(`api/project-user/${this.course_id}/`, {
                     params: {
                         page: this.pagingConfigOne.current,
@@ -424,7 +422,6 @@
                         min_date: this.search.last_login
                     }
                 }).then((res) => {
-                    console.log('项目用户的res', res)
                     this.pagingConfigOne.count = res.data.count
                     this.projectUserList = res.data.results.map((item) => {
                         if (item.last_login === null) {
@@ -438,13 +435,10 @@
             },
             // 导入单个用户
             importToProject (e) {
-                console.log('当前课程id', this.course_id)
-                console.log('当前用户id', JSON.stringify(e.id))
                 this.$http.post('/api/project-user/', {
                     'project_id': this.course_id,
                     'user_id': JSON.stringify(e.id)
                 }).then(res => {
-                    console.log('导入项目成员', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '导入成功',
@@ -466,10 +460,7 @@
             },
             // 批量导入
             importBatch () {
-                // console.log('当前课程id', this.course_id)
-                // console.log('当前用户id', JSON.stringify(e.id))
                 this.$http.post(`/api/project-user/${this.course_id}/`, { 'user_id_list': this.user_id_list }).then(res => {
-                    console.log('导入项目成员', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '导入成功',
@@ -500,9 +491,7 @@
             },
 
             removeUser (e) {
-                console.log('this.user_id_list:', this.user_id_list)
                 this.$http.delete(`/api/project-user/${this.course_id}/`, { data: { 'user_id_list': this.user_id_list } }).then(res => {
-                    console.log('删除项目res', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '删除成功',
@@ -542,32 +531,26 @@
             },
             // 分页一
             pageOneChange (page) {
-                console.log('1分页========')
                 this.pagingConfigOne.current = page
                 this.getProjectUser()
             },
             // 页码的限制发生改变一
             limitOneChange (limit) {
                 this.pagingConfigOne.limit = limit
-                console.log('1页码的限制发生变化========')
                 this.getProjectUser()
             },
             // 分页二
             pageTwoChange (page) {
-                console.log('分页========')
                 this.pagingConfigTwo.current = page
                 this.getAllUserlist()
             },
             // 页码的限制发生改变二
             limitTwoChange (limit) {
                 this.pagingConfigTwo.limit = limit
-                console.log('页码的限制发生变化========')
                 this.getAllUserlist()
             },
             // 判断该用户是否被导入
             isImport () {
-                console.log('isImport()函数被调用')
-                console.log('this.user_list', this.userlist)
                 for (const item of this.userlist) {
                     const itemId = item.id
                     const someResult = this.projectUserList.some(function (e) {
@@ -633,34 +616,4 @@ span {
     margin-top: 5px;
     margin-bottom: 5px;
 }
-
-/* 选择标签居中 */
-.bk-form-control {
-    display: flex;
-    justify-content: space-evenly;
-}
-/*.bk-table{*/
-/*    overflow: auto;*/
-/*}*/
-
-/*.bk-table::-webkit-scrollbar {*/
-/*    !*滚动条整体样式*!*/
-/*    width: 5px !important; !*高宽分别对应横竖滚动条的尺寸*!*/
-/*    height: 1px !important;*/
-/*}*/
-
-/*.bk-table::-webkit-scrollbar-thumb {*/
-/*    !*滚动条里面小方块*!*/
-/*    border-radius: 10px !important;*/
-/*    box-shadow: inset 0 0 5px rgb(255, 255, 255) !important;*/
-/*    background: #868686 !important;*/
-/*}*/
-
-/*.bk-table::-webkit-scrollbar-track {*/
-/*    !*滚动条里面轨道*!*/
-/*    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2) !important;*/
-/*    border-radius: 10px !important;*/
-/*    background: #ededed !important;*/
-/*}*/
-
 </style>

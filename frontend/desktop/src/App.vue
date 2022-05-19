@@ -78,37 +78,36 @@
                         :key="item.id"
                         :default-active="item.active"
                         v-bind="item">
-                        <!-- 这里的处理不好,为什么不使用原生icon配置项,配合css实现效果呢？ -->
                         <bk-icon
                             v-if="item.id === 'home'"
                             type="circle-shape"
                             style="color: #ffdf7e" />
                         <bk-icon
-                            v-if="item.id === 'projectmanage'"
+                            v-else-if="item.id === 'projectmanage'"
                             type="circle-shape"
                             style="color: #bbde4f" />
                         <bk-icon
-                            v-if="item.id === 'classnumber'"
+                            v-else-if="item.id === 'classnumber'"
                             type="circle-shape"
                             style="color: #c7b3ff" />
                         <bk-icon
-                            v-if="item.id === 'set_question_index'"
+                            v-else-if="item.id === 'set_question_index'"
                             type="circle-shape"
                             style="color: #fea3be" />
                         <bk-icon
-                            v-if="item.id === 'answer_question_index'"
+                            v-else-if="item.id === 'answer_question_index'"
                             type="circle-shape"
                             style="color: #8ae4f5" />
                         <bk-icon
-                            v-if="item.id === 'displaypaper'"
+                            v-else-if="item.id === 'displaypaper'"
                             type="circle-shape"
                             style="color: #febb5e" />
                         <bk-icon
-                            v-if="item.id === 'user_manage'"
+                            v-else-if="item.id === 'user_manage'"
                             type="circle-shape"
                             style="color: #66ccff" />
                         <bk-icon
-                            v-if="item.id === 'set_question'"
+                            v-else-if="item.id === 'set_question'"
                             type="circle-shape"
                             style="color: #dd75ca" />
                         <span style="margin-left: 20px">{{ item.name }}</span>
@@ -378,6 +377,7 @@
     }
         },
         created () {
+            this.getCourseList()
             // this.getUserInfo()
             if (sessionStorage.getItem('courseId')) {
                 this.$store.commit(
@@ -444,7 +444,6 @@
             // 获取课程列表
             async getCourseList () {
                 this.$http.get('/api/project/').then((res) => {
-                    console.log('=================================', res)
                     if (res.data.results.length !== 0) {
                         this.courseList = res.data.results
                     }
