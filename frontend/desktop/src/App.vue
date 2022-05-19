@@ -64,7 +64,7 @@
                     ref="menu"
                     @select="handleSelect"
                     icon="circle"
-                    :default-active="nav.id"
+                    :default-active="nav.pathName"
                     :item-default-bg-color="'#7690D9'"
                     :item-hover-bg-color="'#5E7AC5'"
                     :item-active-bg-color="'#5E7AC5'"
@@ -75,46 +75,13 @@
                     <bk-navigation-menu-item
                         v-for="item in nav.list"
                         :has-child="item.children.length === 0 ? false : true"
-                        :key="item.id"
+                        :key="item.pathName"
                         :default-active="item.active"
                         v-bind="item">
-                        <!-- 这里的处理不好,为什么不使用原生icon配置项,配合css实现效果呢？ -->
+                        <!-- 图标 -->
                         <bk-icon
-                            v-if="item.id === 'home'"
                             type="circle-shape"
-                            style="color: #ffdf7e" />
-                        <bk-icon
-                            v-if="item.id === 'projectmanage'"
-                            type="circle-shape"
-                            style="color: #bbde4f" />
-                        <bk-icon
-                            v-if="item.id === 'classnumber'"
-                            type="circle-shape"
-                            style="color: #c7b3ff" />
-                        <bk-icon
-                            v-if="item.id === 'set_question_index'"
-                            type="circle-shape"
-                            style="color: #fea3be" />
-                        <bk-icon
-                            v-if="item.id === 'answer_question_index'"
-                            type="circle-shape"
-                            style="color: #8ae4f5" />
-                        <bk-icon
-                            v-if="item.id === 'displaypaper'"
-                            type="circle-shape"
-                            style="color: #febb5e" />
-                        <bk-icon
-                            v-if="item.id === 'user_manage'"
-                            type="circle-shape"
-                            style="color: #66ccff" />
-                        <bk-icon
-                            v-if="item.id === 'set_question'"
-                            type="circle-shape"
-                            style="color: #dd75ca" />
-                        <bk-icon
-                            v-if="item.id === 'tag_manage'"
-                            type="circle-shape"
-                            style="color: #66ffcc" />
+                            :style="`color: ${item.color}`" />
                         <span style="margin-left: 20px">{{ item.name }}</span>
                         <div slot="child">
                             <bk-navigation-menu-item
@@ -179,73 +146,74 @@
                 nav: {
                     list: [
                         {
-                            id: 'home',
                             name: '首页',
                             pathName: 'home',
+                            color: '#66ccff',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'projectmanage',
                             name: '项目管理',
                             pathName: 'my_course',
+                            color: '#b1de4f',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'classnumber',
                             name: '项目成员',
                             pathName: 'course_number',
+                            color: '#fea3be',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'set_question_index',
                             name: '任务题库',
                             pathName: 'set_question_index',
                             children: [],
+                            color: '#fe33be',
                             group: true
                         },
                         {
-                            id: 'answer_question_index',
                             name: '测验与作业',
+                            color: '#fe8b5e',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'displaypaper',
                             name: '任务管理',
                             pathName: 'displaypaper',
+                            color: '#66ccff',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'user_manage',
                             name: '用户管理',
                             pathName: 'user_manage',
+                            color: '#3399FF',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'set_question',
                             name: '出题',
                             pathName: 'set_question',
+                            color: '#33FF99',
                             children: [],
                             group: true
                         },
                         {
-                            id: 'tag_manage',
                             name: 'tag管理',
                             pathName: 'tag_manage',
+                            color: '#dd75ca',
                             children: [],
                             group: true
                         }
                     ],
-                    id: window.location.pathname.split('/').pop(),
+                    pathName: window.location.pathname.split('/').pop(),
                     toggle: true,
                     submenuActive: false,
                     title: '课程管理系统'
                 },
+                // 这里navTeacher和navStudent我没改，有需要的话从上面复制一下就可以
                 navTeacher: {
                     list: [
                         {
