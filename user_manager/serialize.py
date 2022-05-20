@@ -10,7 +10,10 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
+import re
+
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from blueapps.account.models import User as Account
 from project.models import Project
@@ -32,14 +35,29 @@ class UserTagSerializer(serializers.ModelSerializer):
             "created_by",
             "is_built_in",
         ]
-        extra_kwargs = {"is_built_in": {"read_only": True}}
+        extra_kwargs = {
+            "is_built_in": {"read_only": True},
+            "tag_color": {"min_length": 6, "max_length": 6},
+        }
+        validators = [
+            UniqueTogetherValidator(
+                queryset=model.objects.all(),
+                fields=("tag_value", "sub_project"),
+                message="该项目的相同标签已存在, 请更改标签值或更改项目",
+            )
+        ]
 
     def validate_sub_project(self, sub_project):
-        print("in")
         if Project.objects.filter(id=sub_project).exists():
             return sub_project
         else:
             raise serializers.ValidationError("所属项目不存在")
+
+    def validate_tag_color(self, tag_color):
+        if re.match("[0-9A-F]{6}", tag_color):
+            return tag_color
+        else:
+            raise serializers.ValidationError("颜色范围不正确")
 
 
 class UserTagContactSerializer(serializers.ModelSerializer):
