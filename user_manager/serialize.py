@@ -17,6 +17,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from blueapps.account.models import User as Account
 from project.models import Project
+from user_manager.models import User, UserTag
 
 from . import models
 
@@ -66,6 +67,26 @@ class UserTagContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.UserTagContact
         fields = ["id", "user_id", "tag_id"]
+
+    def validate_user_id(self, user_id):
+        if User.objects.filter(id=user_id).exists():
+            return user_id
+        else:
+            raise serializers.ValidationError("用户不存在")
+
+    def validate_tag_id(self, tag_id):
+        if UserTag.objects.filter(id=tag_id):
+            return tag_id
+        else:
+            raise serializers.ValidationError("标签不存在")
+
+    def validate(self, attrs):
+        if self.Meta.model.objects.filter(
+            user_id=attrs.get("user_id"), tag_id=attrs.get("tag_id")
+        ).exists():
+            raise serializers.ValidationError("用户已拥有此标签")
+        else:
+            return attrs
 
 
 class UserBaseSerializer(serializers.ModelSerializer):

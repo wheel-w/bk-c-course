@@ -19,7 +19,7 @@ from user_manager import views
 # users
 router = DefaultRouter()
 router.register("", views.UserView)
-router.register("batch", views.BatchView)
+router.register("batch", views.UserBatchView)
 # accounts
 router_account = DefaultRouter()
 router_account.register("", views.OriginAccountView)
