@@ -12,7 +12,7 @@ specific Language governing permissions and limitations under the License.
 """
 
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from user_manager import views
 
@@ -27,11 +27,23 @@ router_account.register("", views.OriginAccountView)
 router_tag = DefaultRouter()
 router_tag.register("", views.TagView)
 # UserTagContacts
-UserTagContacts = DefaultRouter()
+UserTagContacts = SimpleRouter(False)  # 解决 batch post 方法不可用
 UserTagContacts.register("", views.UserTagContactView)
 urlpatterns = [
     path("users/", include(router.urls)),
     path("accounts/", include(router_account.urls)),
     path("tags/", include(router_tag.urls)),
     path("UserTagContacts/", include(UserTagContacts.urls)),
+    path(
+        "UserTagContacts/batch/<int:type>",
+        views.ContactBatch.as_view(
+            {
+                "post": "create",
+            }
+        ),
+    ),
+    path(
+        "UserTagContacts/batch/<int:type>/<int:id>",
+        views.ContactBatch.as_view({"delete": "destroy"}),
+    ),
 ]
