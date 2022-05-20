@@ -103,7 +103,7 @@ class OriginAccountView(ViewSet):
             user = User.objects.get(account_id=instance.id)
         except ObjectDoesNotExist:
             return Response("您尚未被导入到当前系统中", exception=True)
-        serializer = serialize.UserSerSerializer(user)
+        serializer = serialize.UserSerializer(user)
         return Response(serializer.data)
 
 
@@ -285,7 +285,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
     """查询用户信息"""
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
-    serializer_class = serialize.UserSerSerializer
+    serializer_class = serialize.UserSerializer
     pagination_class = GeneralPagination
     filter_class = UserFilter
 

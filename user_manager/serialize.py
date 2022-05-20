@@ -104,7 +104,7 @@ class AccountGetSerializer(serializers.ModelSerializer):
         fields = ["id_list"]
 
 
-class UserSerSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     """查找用户信息"""
 
     # 上一次登录信息
