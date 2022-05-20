@@ -373,3 +373,12 @@ class TagView(ModelViewSet):
     queryset = UserTag.objects.all()
     serializer_class = serialize.UserTagSerializer
     filter_class = TagFilter
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.is_built_in == UserTag.BuiltIn.BUILT_IN:
+            return Response("内置标签不可删除", exception=True)
+        if UserTagContact.objects.filter(tag_id=instance.id):
+            return Response("当前标签已经绑定了用户, 请解除绑定用户后再进行删除", exception=True)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
