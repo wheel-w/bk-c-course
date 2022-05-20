@@ -23,7 +23,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
 from blueapps.account.models import User as Account
-from common.drf.pagination import GeneralPagination
 from user_manager import serialize
 from user_manager.filters import TagFilter, UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
@@ -286,7 +285,6 @@ class UserView(GenericViewSet, UpdateModelMixin):
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
     serializer_class = serialize.UserSerializer
-    pagination_class = GeneralPagination
     filter_class = UserFilter
 
     def list(self, request, *args, **kwargs):
@@ -373,6 +371,7 @@ class TagView(ModelViewSet):
     queryset = UserTag.objects.all()
     serializer_class = serialize.UserTagSerializer
     filter_class = TagFilter
+    pagination_class = None  # 关闭分页
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
