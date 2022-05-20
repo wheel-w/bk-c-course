@@ -18,7 +18,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
@@ -28,7 +28,7 @@ from user_manager import serialize
 from user_manager.filters import TagFilter, UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
 
-from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS
+from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS, UserTagContactFindType
 
 
 # 用户相关视图
@@ -382,3 +382,56 @@ class TagView(ModelViewSet):
             return Response("当前标签已经绑定了用户, 请解除绑定用户后再进行删除", exception=True)
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserTagContactView(GenericViewSet, DestroyModelMixin):
+    queryset = UserTagContact.objects.all()
+    serializer_class = serialize.UserTagContactSerializer
+    lookup_url_kwarg = "id"
+
+    def retrieve(self, request, *args, **kwargs):
+        id_ = kwargs.get("id")
+        users = self.queryset.filter(tag_id=id_).values_list("user_id", flat=True)
+        users = User.objects.filter(id__in=users)
+        serializer = serialize.UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                # 参数名称
+                "id",
+                openapi.IN_PATH,
+                # 参数字符类型
+                type=openapi.TYPE_STRING,
+            ),
+            openapi.Parameter(
+                # 参数名称
+                "type",
+                openapi.IN_QUERY,
+                # 参数字符类型
+                type=openapi.TYPE_INTEGER,
+            ),
+        ],
+    )
+    def destroy(self, request, *args, **kwargs):
+        id_ = kwargs.get("id")
+        type_ = request.query_params.get("type")
+        queryset = self.parsing(type_, id_)
+        if queryset:
+            queryset.delete()
+        else:
+            return Response("未查到对应项", exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def parsing(self, type_, id_):
+        if type_ == UserTagContactFindType.USER:
+            queryset = self.queryset.filter(user_id=id_)
+        elif type_ == UserTagContactFindType.TAG:
+            queryset = self.queryset.filter(tag_id=id_)
+        elif type_ == UserTagContactFindType.TOGETHER:
+            user_id, tag_id = id_.split("&")
+            queryset = self.queryset.filter(user_id=user_id, tag_id=tag_id).first()
+        else:
+            return None
+        return queryset

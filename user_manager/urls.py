@@ -26,8 +26,12 @@ router_account.register("", views.OriginAccountView)
 # tags
 router_tag = DefaultRouter()
 router_tag.register("", views.TagView)
+# UserTagContacts
+UserTagContacts = DefaultRouter()
+UserTagContacts.register("", views.UserTagContactView)
 urlpatterns = [
     path("users/", include(router.urls)),
     path("accounts/", include(router_account.urls)),
     path("tags/", include(router_tag.urls)),
+    path("UserTagContacts/", include(UserTagContacts.urls)),
 ]

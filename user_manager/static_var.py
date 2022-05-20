@@ -25,3 +25,9 @@ REQUEST_PARAMS = {
 
 APIGW_BASE_URL = os.getenv("BK_COMPONENT_API_URL")
 PROFILES_LIST_URL = APIGW_BASE_URL + "/api/bk-user/prod/api/v2/profiles/"
+
+
+class UserTagContactFindType:
+    TOGETHER = 0
+    USER = 1
+    TAG = 2
