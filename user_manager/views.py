@@ -394,7 +394,8 @@ class ContactBatch(GenericViewSet):
 
     def destroy(self, request, *args, **kwargs):
         id_ = kwargs.get("id")
-        type_ = request.query_params.get("type")
+        type_ = kwargs.get("type")
+        print(type_, id_)
         if type_ == UserTagContactFindType.USER:
             self.queryset.filter(user_id=id_).delete()
         elif type_ == UserTagContactFindType.TAG:
@@ -420,9 +421,10 @@ class ContactBatch(GenericViewSet):
         ),
     )
     def create(self, request, *args, **kwargs):
+        type_ = kwargs.get("type")
         user_ids = request.data.get("users")
         tag_ids = request.data.get("tags")
-        type_ = request.data.get("type")
+        print(type_, user_ids, tag_ids)
         insert_arr = []
         if type_ == UserTagContactFindType.TAG:
             # 给多个用户打同一个标签

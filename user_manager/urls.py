@@ -35,7 +35,7 @@ urlpatterns = [
     path("tags/", include(router_tag.urls)),
     path("UserTagContacts/", include(UserTagContacts.urls)),
     path(
-        "UserTagContacts/batch/<int:type>",
+        "UserTagContacts/batch/<str:type>/",
         views.ContactBatch.as_view(
             {
                 "post": "create",
@@ -43,7 +43,7 @@ urlpatterns = [
         ),
     ),
     path(
-        "UserTagContacts/batch/<int:type>/<int:id>",
+        "UserTagContacts/batch/<str:type>/<int:id>/",
         views.ContactBatch.as_view({"delete": "destroy"}),
     ),
 ]
