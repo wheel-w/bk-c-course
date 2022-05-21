@@ -52,7 +52,7 @@
         methods: {
             getTagList () {
                 return this.$http.get('/api/tags/').then((res) => {
-                    this.tags = res.data.results
+                    this.tags = res.data
                 })
             },
             addTag () {
@@ -62,8 +62,7 @@
                         tag_color: this.editDialog.form.tag_color.slice(1),
                         sub_project: 1
                     })
-                    .then((res) => {
-                        console.log(res)
+                    .then(() => {
                         this.getTagList()
                     })
             },
@@ -90,7 +89,6 @@
   display: grid;
   grid-template-columns: repeat(5, 20%);
   grid-template-rows: 160px;
-  justify-items: center;
   margin-top: 20px;
 }
 </style>

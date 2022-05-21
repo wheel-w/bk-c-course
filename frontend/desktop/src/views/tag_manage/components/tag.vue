@@ -8,6 +8,7 @@
             <bk-popover placement="bottom-start" width="300">
                 <p>标签：{{ tag.tag_value }}</p>
                 <p>颜色：{{ tag.tag_color }}</p>
+                <p>备注：{{ tag.tag_comment }}</p>
                 <div slot="content" style="white-space: normal">
                     <div class="pt10 pb5 pl10 pr10">{{ tag }}</div>
                 </div>
@@ -24,8 +25,8 @@
                 >
                     <span class="dot-menu-trigger"></span>
                     <ul class="dot-menu-list" slot="content">
-                        <li class="dot-menu-item" @click="delTag">删除</li>
-                        <li class="dot-menu-item" @click="test">修改</li>
+                        <li class="dot-menu-item" @click="handleDelTag">删除</li>
+                        <li class="dot-menu-item" @click="handleEditTag">修改</li>
                     </ul>
                 </bk-popover>
             </div>
@@ -55,8 +56,32 @@
                     this.$emit('change')
                 })
             },
-            test () {
-                console.log(this.tag)
+            handleDelTag () {
+                this.$bkInfo({
+                    type: 'warning',
+                    title: '确认删除？',
+                    confirmLoading: true,
+                    confirmFn: async () => {
+                        try {
+                            await new Promise((resolve) => {
+                                this.delTag().then(() => {
+                                    resolve()
+                                })
+                            })
+                            this.$bkMessage({
+                                message: '删除成功',
+                                theme: 'success'
+                            })
+                            return true
+                        } catch (e) {
+                            console.warn(e)
+                            return true
+                        }
+                    }
+                })
+            },
+            handleEditTag () {
+                alert('修改标签')
             }
         }
     }
