@@ -25,7 +25,7 @@ from project.serializer import (
     UserProjectContactSerializer,
 )
 from user_manager.models import User, UserTag, UserTagContact
-from user_manager.serialize import UserSerSerializer
+from user_manager.serialize import UserSerializer
 
 from .filters import ProjectUserFilter
 
@@ -126,7 +126,7 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         users = self.filter_queryset(User.objects.filter(id__in=user_id_list))
         # 分页
         page = self.paginate_queryset(users)
-        user_info = UserSerSerializer(page, many=True)
+        user_info = UserSerializer(page, many=True)
         self.add_tag(user_info.data)
         return self.get_paginated_response(user_info.data)
 
@@ -172,7 +172,7 @@ class UserProjectContactViewSet(viewsets.ModelViewSet):
         data = UserProjectContact.objects.filter(project_id=project_id)
         user_id_list = [relation.user_id for relation in data]
         users = User.objects.filter(id__in=user_id_list)
-        user_info = UserSerSerializer(users, many=True)
+        user_info = UserSerializer(users, many=True)
         self.add_tag(user_info.data)
         actual_user_id_list = []
         for user in user_info.data:
