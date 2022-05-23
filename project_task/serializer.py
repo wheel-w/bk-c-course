@@ -236,6 +236,9 @@ class ProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
     def get_types(self, data):
         return data.get_types_display()
 
+    def get_status(self, data):
+        return data.get_status_display()
+
 
 class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer):
     """学生任务状态不为已提交时的任务详情序列化器"""
