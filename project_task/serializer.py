@@ -374,6 +374,7 @@ class StudentProjectTaskInfoSerializer(serializers.ModelSerializer):
 
 class StudentProjectTaskInfoShowSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
+    cumulative_time_seconds = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentProjectTaskInfo
@@ -382,12 +383,16 @@ class StudentProjectTaskInfoShowSerializer(serializers.ModelSerializer):
     def get_status(self, relation):
         return relation.get_status_display()
 
+    def get_cumulative_time_seconds(self, relation):
+        return int(relation.cumulative_time.total_seconds())
+
 
 class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
     """老师评分开启匿名时的Relation序列化器"""
 
     individual_score = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    cumulative_time_seconds = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentProjectTaskInfo
@@ -402,6 +407,9 @@ class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
             item.pop("teacher_name")
             item.pop("teacher_id")
         return individual_score
+
+    def get_cumulative_time_seconds(self, relation):
+        return int(relation.cumulative_time.total_seconds())
 
 
 class ProjectSearchInfoSerializer(serializers.ModelSerializer):
