@@ -7,6 +7,7 @@
         <div class="tag_info">
             <bk-popover placement="bottom-start" width="300">
                 <p>标签：{{ tag.tag_value }}</p>
+                <p>所属项目：{{ tag.sub_project }}</p>
                 <p>颜色：{{ tag.tag_color }}</p>
                 <p>备注：{{ tag.tag_comment }}</p>
                 <div slot="content" style="white-space: normal">
@@ -91,7 +92,7 @@
 @import "@/css/bk-dot-menu.css";
 .tag {
   width: 200px;
-  height: 130px;
+  height: 150px;
   border-radius: 3px;
   background-color: rgb(239, 239, 239);
   .palette {

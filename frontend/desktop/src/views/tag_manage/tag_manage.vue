@@ -15,11 +15,30 @@
             @confirm="handleAddTag"
             title="编辑标签"
             :mask-close="false"
+            :auto-close="false"
             width="400px"
         >
             <bk-form label-width="80" :model="editDialog.form">
                 <bk-form-item label="标签名称" :required="true">
                     <bk-input v-model="editDialog.form.tag_value"></bk-input>
+                </bk-form-item>
+                <bk-form-item label="所属项目" :required="true">
+                    <!-- <bk-input v-model="editDialog.form.sub_project"></bk-input> -->
+                    <bk-select
+                        v-model="editDialog.form.sub_project"
+                        style="width: 250px"
+                        ext-cls="select-custom"
+                        ext-popover-cls="select-popover-custom"
+                        searchable
+                    >
+                        <bk-option
+                            v-for="option in projectList"
+                            :key="option.id"
+                            :id="option.id"
+                            :name="option.name"
+                        >
+                        </bk-option>
+                    </bk-select>
                 </bk-form-item>
                 <bk-form-item label="标签颜色" :required="true">
                     <bk-color-picker
@@ -36,12 +55,14 @@
     export default {
         components: { tag },
         data () {
+            const projectList = JSON.parse(sessionStorage.getItem('projects'))
             return {
                 tags: [],
                 editDialog: {
                     visible: false,
                     form: {}
-                }
+                },
+                projectList
             }
         },
         mounted () {
@@ -52,23 +73,51 @@
         methods: {
             getTagList () {
                 return this.$http.get('/api/tags/').then((res) => {
-                    this.tags = res.data
+                    if (res.code === 0) {
+                        // 有些标签的所属项目id根本不存在
+                        // res.data.map(
+                        //     (e) =>
+                        //         (e.projectName = this.projectList.find((i) => (i.id === e.sub_project)).name)
+                        // )
+                        this.tags = res.data
+                    }
                 })
             },
             addTag () {
-                return this.$http
-                    .post('/api/tags/', {
-                        tag_value: this.editDialog.form.tag_value,
-                        tag_color: this.editDialog.form.tag_color.slice(1),
-                        sub_project: 1
-                    })
-                    .then(() => {
-                        this.getTagList()
-                    })
+                return new Promise((resolve, reject) => {
+                    this.$http
+                        .post('/api/tags/', {
+                            tag_value: this.editDialog.form.tag_value,
+                            tag_color: this.editDialog.form.tag_color.slice(1),
+                            sub_project: 53
+                        })
+                        .then((res) => {
+                            if (res.code === 0) {
+                                this.$bkMessage({
+                                    message: '添加成功',
+                                    theme: 'success'
+                                })
+                            } else {
+                                this.$bkMessage({
+                                    message: res.message,
+                                    theme: 'error'
+                                })
+                            }
+                            this.getTagList()
+                        })
+                })
             },
             handleAddTag () {
-                console.log(this.editDialog)
+                if (
+                    !this.editDialog.form.tag_color
+                    || !this.editDialog.form.sub_project
+                    || !this.editDialog.form.tag_value
+                ) {
+                    alert('不完整')
+                    return false
+                }
                 this.addTag()
+                return true
             },
             test () {
                 console.log(arguments)

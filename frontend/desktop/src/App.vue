@@ -301,7 +301,6 @@
                 )
             })
 
-            this.getCourseList()
             const platform = window.navigator.platform.toLowerCase()
             if (platform.indexOf('win') === 0) {
                 this.systemCls = 'win'
@@ -350,8 +349,9 @@
             // 获取课程列表
             async getCourseList () {
                 this.$http.get('/api/project/').then((res) => {
-                    if (res.data.results.length !== 0) {
+                    if (res.code === 0) {
                         this.courseList = res.data.results
+                        sessionStorage.setItem('projects', JSON.stringify(res.data.results))
                     }
                     if (this.$store.state.currentCourseId === 0) {
                         this.$store.commit('updateCourseId', res.data.results[0].id)
