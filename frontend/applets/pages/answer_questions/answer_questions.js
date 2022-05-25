@@ -48,7 +48,6 @@ Page({
           paper_id: paper_id
         },
         success: res => {
-          console.log(res.data)
           this.setData({
             paper_status: res.data.data.paper_status,
             paper_end_time: res.data.data.paper_end_time,

@@ -3,14 +3,16 @@
         class="monitor-navigation"
         :class="systemCls"
         v-title
-        data-title="课程管理系统">
+        data-title="课程管理系统"
+    >
         <bk-navigation
             :header-title="nav.id"
             :side-title="nav.title"
             :default-open="true"
             :navigation-type="'left-right'"
             :theme-color="'#7090D9'"
-            :need-menu="true">
+            :need-menu="true"
+        >
             <template slot="header">
                 <div class="monitor-navigation-header">
                     <div class="header-select">
@@ -26,12 +28,14 @@
                             ext-cls="select-custom"
                             ext-popover-cls="select-popover-custom"
                             searchable
-                            :disabled="false">
+                            :disabled="false"
+                        >
                             <bk-option
                                 v-for="option in courseList"
                                 :key="option.id"
                                 :id="option.id"
-                                :name="option.name">
+                                :name="option.name"
+                            >
                             </bk-option>
                         </bk-select>
                     </div>
@@ -40,7 +44,8 @@
                         :arrow="false"
                         offset="-20, 10"
                         placement="bottom-start"
-                        :tippy-options="{ hideOnClick: false }">
+                        :tippy-options="{ hideOnClick: false }"
+                    >
                         <div class="header-user">
                             {{ $store.state.user.username }}
                             <i class="bk-icon icon-down-shape"></i>
@@ -51,7 +56,8 @@
                                     class="nav-item"
                                     v-for="userItem in user.list"
                                     :key="userItem"
-                                    @click="handleSelect(userItem.id, userItem)">
+                                    @click="handleSelect(userItem.id, userItem)"
+                                >
                                     {{ userItem.name }}
                                 </li>
                             </ul>
@@ -64,59 +70,31 @@
                     ref="menu"
                     @select="handleSelect"
                     icon="circle"
-                    :default-active="nav.id"
-                    :item-default-bg-color="'#7690D9'"
-                    :item-hover-bg-color="'#5E7AC5'"
-                    :item-active-bg-color="'#5E7AC5'"
-                    :item-default-color="'#f6f6f6'"
-                    :item-hover-color="'#8ae4f5'"
-                    :item-active-color="'#fea3be'"
-                    :toggle-active="nav.toggle">
+                    :default-active="nav.pathName"
+                    item-default-bg-color="#7690D9"
+                    item-hover-bg-color="#5E7AC5"
+                    item-active-bg-color="#5E7AC5"
+                    item-default-color="#f6f6f6"
+                    item-hover-color="#8ae4f5"
+                    item-active-color="#fea3be"
+                    :toggle-active="nav.toggle"
+                >
                     <bk-navigation-menu-item
                         v-for="item in nav.list"
                         :has-child="item.children.length === 0 ? false : true"
-                        :key="item.id"
+                        :key="item.pathName"
                         :default-active="item.active"
-                        v-bind="item">
-                        <!-- 这里的处理不好,为什么不使用原生icon配置项,配合css实现效果呢？ -->
-                        <bk-icon
-                            v-if="item.id === 'home'"
-                            type="circle-shape"
-                            style="color: #ffdf7e" />
-                        <bk-icon
-                            v-if="item.id === 'projectmanage'"
-                            type="circle-shape"
-                            style="color: #bbde4f" />
-                        <bk-icon
-                            v-if="item.id === 'classnumber'"
-                            type="circle-shape"
-                            style="color: #c7b3ff" />
-                        <bk-icon
-                            v-if="item.id === 'set_question_index'"
-                            type="circle-shape"
-                            style="color: #fea3be" />
-                        <bk-icon
-                            v-if="item.id === 'answer_question_index'"
-                            type="circle-shape"
-                            style="color: #8ae4f5" />
-                        <bk-icon
-                            v-if="item.id === 'displaypaper'"
-                            type="circle-shape"
-                            style="color: #febb5e" />
-                        <bk-icon
-                            v-if="item.id === 'user_manage'"
-                            type="circle-shape"
-                            style="color: #66ccff" />
-                        <bk-icon
-                            v-if="item.id === 'set_question'"
-                            type="circle-shape"
-                            style="color: #dd75ca" />
+                        v-bind="item"
+                    >
+                        <!-- 图标 -->
+                        <bk-icon type="circle-shape" :style="`color: ${item.color}`" />
                         <span style="margin-left: 20px">{{ item.name }}</span>
                         <div slot="child">
                             <bk-navigation-menu-item
                                 v-for="child in item.children"
-                                :key="child.id"
-                                v-bind="child">
+                                :key="child.pathName"
+                                v-bind="child"
+                            >
                                 <span>{{ child.name }}</span>
                             </bk-navigation-menu-item>
                         </div>
@@ -126,7 +104,8 @@
             <div class="monitor-navigation-content" id="a">
                 <main
                     class="main-content"
-                    v-bkloading="{ isLoading: mainContentLoading, opacity: 1 }">
+                    v-bkloading="{ isLoading: mainContentLoading, opacity: 1 }"
+                >
                     <router-view :key="routerKey" v-show="!mainContentLoading" />
                 </main>
             </div>
@@ -144,7 +123,8 @@
             ok-text="去认证"
             :confirm-fn="toRegister"
             :header-position="register.primary.headerPosition"
-            title="去认证">
+            title="去认证"
+        >
             您还没有进行身份认证，点击去认证按钮即可跳转至认证页面。
         </bk-dialog>
         <app-auth ref="bkAuth"></app-auth>
@@ -163,7 +143,91 @@
             bkDialog
         },
         data () {
+            const views = {
+                home: {
+                    id: 'home',
+                    name: '首页',
+                    pathName: 'home',
+                    color: '#66ccff',
+                    children: [],
+                    group: true
+                },
+                my_course: {
+                    id: 'my_course',
+                    name: '项目管理',
+                    pathName: 'my_course',
+                    color: '#b1de4f',
+                    children: [],
+                    group: true
+                },
+                course_number: {
+                    id: 'course_number',
+                    name: '项目成员',
+                    pathName: 'course_number',
+                    color: '#fea3be',
+                    children: [],
+                    group: true
+                },
+                set_question_index: {
+                    id: 'set_question_index',
+                    name: '任务题库',
+                    pathName: 'set_question_index',
+                    children: [],
+                    color: '#fe33be',
+                    group: true
+                },
+                // untitled:{
+                //     name: '测验与作业',
+                //     color: '#fe8b5e',
+                //     children: [],
+                //     group: true
+                // },
+                displaypaper: {
+                    id: 'displaypaper',
+                    name: '任务管理',
+                    pathName: 'displaypaper',
+                    color: '#66ccff',
+                    children: [],
+                    group: true
+                },
+                user_manage: {
+                    id: 'user_manage',
+                    name: '用户管理',
+                    pathName: 'user_manage',
+                    color: '#3399FF',
+                    children: [],
+                    group: true
+                },
+                set_question: {
+                    id: 'set_question',
+                    name: '出题',
+                    pathName: 'set_question',
+                    color: '#33FF99',
+                    children: [],
+                    group: true
+                },
+                tag_manage: {
+                    id: 'tag_manage',
+                    name: '标签管理',
+                    pathName: 'tag_manage',
+                    color: '#dd75ca',
+                    children: [],
+                    group: true
+                }
+            }
+            const nav = {
+                list: [],
+                pathName: window.location.pathname.split('/').pop(),
+                toggle: true,
+                submenuActive: false,
+                title: '课程管理系统'
+            }
+            for (const i in views) {
+                nav.list.push(views[i])
+            }
             return {
+                // 默认开发者视图（全部功能）
+                nav,
                 register: {
                     primary: {
                         visible: false,
@@ -172,183 +236,25 @@
                 },
                 routerKey: +new Date(),
                 systemCls: 'mac',
-                nav: {
-                    list: [
-                        {
-                            id: 'home',
-                            name: '首页',
-                            pathName: 'home',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'projectmanage',
-                            name: '项目管理',
-                            pathName: 'my_course',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'classnumber',
-                            name: '项目成员',
-                            pathName: 'course_number',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'set_question_index',
-                            name: '任务题库',
-                            pathName: 'set_question_index',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'answer_question_index',
-                            name: '测验与作业',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'displaypaper',
-                            name: '任务管理',
-                            pathName: 'displaypaper',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'user_manage',
-                            name: '用户管理',
-                            pathName: 'user_manage',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'set_question',
-                            name: '出题',
-                            pathName: 'set_question',
-                            children: [],
-                            group: true
-                        }
-                    ],
-                    id: 'home',
-                    toggle: true,
-                    submenuActive: false,
-                    title: '课程管理系统'
-                },
+                // 教师视图
                 navTeacher: {
-                    list: [
-                        {
-                            id: 'home',
-                            name: '首页',
-                            icon: 'icon-home-shape',
-                            pathName: 'home',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'mycourse',
-                            name: '我的课程',
-                            icon: 'icon-tree-module-shape',
-                            pathName: 'my_course',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'classnumber',
-                            name: '课程成员',
-                            icon: 'icon-tree-module-shape',
-                            pathName: 'course_number',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'set_question_index',
-                            name: '课程题库',
-                            icon: 'icon-tree-process-shape',
-                            pathName: 'set_question_index',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'answer_question_index',
-                            name: '测验与作业',
-                            icon: 'icon-tree-process-shape',
-                            pathName: 'answer_question_index',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'displaypaper',
-                            name: '作业管理',
-                            icon: 'icon-tree-process-shape',
-                            pathName: 'displaypaper',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'user_manage',
-                            name: '用户管理',
-                            pathName: 'user_manage',
-                            children: [],
-                            group: true
-                        }
-                    ],
+                    list: [views.home],
                     id: 'home',
                     toggle: true,
                     submenuActive: false,
                     title: '课程管理系统'
                 },
+                // 学生视图
                 navStudent: {
-                    list: [
-                        {
-                            id: 'home',
-                            name: '首页',
-                            icon: 'icon-home-shape',
-                            pathName: 'home',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'mycourse',
-                            name: '我的课程',
-                            icon: 'icon-tree-module-shape',
-                            pathName: 'my_course',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'classnumber',
-                            name: '课程成员',
-                            icon: 'icon-tree-module-shape',
-                            pathName: 'course_number',
-                            children: [],
-                            group: true
-                        },
-                        {
-                            id: 'answer_question_index',
-                            name: '答题页面',
-                            icon: 'icon-tree-process-shape',
-                            pathName: 'answer_question_index',
-                            children: [],
-                            group: true
-                        }
-                    ],
+                    list: [views.home],
                     id: 'home',
                     toggle: true,
                     submenuActive: false,
                     title: '课程管理系统'
                 },
+                // 未验证者视图？
                 navNotCertified: {
-                    list: [
-                        {
-                            id: 'home',
-                            name: '首页',
-                            icon: 'icon-home-shape',
-                            pathName: 'home',
-                            children: [],
-                            group: true
-                        }
-                    ],
+                    list: [views.home],
                     id: 'home',
                     toggle: true,
                     submenuActive: false,
@@ -378,6 +284,7 @@
     }
         },
         created () {
+            this.getCourseList()
             // this.getUserInfo()
             if (sessionStorage.getItem('courseId')) {
                 this.$store.commit(
@@ -394,7 +301,6 @@
                 )
             })
 
-            this.getCourseList()
             const platform = window.navigator.platform.toLowerCase()
             if (platform.indexOf('win') === 0) {
                 this.systemCls = 'win'
@@ -433,7 +339,6 @@
                     path = path.replace(new RegExp('/+', 'gm'), '/')
                     sessionStorage.removeItem('navId')
                     sessionStorage.removeItem('courseId')
-                    this.nav.id = 'home'
                     this.$store.commit('updateCourseId', 0)
                     window.location.href = `${BK_PAAS_HOST}/login/?c_url=${HOST}${path}`
                 }
@@ -444,9 +349,9 @@
             // 获取课程列表
             async getCourseList () {
                 this.$http.get('/api/project/').then((res) => {
-                    console.log('=================================', res)
-                    if (res.data.results.length !== 0) {
+                    if (res.code === 0) {
                         this.courseList = res.data.results
+                        sessionStorage.setItem('projects', JSON.stringify(res.data.results))
                     }
                     if (this.$store.state.currentCourseId === 0) {
                         this.$store.commit('updateCourseId', res.data.results[0].id)
@@ -464,7 +369,7 @@
                         this.register.primary.visible = true
                     }
                     // 在页面加载时读取sessionStorage里的状态信息
-                    this.nav.id = sessionStorage.getItem('navId')
+                    this.nav.pathName = sessionStorage.getItem('navId')
                         ? JSON.parse(sessionStorage.getItem('navId'))
                         : 'home'
                 })
@@ -528,9 +433,6 @@
     margin-right: 40px;
     color: #96a2b9;
     min-width: 56px;
-    &.item-active {
-      color: #fff !important;
-    }
     &:hover {
       cursor: pointer;
       color: #d3d9e4;

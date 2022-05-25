@@ -9,11 +9,13 @@ Unless required by applicable Law or agreed to in writing, software distributed 
 an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific Language governing permissions and limitations under the License.
 """
+import datetime
 
 from celery.result import AsyncResult
 from django.db import transaction
 
 # Create your views here.
+from django.utils.timezone import utc
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.response import Response
@@ -34,7 +36,6 @@ from question.serializer import QuestionSerializer
 
 from .celery_task.auto_submit import auto_submit
 from .celery_task.scheduled_publish import scheduled_publish
-from .constants import TASK_STATUS
 
 
 # 出题接口
@@ -85,7 +86,6 @@ class ProjectTaskList(viewsets.ViewSet):
                 return Response("答案与答案分数个数不匹配", exception=True)
 
             data["questions_info"] = questions_info
-            data["status"] = TASK_STATUS.DRAFT
             task = ProjectTaskSerializer(data=data)
             task.is_valid(raise_exception=True)
             task_temp = task.save()
@@ -143,11 +143,15 @@ class ProjectTaskList(viewsets.ViewSet):
         # 设置定时发布
         if "scheduled_publish_time" in data:
             scheduled_publish_time = data.pop("scheduled_publish_time")
+            if datetime.datetime.strptime(
+                scheduled_publish_time, "%Y-%m-%dT%H:%M:%S"
+            ).replace(tzinfo=utc) < datetime.datetime.now().replace(tzinfo=utc):
+                return Response("任务计划发布时间不能早于当前!!!", exception=True)
+
             time_transfer = TimeTransferSerializer(
                 data={"scheduled_publish_time": scheduled_publish_time}
             )
             time_transfer.is_valid(raise_exception=True)
-
             # 定时发布celery任务
             scheduled_publish_task = scheduled_publish.apply_async(
                 args=[project_task_id], eta=time_transfer.data["scheduled_publish_time"]
@@ -191,8 +195,14 @@ class ProjectTaskList(viewsets.ViewSet):
 
             data["questions_info"] = questions_info
 
+        if "end_time" in data:
+            if datetime.datetime.strptime(
+                data["end_time"], "%Y-%m-%dT%H:%M:%S"
+            ).replace(tzinfo=utc) < datetime.datetime.now().replace(tzinfo=utc):
+                return Response("任务截止时间不能早于当前!!!", exception=True)
+
         info = ProjectTaskUpdateSerializer(task, data)
-        info.is_valid()
+        info.is_valid(raise_exception=True)
         task_info = info.save()
 
         # 如果更改截止时间，更新celery任务id并把原来的任务revoke

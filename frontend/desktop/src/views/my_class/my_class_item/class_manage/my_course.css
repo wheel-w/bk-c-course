@@ -3,7 +3,7 @@
 }
 .wrapper-head1 {
     display: flex;
-    justify-content: end;
+    justify-content: flex-end;
 }
 .wrapper-body {
     height: 500px;

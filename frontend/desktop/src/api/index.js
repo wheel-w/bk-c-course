@@ -181,6 +181,12 @@ function handleReject (error, config) {
         const nextError = { message: error.message, response: error.response }
         if (status === 401) {
             bus.$emit('show-login-modal', nextError.response)
+            // 这里方便开发服务器登录
+            if (NODE_ENV === 'development') {
+                setTimeout(() => {
+                    window.open('https://paas-edu.bktencent.com/login/?c_url=/')
+                }, 500)
+            }
         } else if (status === 500) {
             nextError.message = '系统出现异常'
         } else if (data && data.message) {
@@ -252,6 +258,8 @@ export function injectCSRFTokenToHeaders () {
     const CSRFToken = cookie.parse(document.cookie).csrftoken
     if (CSRFToken !== undefined) {
         axiosInstance.defaults.headers.common['X-CSRFToken'] = CSRFToken
+    } else if (NODE_ENV === 'development') { // 开发环境老是弹警告，我关了
+        return null
     } else {
         console.warn('Can not find csrftoken in document.cookie')
     }

@@ -18,10 +18,10 @@ from rest_framework import serializers
 
 from project_task.models import CeleryTaskInfo, ProjectTask, StudentProjectTaskInfo
 from question.models import Question
-from question.serializer import QuestionSerializer
+from question.serializer import QuestionSerializer, QuestionShowSerializer
 from user_manager.models import User
 
-from .constants import STATUS
+from .constants import STATUS, TASK_STATUS
 
 
 class ProjectTaskSerializer(serializers.ModelSerializer):
@@ -75,10 +75,18 @@ class ProjectTaskForTeacherSerializer(serializers.ModelSerializer):
     submitted_count = serializers.SerializerMethodField()  # 已提交的人数
     marked_count = serializers.SerializerMethodField()  # 已批阅的人数
     student_total_count = serializers.SerializerMethodField()  # 学生总数
+    types = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectTask
         exclude = ["questions_info", "judge_teachers_info", "project_id"]
+
+    def get_types(self, data):
+        return data.get_types_display()
+
+    def get_status(self, data):
+        return data.get_status_display()
 
     def get_submitted_count(self, data):
         return StudentProjectTaskInfo.objects.filter(
@@ -104,10 +112,18 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
     student_info = serializers.SerializerMethodField()  # 学生信息列表
     marked_student_info = serializers.SerializerMethodField()  # # 已批阅的学生信息列表
     submitted_student_info = serializers.SerializerMethodField()  # 已提交的学生信息列表
+    types = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectTask
         fields = "__all__"
+
+    def get_types(self, data):
+        return data.get_types_display()
+
+    def get_status(self, data):
+        return data.get_status_display()
 
     def get_submitted_count(self, data):
         return StudentProjectTaskInfo.objects.filter(
@@ -197,7 +213,7 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
             question_id_list.append(item["id"])
 
         questions = Question.objects.filter(id__in=question_id_list)
-        questions_info = QuestionSerializer(questions, many=True)
+        questions_info = QuestionShowSerializer(questions, many=True)
 
         question_index = 0
         for item in questions_info.data:
@@ -210,9 +226,18 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
 class ProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
     """为学生提供的任务基本信息的序列化器"""
 
+    types = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
     class Meta:
         model = ProjectTask
         exclude = ["questions_info", "judge_teachers_info"]
+
+    def get_types(self, data):
+        return data.get_types_display()
+
+    def get_status(self, data):
+        return data.get_status_display()
 
 
 class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer):
@@ -220,10 +245,18 @@ class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer)
 
     questions_info = serializers.SerializerMethodField()
     judge_teachers_info = serializers.SerializerMethodField()
+    types = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectTask
         fields = "__all__"
+
+    def get_types(self, data):
+        return data.get_types_display()
+
+    def get_status(self, data):
+        return data.get_status_display()
 
     def get_questions_info(self, data):
         raw_questions_info = data.questions_info
@@ -233,15 +266,15 @@ class ProjectTaskDetailForStuHasNotSubmitSerializer(serializers.ModelSerializer)
             question_id_list.append(item["id"])
 
         questions = Question.objects.filter(id__in=question_id_list)
-        questions_info = QuestionSerializer(questions, many=True)
+        questions_info = QuestionShowSerializer(questions, many=True)
 
         question_index = 0
         for item in questions_info.data:
             item.update(raw_questions_info[question_index])
             item.pop("answer")
-            item.pop("answer_url")
+            item.pop("answer_file")
             item.pop("explain")
-            item.pop("explain_url")
+            item.pop("explain_file")
             question_index += 1
 
         return questions_info.data
@@ -258,10 +291,18 @@ class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
 
     questions_info = serializers.SerializerMethodField()
     judge_teachers_info = serializers.SerializerMethodField()
+    types = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectTask
         fields = "__all__"
+
+    def get_types(self, data):
+        return data.get_types_display()
+
+    def get_status(self, data):
+        return data.get_status_display()
 
     def get_questions_info(self, data):
         raw_questions_info = data.questions_info
@@ -271,7 +312,7 @@ class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
             question_id_list.append(item["id"])
 
         questions = Question.objects.filter(id__in=question_id_list)
-        questions_info = QuestionSerializer(questions, many=True)
+        questions_info = QuestionShowSerializer(questions, many=True)
 
         question_index = 0
         for item in questions_info.data:
@@ -288,19 +329,30 @@ class ProjectTaskDetailForStuHasSubmitSerializer(serializers.ModelSerializer):
 
 
 class TaskCreateSerializer(serializers.Serializer):
-    """创建课程的序列化器"""
+    """
+    创建课程的序列化器
+    """
+
+    class TASK_TYPES:
+        DAILY = "DAILY"
+        ASSESSMENT = "ASSESSMENT"
 
     questions = QuestionSerializer(many=True)
     students = serializers.ListField(child=serializers.IntegerField())
     questions_detail = serializers.ListField(child=serializers.DictField())
 
     project_id = serializers.IntegerField()
-    types = serializers.CharField(max_length=10)
+    types = serializers.ChoiceField(
+        choices=((TASK_TYPES.DAILY, "日常任务"), (TASK_TYPES.ASSESSMENT, "考核任务"))
+    )
     title = serializers.CharField(max_length=255)
     describe = serializers.CharField(max_length=255)
     start_time = serializers.DateTimeField(required=False)
     end_time = serializers.DateTimeField(required=False)
-    status = serializers.CharField(max_length=10, required=False)
+    status = serializers.ChoiceField(
+        choices=((TASK_STATUS.DRAFT, "草稿"), (TASK_STATUS.RELEASE, "已发布")),
+        default=TASK_STATUS.DRAFT,
+    )
     judge_teachers_info = serializers.JSONField()
     students_visible = serializers.BooleanField(required=False)
     creator = serializers.CharField(required=False)
@@ -320,14 +372,34 @@ class StudentProjectTaskInfoSerializer(serializers.ModelSerializer):
         exclude = ["id"]
 
 
-class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
-    """老师评分开启匿名时的Relation序列化器"""
-
-    individual_score = serializers.SerializerMethodField()
+class StudentProjectTaskInfoShowSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    cumulative_time_seconds = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentProjectTaskInfo
         exclude = ["id"]
+
+    def get_status(self, relation):
+        return relation.get_status_display()
+
+    def get_cumulative_time_seconds(self, relation):
+        return int(relation.cumulative_time.total_seconds())
+
+
+class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
+    """老师评分开启匿名时的Relation序列化器"""
+
+    individual_score = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    cumulative_time_seconds = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StudentProjectTaskInfo
+        exclude = ["id"]
+
+    def get_status(self, relation):
+        return relation.get_status_display()
 
     def get_individual_score(self, relation):
         individual_score = relation.individual_score
@@ -335,6 +407,9 @@ class StudentProjectTaskInfoForStuSerializer(serializers.ModelSerializer):
             item.pop("teacher_name")
             item.pop("teacher_id")
         return individual_score
+
+    def get_cumulative_time_seconds(self, relation):
+        return int(relation.cumulative_time.total_seconds())
 
 
 class ProjectSearchInfoSerializer(serializers.ModelSerializer):
