@@ -22,7 +22,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class UserTagAdmin(admin.ModelAdmin):
-    list_filter = ("tag_value", "tag_color", "is_built_in", "sub_project")
+    list_filter = ("id", "tag_value", "tag_color", "is_built_in", "sub_project")
 
 
 class UserTagContactAdmin(admin.ModelAdmin):
