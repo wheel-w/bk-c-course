@@ -7,12 +7,18 @@
         </div>
         <!-- 标签们 -->
         <div class="tag_group">
-            <tag v-for="tag in tags" :key="tag" :tag="tag" @change="getTagList"></tag>
+            <tag
+                v-for="tag in tags"
+                :key="tag"
+                :tag="tag"
+                @listChange="getTagList"
+                @updateTag="handleEditTag"
+            ></tag>
         </div>
         <!-- 增改标签 -->
         <bk-dialog
             v-model="editDialog.visible"
-            @confirm="handleAddTag"
+            @confirm="handleConfirm"
             title="编辑标签"
             :mask-close="false"
             :auto-close="false"
@@ -89,7 +95,7 @@
                         .post('/api/tags/', {
                             tag_value: this.editDialog.form.tag_value,
                             tag_color: this.editDialog.form.tag_color.slice(1),
-                            sub_project: 53
+                            sub_project: this.editDialog.form.sub_project
                         })
                         .then((res) => {
                             if (res.code === 0) {
@@ -107,20 +113,51 @@
                         })
                 })
             },
-            handleAddTag () {
+            updateTag (id) {
+                return this.$http
+                    .put(`/api/tags/${id}/`, {
+                        tag_value: this.editDialog.form.tag_value,
+                        tag_color: this.editDialog.form.tag_color.slice(1),
+                        sub_project: this.editDialog.form.sub_project
+                    })
+                    .then((res) => {
+                        if (res.code === 0) {
+                            this.$bkMessage({
+                                message: '添加成功',
+                                theme: 'success'
+                            })
+                        } else {
+                            this.$bkMessage({
+                                message: res.message,
+                                theme: 'error'
+                            })
+                        }
+                        this.getTagList()
+                    })
+            },
+            handleConfirm () {
                 if (
                     !this.editDialog.form.tag_color
                     || !this.editDialog.form.sub_project
                     || !this.editDialog.form.tag_value
                 ) {
                     alert('不完整')
-                    return false
+                    return null
                 }
-                this.addTag()
-                return true
+
+                switch (typeof this.editDialog.form.id) {
+                    case 'number': // 修改
+                        this.updateTag(this.editDialog.form.id)
+                        break
+                    case 'undefined': // 新增
+                        this.addTag()
+                        break
+                }
             },
-            test () {
-                console.log(arguments)
+            handleEditTag (tag) {
+                this.editDialog.form = tag
+                this.editDialog.form.tag_color = '#' + tag.tag_color
+                this.editDialog.visible = true
             }
         }
     }
@@ -136,7 +173,7 @@
 }
 .tag_group {
   display: grid;
-  grid-template-columns: repeat(5, 20%);
+  grid-template-columns: repeat(6, 16%);
   grid-template-rows: 160px;
   margin-top: 20px;
 }
