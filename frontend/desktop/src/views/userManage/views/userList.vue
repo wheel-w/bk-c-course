@@ -73,6 +73,13 @@
             @page-limit-change="handlePageLimitChange"
             @filter-change="handleFilterChange"
         >
+            <!-- 表格空状态插槽 -->
+            <template slot="empty">
+                <bk-spin v-if="loadFlag" icon="circle-2-1"></bk-spin>
+                <div v-else style="font-weight: 800; font-size: 18px">
+                    无任何用户
+                </div>
+            </template>
             <bk-table-column type="selection" width="60" resizable></bk-table-column>
             <bk-table-column
                 label="用户名"
@@ -232,7 +239,9 @@
                             value: new Date(current - 365 * 24 * 3600 * 1000).toLocaleString()
                         }
                     ]
-                }
+                },
+                // 加载状态
+                loadFlag: true
             }
         },
         mounted () {
@@ -259,6 +268,7 @@
                             item.last_login = new Date(item.last_login).toLocaleString()
                             return item
                         })
+                        this.loadFlag = false
                     })
             },
             deleteUser (idList) {

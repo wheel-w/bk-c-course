@@ -1,6 +1,58 @@
 <template>
     <div id="tag_manage">
-        <tag v-for="tag in tags" :key="tag">{{tag}}</tag>
+        <div class="tag_control">
+            <bk-button @click="editDialog.visible = true" theme="primary"
+            >新增标签</bk-button
+            >
+        </div>
+        <!-- 标签们 -->
+        <div class="tag_group">
+            <tag
+                v-for="tag in tags"
+                :key="tag"
+                :tag="tag"
+                @listChange="getTagList"
+                @updateTag="handleEditTag"
+            ></tag>
+        </div>
+        <!-- 增改标签 -->
+        <bk-dialog
+            v-model="editDialog.visible"
+            @confirm="handleConfirm"
+            title="编辑标签"
+            :mask-close="false"
+            :auto-close="false"
+            width="400px"
+        >
+            <bk-form label-width="80" :model="editDialog.form">
+                <bk-form-item label="标签名称" :required="true">
+                    <bk-input v-model="editDialog.form.tag_value"></bk-input>
+                </bk-form-item>
+                <bk-form-item label="所属项目" :required="true">
+                    <!-- <bk-input v-model="editDialog.form.sub_project"></bk-input> -->
+                    <bk-select
+                        v-model="editDialog.form.sub_project"
+                        style="width: 250px"
+                        ext-cls="select-custom"
+                        ext-popover-cls="select-popover-custom"
+                        searchable
+                    >
+                        <bk-option
+                            v-for="option in projectList"
+                            :key="option.id"
+                            :id="option.id"
+                            :name="option.name"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </bk-form-item>
+                <bk-form-item label="标签颜色" :required="true">
+                    <bk-color-picker
+                        v-model="editDialog.form.tag_color"
+                    ></bk-color-picker>
+                </bk-form-item>
+            </bk-form>
+        </bk-dialog>
     </div>
 </template>
 
@@ -8,16 +60,121 @@
     const tag = () => import('./components/tag')
     export default {
         components: { tag },
-        omponents: {
-            tag
-        },
         data () {
+            const projectList = JSON.parse(sessionStorage.getItem('projects'))
             return {
-                tags: ['ck', 'mc', 'zyz', 'wyc', 'ljy']
+                tags: [],
+                editDialog: {
+                    visible: false,
+                    form: {}
+                },
+                projectList
+            }
+        },
+        mounted () {
+            this.getTagList()
+            // this.addTag()
+            // this.delTag()
+        },
+        methods: {
+            getTagList () {
+                return this.$http.get('/api/tags/').then((res) => {
+                    if (res.code === 0) {
+                        // 有些标签的所属项目id根本不存在
+                        // res.data.map(
+                        //     (e) =>
+                        //         (e.projectName = this.projectList.find((i) => (i.id === e.sub_project)).name)
+                        // )
+                        this.tags = res.data
+                    }
+                })
+            },
+            addTag () {
+                return new Promise((resolve, reject) => {
+                    this.$http
+                        .post('/api/tags/', {
+                            tag_value: this.editDialog.form.tag_value,
+                            tag_color: this.editDialog.form.tag_color.slice(1),
+                            sub_project: this.editDialog.form.sub_project
+                        })
+                        .then((res) => {
+                            if (res.code === 0) {
+                                this.$bkMessage({
+                                    message: '添加成功',
+                                    theme: 'success'
+                                })
+                            } else {
+                                this.$bkMessage({
+                                    message: res.message,
+                                    theme: 'error'
+                                })
+                            }
+                            this.getTagList()
+                        })
+                })
+            },
+            updateTag (id) {
+                return this.$http
+                    .put(`/api/tags/${id}/`, {
+                        tag_value: this.editDialog.form.tag_value,
+                        tag_color: this.editDialog.form.tag_color.slice(1),
+                        sub_project: this.editDialog.form.sub_project
+                    })
+                    .then((res) => {
+                        if (res.code === 0) {
+                            this.$bkMessage({
+                                message: '添加成功',
+                                theme: 'success'
+                            })
+                        } else {
+                            this.$bkMessage({
+                                message: res.message,
+                                theme: 'error'
+                            })
+                        }
+                        this.getTagList()
+                    })
+            },
+            handleConfirm () {
+                if (
+                    !this.editDialog.form.tag_color
+                    || !this.editDialog.form.sub_project
+                    || !this.editDialog.form.tag_value
+                ) {
+                    alert('不完整')
+                    return null
+                }
+
+                switch (typeof this.editDialog.form.id) {
+                    case 'number': // 修改
+                        this.updateTag(this.editDialog.form.id)
+                        break
+                    case 'undefined': // 新增
+                        this.addTag()
+                        break
+                }
+            },
+            handleEditTag (tag) {
+                this.editDialog.form = tag
+                this.editDialog.form.tag_color = '#' + tag.tag_color
+                this.editDialog.visible = true
             }
         }
     }
 </script>
 
-<style>
+<style lang="postcss">
+.tag_control {
+  background-color: rgb(194, 243, 232);
+}
+.tag_menu {
+  width: fit-content;
+  float: right;
+}
+.tag_group {
+  display: grid;
+  grid-template-columns: repeat(6, 16%);
+  grid-template-rows: 160px;
+  margin-top: 20px;
+}
 </style>

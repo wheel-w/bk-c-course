@@ -29,7 +29,7 @@
                 courseList: []
             }
         },
-        created () {
+        mounted () {
             this.getCourseList()
         },
         methods: {
@@ -53,11 +53,12 @@
             },
             // 获取课程列表
             async getCourseList () {
-                this.$http.get('/api/project/').then(res => {
-                    if (res.data.count !== 0) {
-                        this.courseList = res.data.results
-                    }
-                })
+                // this.$http.get('/api/project/').then(res => {
+                //     if (res.data.count !== 0) {
+                //         this.courseList = res.data.results
+                //     }
+                // })
+                this.courseList = JSON.parse(sessionStorage.getItem('projects'))
             }
         }
     }

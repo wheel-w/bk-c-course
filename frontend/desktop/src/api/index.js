@@ -258,6 +258,8 @@ export function injectCSRFTokenToHeaders () {
     const CSRFToken = cookie.parse(document.cookie).csrftoken
     if (CSRFToken !== undefined) {
         axiosInstance.defaults.headers.common['X-CSRFToken'] = CSRFToken
+    } else if (NODE_ENV === 'development') { // 开发环境老是弹警告，我关了
+        return null
     } else {
         console.warn('Can not find csrftoken in document.cookie')
     }
