@@ -382,6 +382,19 @@ class TagView(ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def update(self, request, *args, **kwargs):
+        if request.data.get("sub_project"):
+            return Response("所属项目不允许修改", exception=True)
+        if request.data.get("created_by"):
+            return Response("创建者不允许修改", exception=True)
+        instance = self.get_object()
+        if instance.is_built_in == UserTag.BuiltIn.BUILT_IN:
+            return Response("内置标签不允许修改", exception=True)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
 
 class UserTagContactView(GenericViewSet, CreateModelMixin, DestroyModelMixin):
     queryset = UserTagContact.objects.all()

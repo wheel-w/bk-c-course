@@ -36,8 +36,8 @@ class UserTagSerializer(serializers.ModelSerializer):
             "created_by",
             "is_built_in",
         ]
+        read_only_fields = ["id", "is_built_in"]
         extra_kwargs = {
-            "is_built_in": {"read_only": True},
             "tag_color": {"min_length": 6, "max_length": 6},
         }
         validators = [
