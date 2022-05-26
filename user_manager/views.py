@@ -18,17 +18,16 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
 from blueapps.account.models import User as Account
-from common.drf.pagination import GeneralPagination
 from user_manager import serialize
 from user_manager.filters import TagFilter, UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
 
-from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS
+from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS, UserTagContactFindType
 
 
 # 用户相关视图
@@ -103,11 +102,11 @@ class OriginAccountView(ViewSet):
             user = User.objects.get(account_id=instance.id)
         except ObjectDoesNotExist:
             return Response("您尚未被导入到当前系统中", exception=True)
-        serializer = serialize.UserSerSerializer(user)
+        serializer = serialize.UserSerializer(user)
         return Response(serializer.data)
 
 
-class BatchView(ViewSet):
+class UserBatchView(ViewSet):
     queryset = User.objects.all()
 
     @swagger_auto_schema(
@@ -285,8 +284,7 @@ class UserView(GenericViewSet, UpdateModelMixin):
     """查询用户信息"""
 
     queryset = User.objects.all().filter(account_id__is_active=True)  # 只显示非禁用账户
-    serializer_class = serialize.UserSerSerializer
-    pagination_class = GeneralPagination
+    serializer_class = serialize.UserSerializer
     filter_class = UserFilter
 
     def list(self, request, *args, **kwargs):
@@ -373,3 +371,92 @@ class TagView(ModelViewSet):
     queryset = UserTag.objects.all()
     serializer_class = serialize.UserTagSerializer
     filter_class = TagFilter
+    pagination_class = None  # 关闭分页
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.is_built_in == UserTag.BuiltIn.BUILT_IN:
+            return Response("内置标签不可删除", exception=True)
+        if UserTagContact.objects.filter(tag_id=instance.id):
+            return Response("当前标签已经绑定了用户, 请解除绑定用户后再进行删除", exception=True)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserTagContactView(GenericViewSet, CreateModelMixin, DestroyModelMixin):
+    queryset = UserTagContact.objects.all()
+    serializer_class = serialize.UserTagContactSerializer
+
+
+class ContactBatch(GenericViewSet):
+    queryset = UserTagContact.objects.all()
+    serializer_class = serialize.UserTagContactSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        id_ = kwargs.get("id")
+        type_ = kwargs.get("type")
+        if type_ == UserTagContactFindType.USER:
+            self.queryset.filter(user_id=id_).delete()
+        elif type_ == UserTagContactFindType.TAG:
+            self.queryset.filter(tag_id=id_).delete()
+        else:
+            return Response("未查到对应项", exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["user_ids", "tag_id"],
+            properties={
+                "users": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_INTEGER),
+                ),
+                "tags": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Items(type=openapi.TYPE_INTEGER),
+                ),
+            },
+        ),
+    )
+    def create(self, request, *args, **kwargs):
+        type_ = kwargs.get("type")
+        user_ids = request.data.get("users")
+        tag_ids = request.data.get("tags")
+        insert_arr = []
+        if type_ == UserTagContactFindType.TAG:
+            # 给多个用户打同一个标签
+            if not UserTag.objects.filter(id=tag_ids[0]).exists():
+                return Response("标签不存在", exception=True)
+            exist_contact = set(
+                UserTagContact.objects.filter(tag_id__in=tag_ids).values_list(
+                    "user_id", flat=True
+                )
+            )
+            exist_user = set(
+                User.objects.filter(id__in=user_ids).values_list("id", flat=True)
+            )
+            if not exist_user:
+                return Response("用户不存在")
+            for user_id in exist_user - exist_contact:
+                insert_arr.append(UserTagContact(tag_id=tag_ids[0], user_id=user_id))
+        elif type_ == UserTagContactFindType.USER:
+            # 给一个用户打多个标签
+            if not User.objects.filter(id=user_ids[0]).exists():
+                return Response("用户不存在", exception=True)
+            exist_contact = set(
+                UserTagContact.objects.filter(user_id=user_ids[0]).values_list(
+                    "tag_id", flat=True
+                )
+            )
+            exist_tag = set(
+                UserTag.objects.filter(id__in=tag_ids).values_list("id", flat=True)
+            )
+            if not exist_tag:
+                return Response("标签不存在", exception=True)
+            for tag_id in exist_tag - exist_contact:
+                insert_arr.append(UserTagContact(tag_id=tag_id, user_id=user_ids[0]))
+        else:
+            return Response("未查到对应项", exception=True)
+        UserTagContact.objects.bulk_create(insert_arr)
+        return Response("successful", status=status.HTTP_201_CREATED)

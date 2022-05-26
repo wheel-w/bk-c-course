@@ -48,7 +48,7 @@ class UserTag(models.Model):
 
     BUILTIN = [(BuiltIn.BUILT_IN, "内置"), (BuiltIn.NON_INTRINSIC, "非内置")]
     tag_value = models.CharField("标签值", max_length=20)
-    tag_color = models.CharField("标签颜色", max_length=7)
+    tag_color = models.CharField("标签颜色", max_length=6)
     is_built_in = models.IntegerField("是否内置", choices=BUILTIN, default=False)
     sub_project = models.IntegerField("所属项目")
     time_created = models.DateTimeField("创建时间", default=timezone.now)

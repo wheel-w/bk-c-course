@@ -12,23 +12,38 @@ specific Language governing permissions and limitations under the License.
 """
 
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from user_manager import views
 
+# users
 router = DefaultRouter()
 router.register("", views.UserView)
-# router.register("add_tag", views.AddTagToUserView)
-# router.register("tag", views.UserTagView)
-router.register("batch", views.BatchView)
-
+router.register("batch", views.UserBatchView)
+# accounts
 router_account = DefaultRouter()
 router_account.register("", views.OriginAccountView)
-
+# tags
 router_tag = DefaultRouter()
 router_tag.register("", views.TagView)
+# UserTagContacts
+UserTagContacts = SimpleRouter(False)  # 解决 batch post 方法不可用
+UserTagContacts.register("", views.UserTagContactView)
 urlpatterns = [
     path("users/", include(router.urls)),
     path("accounts/", include(router_account.urls)),
     path("tags/", include(router_tag.urls)),
+    path("UserTagContacts/", include(UserTagContacts.urls)),
+    path(
+        "UserTagContacts/batch/<str:type>/",
+        views.ContactBatch.as_view(
+            {
+                "post": "create",
+            }
+        ),
+    ),
+    path(
+        "UserTagContacts/batch/<str:type>/<int:id>/",
+        views.ContactBatch.as_view({"delete": "destroy"}),
+    ),
 ]
