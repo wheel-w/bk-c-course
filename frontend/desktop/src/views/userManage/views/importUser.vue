@@ -175,7 +175,7 @@
             async getTags () {
                 await this.$http
                     .get('/api/tags/?is_built_in=1')
-                    .then((res) => (this.tagConfig.tags = res.data.results))
+                    .then((res) => (this.tagConfig.tags = res.data))
             },
             // 搜索
             flushAccounts () {
