@@ -23,6 +23,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
 from blueapps.account.models import User as Account
+from project.models import Project
 from user_manager import serialize
 from user_manager.filters import TagFilter, UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
@@ -372,6 +373,19 @@ class TagView(ModelViewSet):
     serializer_class = serialize.UserTagSerializer
     filter_class = TagFilter
     pagination_class = None  # 关闭分页
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        project_ids = queryset.values_list("sub_project", flat=1).distinct()
+
+        prj_map = Project.objects.filter(id__in=project_ids).values_list("id", "name")
+        prj_map = {i[0]: i[1] for i in prj_map}
+
+        serializer = self.get_serializer(queryset, many=True)
+        for i in serializer.data:
+            i["sub_project"] = prj_map.get(i["sub_project"])
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
