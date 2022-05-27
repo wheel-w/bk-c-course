@@ -18,9 +18,14 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, UpdateModelMixin
+from rest_framework.mixins import (
+    CreateModelMixin,
+    DestroyModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+)
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
+from rest_framework.viewsets import GenericViewSet, ViewSet
 
 from blueapps.account.models import User as Account
 from project.models import Project
@@ -368,7 +373,11 @@ class UserView(GenericViewSet, UpdateModelMixin):
         return Response(serializer.data)
 
 
-class TagView(ModelViewSet):
+class TagView(
+    GenericViewSet,
+    CreateModelMixin,
+    RetrieveModelMixin,
+):
     queryset = UserTag.objects.all()
     serializer_class = serialize.UserTagSerializer
     filter_class = TagFilter
@@ -393,7 +402,7 @@ class TagView(ModelViewSet):
             return Response("内置标签不可删除", exception=True)
         if UserTagContact.objects.filter(tag_id=instance.id):
             return Response("当前标签已经绑定了用户, 请解除绑定用户后再进行删除", exception=True)
-        self.perform_destroy(instance)
+        instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
