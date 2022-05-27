@@ -385,10 +385,11 @@ class TagView(
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-
-        project_ids = queryset.values_list("sub_project", flat=1).distinct()
-
-        prj_map = Project.objects.filter(id__in=project_ids).values_list("id", "name")
+        # 获取prj_id : prj_name 映射 方法一:
+        # project_ids = queryset.values_list("sub_project", flat=1).distinct()
+        # prj_map = Project.objects.filter(id__in=project_ids).values_list("id", "name")
+        # 获取prj_id : prj_name 映射 方法二:
+        prj_map = Project.objects.filter().values_list("id", "name")
         prj_map = {i[0]: i[1] for i in prj_map}
 
         serializer = self.get_serializer(queryset, many=True)
