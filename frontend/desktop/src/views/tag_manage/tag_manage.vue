@@ -21,7 +21,6 @@
             @confirm="handleConfirm"
             title="编辑标签"
             :mask-close="false"
-            :auto-close="false"
             width="400px"
         >
             <bk-form label-width="80" :model="editDialog.form">
@@ -73,8 +72,8 @@
         },
         mounted () {
             this.getTagList()
-            // this.addTag()
-            // this.delTag()
+        // this.addTag()
+        // this.delTag()
         },
         methods: {
             getTagList () {
@@ -94,21 +93,14 @@
                     this.$http
                         .post('/api/tags/', {
                             tag_value: this.editDialog.form.tag_value,
-                            tag_color: this.editDialog.form.tag_color.slice(1),
+                            tag_color: this.editDialog.form.tag_color.slice(-6),
                             sub_project: this.editDialog.form.sub_project
                         })
                         .then((res) => {
-                            if (res.code === 0) {
-                                this.$bkMessage({
-                                    message: '添加成功',
-                                    theme: 'success'
-                                })
-                            } else {
-                                this.$bkMessage({
-                                    message: res.message,
-                                    theme: 'error'
-                                })
-                            }
+                            this.$bkMessage({
+                                message: res.message,
+                                theme: res.code === 0 ? 'success' : 'error'
+                            })
                             this.getTagList()
                         })
                 })
@@ -117,21 +109,14 @@
                 return this.$http
                     .put(`/api/tags/${id}/`, {
                         tag_value: this.editDialog.form.tag_value,
-                        tag_color: this.editDialog.form.tag_color.slice(1),
+                        tag_color: this.editDialog.form.tag_color.slice(-6),
                         sub_project: this.editDialog.form.sub_project
                     })
                     .then((res) => {
-                        if (res.code === 0) {
-                            this.$bkMessage({
-                                message: '添加成功',
-                                theme: 'success'
-                            })
-                        } else {
-                            this.$bkMessage({
-                                message: res.message,
-                                theme: 'error'
-                            })
-                        }
+                        this.$bkMessage({
+                            message: res.message,
+                            theme: res.code === 0 ? 'success' : 'error'
+                        })
                         this.getTagList()
                     })
             },
@@ -156,7 +141,6 @@
             },
             handleEditTag (tag) {
                 this.editDialog.form = tag
-                this.editDialog.form.tag_color = '#' + tag.tag_color
                 this.editDialog.visible = true
             }
         }
@@ -174,7 +158,7 @@
 .tag_group {
   display: grid;
   grid-template-columns: repeat(6, 16%);
-  grid-template-rows: 160px;
-  margin-top: 20px;
+  grid-template-rows: 130px;
+  align-items: center;
 }
 </style>
