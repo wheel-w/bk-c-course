@@ -1,14 +1,12 @@
 <template>
     <div class="tag">
-        <div
-            class="palette"
-            :style="`background-color: ${tag.tag_color_rgba};`"
-        ></div>
+        <div class="palette" :style="`background-color: ${tag.tag_color_rgba};`">
+            <p>{{ tag.tag_value }}</p>
+        </div>
         <div class="tag_info">
             <bk-popover placement="bottom-start" width="300">
-                <p>标签：{{ tag.tag_value }}</p>
                 <p>所属项目：{{ tag.sub_project }}</p>
-                <p>颜色：#{{ tag.tag_color }}</p>
+                <p>颜色：#{{ tag.tag_color.slice(-6) }}</p>
                 <!-- <p>备注：{{ tag.tag_comment }}</p> -->
                 <div slot="content" style="white-space: normal">
                     <div class="pt10 pb5 pl10 pr10">{{ tag }}</div>
@@ -54,6 +52,10 @@
         methods: {
             delTag () {
                 return this.$http.delete(`/api/tags/${this.tag.id}/`).then((res) => {
+                    this.$bkMessage({
+                        message: res.message,
+                        theme: res.code === 0 ? 'success' : 'error'
+                    })
                     this.$emit('listChange')
                 })
             },
@@ -68,10 +70,6 @@
                                 this.delTag().then(() => {
                                     resolve()
                                 })
-                            })
-                            this.$bkMessage({
-                                message: '删除成功',
-                                theme: 'success'
                             })
                             return true
                         } catch (e) {
@@ -92,16 +90,26 @@
 @import "@/css/bk-dot-menu.css";
 .tag {
   width: 160px;
-  height: 120px;
+  height: 100px;
   border-radius: 3px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
   background-color: rgb(239, 239, 239);
   .palette {
     width: 100%;
-    height: 50%;
+    height: 60%;
     border-radius: 3px;
+    position: relative;
+    p:first-child {
+      position: absolute;
+      font-size: 20px;
+      font-weight: bold;
+      color: rgba(0, 0, 0, 0.7);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
   }
-  /* .tag_info {
-    background-color: rgb(48, 215, 207);
-  } */
+  .tag_info {
+  }
 }
 </style>
