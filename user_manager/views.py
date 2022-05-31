@@ -30,7 +30,12 @@ from rest_framework.viewsets import GenericViewSet, ViewSet
 from blueapps.account.models import User as Account
 from project.models import Project
 from user_manager import serialize
-from user_manager.filters import TagFilter, UserFilter, filter_by_role
+from user_manager.filters import (
+    TagFilter,
+    UserFilter,
+    filter_by_role,
+    filter_by_sub_project,
+)
 from user_manager.models import User, UserTag, UserTagContact
 
 from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS, UserTagContactFindType
@@ -384,17 +389,21 @@ class TagView(
     pagination_class = None  # 关闭分页
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        # 获取prj_id : prj_name 映射 方法一:
-        # project_ids = queryset.values_list("sub_project", flat=1).distinct()
-        # prj_map = Project.objects.filter(id__in=project_ids).values_list("id", "name")
-        # 获取prj_id : prj_name 映射 方法二:
-        prj_map = Project.objects.filter().values_list("id", "name")
-        prj_map = {i[0]: i[1] for i in prj_map}
-
+        queryset = self.get_queryset()
+        # 根据 sub_project 过滤
+        sub_project = request.query_params.get("sub_project")
+        if sub_project:
+            queryset = filter_by_sub_project(sub_project, queryset)
+            if queryset is None:
+                return Response("您想要查找的项目不存在", exception=True)
+        else:
+            sub_project = Project.objects.filter().values_list("id", "name")
+            sub_project = {i[0]: i[1] for i in sub_project}
+        # 根据其余项过滤
+        queryset = self.filter_queryset(queryset)
         serializer = self.get_serializer(queryset, many=True)
-        for i in serializer.data:
-            i["sub_project"] = prj_map.get(i["sub_project"])
+        # 给每条数据的sub_project的 id 转换为 name
+        self.convert_sub_project(sub_project, serializer.data)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
@@ -418,6 +427,15 @@ class TagView(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    @staticmethod
+    def convert_sub_project(sub_project, data):
+        if isinstance(sub_project, str):
+            for i in data:
+                i["sub_project"] = sub_project
+        else:
+            for i in data.data:
+                i["sub_project"] = sub_project.get(i["sub_project"])
 
 
 class UserTagContactView(GenericViewSet, CreateModelMixin, DestroyModelMixin):
