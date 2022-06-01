@@ -400,12 +400,12 @@
             selectQuestion (num) {
                 const ul = document.querySelector('.question_lists')
                 const li = document.querySelectorAll('.question_item')
-                let currentnum = this.questionsInfo[0].index
-                const liheight = li[0].offsetHeight
-                let ultop = ul.offsetTop
-                ultop = (currentnum - num) * liheight
-                ul.style.top = ultop + 'px'
-                currentnum = num
+                let currentNum = this.questionsInfo[0].index
+                const liHeight = li[0].offsetHeight
+                let ulTop = ul.offsetTop
+                ulTop = (currentNum - num) * liHeight
+                ul.style.top = ulTop + 'px'
+                currentNum = num
             },
             getPaperStatus () {
                 console.log('获取试卷状态')
