@@ -13,7 +13,6 @@ specific Language governing permissions and limitations under the License.
 import django_filters
 from django_filters.rest_framework import FilterSet
 
-from project.models import Project
 from user_manager.models import User, UserTag, UserTagContact
 
 
@@ -42,10 +41,11 @@ class UserFilter(FilterSet):
 class TagFilter(FilterSet):
     is_built_in = django_filters.NumberFilter(field_name="is_built_in")
     tag_value = django_filters.CharFilter(field_name="tag_value")
+    sub_project = django_filters.NumberFilter(field_name="sub_project")
 
     class Meta:
         model = UserTag
-        fields = ["is_built_in", "tag_value"]
+        fields = ["is_built_in", "tag_value", "sub_project"]
 
 
 def filter_by_role(tag_ids, queryset):
@@ -54,10 +54,3 @@ def filter_by_role(tag_ids, queryset):
     )
     queryset = queryset.filter(id__in=user_ids)
     return True, queryset
-
-
-def filter_by_sub_project(sub_project, queryset):
-    project = Project.objects.filter(name=sub_project).first()
-    if not project:
-        return None
-    return queryset.filter(sub_project=project.id)

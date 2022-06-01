@@ -30,12 +30,7 @@ from rest_framework.viewsets import GenericViewSet, ViewSet
 from blueapps.account.models import User as Account
 from project.models import Project
 from user_manager import serialize
-from user_manager.filters import (
-    TagFilter,
-    UserFilter,
-    filter_by_role,
-    filter_by_sub_project,
-)
+from user_manager.filters import TagFilter, UserFilter, filter_by_role
 from user_manager.models import User, UserTag, UserTagContact
 
 from .static_var import PROFILES_LIST_URL, REQUEST_PARAMS, UserTagContactFindType
@@ -389,21 +384,21 @@ class TagView(
     pagination_class = None  # 关闭分页
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
         # 根据 sub_project 过滤
         sub_project = request.query_params.get("sub_project")
+        # 根据其余项过滤
+        queryset = self.filter_queryset(self.get_queryset())
         if sub_project:
-            queryset = filter_by_sub_project(sub_project, queryset)
-            if queryset is None:
-                return Response("您想要查找的项目不存在", exception=True)
+            sub_project = Project.objects.filter(id=sub_project).first()
+            if not sub_project:
+                return Response("项目不存在", exception=True)
+            project_name = sub_project.name
         else:
             sub_project = Project.objects.filter().values_list("id", "name")
-            sub_project = {i[0]: i[1] for i in sub_project}
-        # 根据其余项过滤
-        queryset = self.filter_queryset(queryset)
+            project_name = {i[0]: i[1] for i in sub_project}
         serializer = self.get_serializer(queryset, many=True)
-        # 给每条数据的sub_project的 id 转换为 name
-        self.convert_sub_project(sub_project, serializer.data)
+        # 给每条数据的添加 project.name 字段
+        self.convert_sub_project(project_name, serializer.data)
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
@@ -429,13 +424,16 @@ class TagView(
         return Response(serializer.data)
 
     @staticmethod
-    def convert_sub_project(sub_project, data):
-        if isinstance(sub_project, str):
+    def convert_sub_project(project_name, data):
+        if isinstance(project_name, str):
             for i in data:
-                i["sub_project"] = sub_project
-        else:
+                i["sub_project"] = {"id": i["sub_project"], "name": project_name}
+        elif isinstance(project_name, dict):
             for i in data.data:
-                i["sub_project"] = sub_project.get(i["sub_project"])
+                i["sub_project"] = {
+                    "id": i["sub_project"],
+                    "name": project_name.get(i["sub_project"]),
+                }
 
 
 class UserTagContactView(GenericViewSet, CreateModelMixin, DestroyModelMixin):
