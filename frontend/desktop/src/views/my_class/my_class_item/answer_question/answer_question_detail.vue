@@ -72,15 +72,10 @@
         </div>
         <div class="answer_sheet">
             <h3>答题卡</h3>
-            <ul id="answer_sheet_title">
-                <li v-for="(value, key) in questionTitle" :key="key">
-                    <strong v-if="key !== 'cumulative_time'">{{key}}</strong>
-                    <ul id="answer_sheet_number" v-if="key !== 'cumulative_time'">
-                        <li v-for="item in questionTitle[key]" :key="item.id">
-                            <bk-button v-if="(item.student_answer === '') || (item.student_answer === null) || (item.student_answer === '[]')" :theme="'primary'" type="submit" class="mr10 switchQuestion" size="small" @click="selectQuestion(item.id)">{{item.id}}</bk-button>
-                            <bk-button v-else-if="(item.student_answer !== '') && (item.student_answer !== null) && (item.student_answer !== '[]')" :theme="'success'" type="submit" class="mr10 switchQuestion" size="small" @click="selectQuestion(item.id)">{{item.id}}</bk-button>
-                        </li>
-                    </ul><br>
+            <ul id="answer_sheet_number">
+                <li v-for="item in questionsInfo" :key="item.index">
+                    <bk-button v-if="(item.stu_answers === '') || (item.stu_answers === null) || (item.stu_answers === '[]')" :theme="'primary'" type="submit" class="mr10 switchQuestion" size="small" @click="selectQuestion(item.index)">{{item.index}}</bk-button>
+                    <bk-button v-else-if="(item.stu_answers !== '') && (item.stu_answers !== null) && (item.stu_answers !== '[]')" :theme="'success'" type="submit" class="mr10 switchQuestion" size="small" @click="selectQuestion(item.index)">{{item.index}}</bk-button>
                 </li>
             </ul>
             <div class="answer_sheet_explain">
@@ -101,9 +96,9 @@
                 <bk-button :theme="'default'" icon="angle-left" class="last mr10" @click="lastQuestion"></bk-button>
                 <div class="question_box">
                     <ul class="question_lists">
-                        <li class="question_item" v-for="item in questionList" :key="item.id">{{item.id}}.{{item.question}}
-                            <div v-if="item.types === 'SINGLE'">
-                                <bk-radio-group v-model="item.student_answer">
+                        <li class="question_item" v-for="item in questionsInfo" :key="item.index">{{item.index}}.【{{item.types}}】{{item.title}}（{{item.score}}分）
+                            <div v-if="item.types === '单选题'">
+                                <bk-radio-group v-model="item.stu_answers">
                                     <bk-radio :value="'A'">
                                         A. {{item.option_A}}
                                     </bk-radio>
@@ -121,10 +116,10 @@
                                     </bk-radio>
                                     <br>
                                 </bk-radio-group>
-                                <p class="mb5">我的答案：{{item.student_answer}}</p>
+                                <p class="mb5">我的答案：{{item.stu_answers}}</p>
                             </div>
-                            <div v-else-if="item.types === 'MULTIPLE'">
-                                <bk-checkbox-group v-model="item.student_answer">
+                            <div v-else-if="item.types === '多选题'">
+                                <bk-checkbox-group v-model="item.stu_answers">
                                     <bk-checkbox :value="'A'">A. {{item.option_A}}</bk-checkbox>
                                     <br>
                                     <bk-checkbox :value="'B'">B. {{item.option_B}}</bk-checkbox>
@@ -136,10 +131,10 @@
                                     <bk-checkbox :value="'E'">E. {{item.option_E}}</bk-checkbox>
                                     <br>
                                 </bk-checkbox-group>
-                                <p class="mb5">我的答案：{{item.student_answer}}</p>
+                                <p class="mb5">我的答案：{{item.stu_answers}}</p>
                             </div>
-                            <div v-else-if="item.types === 'JUDGE'">
-                                <bk-radio-group v-model="item.student_answer">
+                            <div v-else-if="item.types === '判断题'">
+                                <bk-radio-group v-model="item.stu_answers">
                                     <bk-radio :value="'T'">
                                         T. 正确
                                     </bk-radio>
@@ -149,23 +144,23 @@
                                     </bk-radio>
                                     <br>
                                 </bk-radio-group>
-                                <p class="mb5">我的答案：{{item.student_answer}}</p>
+                                <p class="mb5">我的答案：{{item.stu_answers}}</p>
                             </div>
-                            <div v-else-if="item.types === 'COMPLETION'">
+                            <div v-else-if="item.types === '简答题'">
                                 <div class="input-answer">
                                     <bk-input placeholder="请输入你的答案" :type="'textarea'" :rows="3" :maxlength="255"
-                                        v-model="item.student_answer">
+                                        v-model="item.stu_answers">
                                     </bk-input>
                                 </div>
-                                <p class="mb5">我的答案：{{item.student_answer}}</p>
+                                <p class="mb5">我的答案：{{item.stu_answers}}</p>
                             </div>
                             <div v-else-if="item.types === 'SHORT_ANSWER'">
                                 <div class="input-answer">
                                     <bk-input placeholder="请输入你的答案" :type="'textarea'" :rows="3" :maxlength="255"
-                                        v-model="item.student_answer">
+                                        v-model="item.stu_answers">
                                     </bk-input>
                                 </div>
-                                <p class="mb5">我的答案：{{item.student_answer}}</p>
+                                <p class="mb5">我的答案：{{item.stud_answers}}</p>
                             </div>
                         </li>
                     </ul>
@@ -184,7 +179,28 @@
                 </div>
             </div>
         </div>
+        <div class="dialog">
+            <!--保存Dialog-->
+            <bk-dialog v-model="saveAnswerDialog.primary.visible"
+                theme="primary"
+                :mask-close="false"
+                :header-position="saveAnswerDialog.primary.headerPosition"
+                @confirm="saveAnswer"
+                title="保存答案">
+                <h3>确认要保存当前作答？</h3>
+            </bk-dialog>
+            <!--提交Dialog-->
+            <bk-dialog v-model="submitAnswerDialog.primary.visible"
+                theme="primary"
+                :mask-close="false"
+                :header-position="submitAnswerDialog.primary.headerPosition"
+                @confirm="submitAnswer"
+                title="提交试卷">
+                <h3>确认要提交当前试卷？</h3>
+            </bk-dialog>
+        </div>
     </div>
+    
 </template>
 
 <script>
@@ -198,10 +214,23 @@
                 count: '', // 计时
                 seconds: 0, // 从0秒开始计数
                 msg: '',
-                questionList: [],
-                questionTitle: {},
                 answer_info: [],
-                paper_id: 0
+                paper_id: 0,
+                questionsInfo: [],
+                stu_answers: [],
+                answer: [],
+                saveAnswerDialog: {
+                    primary: {
+                        visible: false,
+                        headerPosition: 'left'
+                    }
+                },
+                submitAnswerDialog: {
+                    primary: {
+                        visible: false,
+                        headerPosition: 'left'
+                    }
+                }
             }
         },
         watch: {
@@ -214,37 +243,39 @@
         },
         mounted () {
             this.paper_id = this.$route.query.id
+            this.project_id = this.$route.query.project_id
             if (this.$route.query.isAccomplish) {
                 this.getStudentQuestionList()
             } else {
                 this.Time() // 调用定时器
-                this.getPaperStatus() // 调用获取题目接口
+                this.getPaperStatus() // 调用试卷状态
                 const that = this
                 setTimeout(function () {
                     that.submitButtonDisabled()
                 }, 2000)
             }
+            // this.getQuestionList()
         },
         methods: {
             // 获取问题列表
-            async getStudentQuestionList () {
-                this.$http.get('/course/answer_or_check_paper/', { params: { paper_id: this.paper_id } }).then(res => {
-                    this.totalQuestion = res.data
-                    this.totalScore = res.data.total_score
-                    delete this.totalQuestion['total_score']
-                    delete this.totalQuestion['cumulative_time']
-                    delete this.totalQuestion['status']
-                    for (const item in this.totalQuestion) {
-                        for (const childItem of this.totalQuestion[item]) {
-                            if (childItem.student_answer === null) {
-                                childItem.student_answer = '未作答'
-                            }
-                        }
-                    }
-                })
-            },
+            // async getStudentQuestionList () {
+            //     this.$http.get('/course/answer_or_check_paper/', { params: { paper_id: this.paper_id } }).then(res => {
+            //         this.totalQuestion = res.data
+            //         this.totalScore = res.data.total_score
+            //         delete this.totalQuestion['total_score']
+            //         delete this.totalQuestion['cumulative_time']
+            //         delete this.totalQuestion['status']
+            //         for (const item in this.totalQuestion) {
+            //             for (const childItem of this.totalQuestion[item]) {
+            //                 if (childItem.student_answer === null) {
+            //                     childItem.student_answer = '未作答'
+            //                 }
+            //             }
+            //         }
+            //     })
+            // },
             // 时 分 秒 格式化函数
-            countDown () {
+            countUp () {
                 let h = parseInt(this.seconds / (60 * 60) % 24)
                 h = h < 10 ? '0' + h : h
                 let m = parseInt(this.seconds / 60 % 60)
@@ -257,36 +288,31 @@
             Time () {
                 setInterval(() => {
                     this.seconds += 1
-                    this.countDown()
+                    this.countUp()
                     this.submitButtonDisabled()
                 }, 1000)
             },
             clickSavaAnswer () {
-                this.$bkInfo({
-                    title: '确认要保存当前作答？',
-                    confirmLoading: true,
-                    confirmFn: async () => {
-                        try {
-                            await new Promise(resolve => {
-                                setTimeout(() => {
-                                    resolve('成功')
-                                }, 1500)
-                            })
-                            this.saveAnswer()
-                            return true
-                        } catch (e) {
-                            console.warn(e)
-                            return false
-                        }
-                    }
-                })
+                this.saveAnswerDialog.primary.visible = true
             },
             saveAnswer () {
-                this.questionList.forEach(e => {
-                    this.answer_info.push({ question_id: e.id, stu_answers: e.student_answer
-                    })
+                this.stu_answers = []
+                this.questionsInfo.forEach(e => {
+                    this.stu_answers.push(e.stu_answers)
                 })
-                this.$http.post('/course/save_answer/', { paper_id: this.paper_id, answer_info: this.answer_info, save_or_submit: 1, cumulative_time: this.seconds }).then(res => {
+                for (let i = 0; i < this.stu_answers.length; i++) {
+                    if (this.stu_answers[i] === '') {
+                        this.stu_answers[i] = 'HAS_NOT_SOLVED'
+                    }
+                }
+                for (const i in this.stu_answers) {
+                    if (this.stu_answers[i].constructor === Array) {
+                        this.stu_answers[i] = this.stu_answers[i].join('')
+                    }
+                }
+                console.log('this.stu_answers', this.stu_answers)
+                this.$http.patch(`/api/project-task-info/${this.paper_id}/`, { 'stu_answers': this.stu_answers, 'status': 'SAVED', 'cumulative_time': this.seconds }).then(res => {
+                    console.log('save的res', res)
                     if (res.result === true) {
                         this.$bkMessage({
                             message: '保存成功',
@@ -302,32 +328,25 @@
                 })
             },
             clickSubmit () {
-                this.$bkInfo({
-                    title: '确认要提交当前试卷？',
-                    confirmLoading: true,
-                    confirmFn: async () => {
-                        try {
-                            await new Promise(resolve => {
-                                setTimeout(() => {
-                                    resolve('成功')
-                                }, 1500)
-                            })
-                            this.submitAnswer()
-                            this.toAnswerQuestionIndex()
-                            return true
-                        } catch (e) {
-                            console.warn(e)
-                            return false
-                        }
-                    }
-                })
+                this.submitAnswerDialog.primary.visible = true
             },
             submitAnswer () {
-                this.questionList.forEach(e => {
-                    this.answer_info.push({ question_id: e.id, stu_answers: e.student_answer
-                    })
+                this.stu_answers = []
+                this.questionsInfo.forEach(e => {
+                    this.stu_answers.push(e.stu_answers)
                 })
-                this.$http.post('/course/save_answer/', { paper_id: this.paper_id, answer_info: this.answer_info, save_or_submit: 0, cumulative_time: this.seconds }).then(res => {
+                for (let i = 0; i < this.stu_answers.length; i++) {
+                    if (this.stu_answers[i] === '' || this.stu_answers === []) {
+                        this.stu_answers[i] = 'HAS_NOT_SOLVED'
+                    }
+                }
+                for (const i in this.stu_answers) {
+                    if (this.stu_answers[i].constructor === Array) {
+                        this.stu_answers[i] = this.stu_answers[i].join('')
+                    }
+                }
+                this.$http.patch(`/api/project-task-info/${this.paper_id}/`, { 'stu_answers': this.stu_answers, 'status': 'SUBMITTED', 'cumulative_time': this.seconds }).then(res => {
+                    console.log('提交后res', res)
                     if (res.result === true) {
                         this.$bkMessage({
                             message: '提交成功',
@@ -345,40 +364,43 @@
             toAnswerQuestionIndex () {
                 setTimeout(() => {
                     this.$router.push({
-                        name: 'answer_question_index'
+                        name: 'answer_question_index',
+                        params: {
+                            'projectId': this.project_id
+                        }
                     })
                 }, 100)
             },
             lastQuestion () {
                 const ul = document.querySelector('.question_lists')
                 const li = document.querySelectorAll('.question_item')
-                const lilength = li.length
-                const liheight = li[0].offsetHeight
-                const relativeheight = lilength * liheight
-                ul.style.width = relativeheight + 'px'
-                let ultop = ul.offsetTop
-                if (-(ultop) > 0 && ultop < relativeheight * 4) {
-                    ultop = ultop + liheight
-                    ul.style.top = ultop + 'px'
+                const liLength = li.length
+                const liHeight = li[0].offsetHeight
+                const relativeHeight = liLength * liHeight
+                ul.style.width = relativeHeight + 'px'
+                let ulTop = ul.offsetTop
+                if (-(ulTop) > 0 && ulTop < relativeHeight * 4) {
+                    ulTop = ulTop + liHeight
+                    ul.style.top = ulTop + 'px'
                 }
             },
             nextQuestion () {
                 const ul = document.querySelector('.question_lists')
                 const li = document.querySelectorAll('.question_item')
-                const lilength = li.length
-                const liheight = li[0].offsetHeight
-                const relativeheight = lilength * liheight
-                ul.style.height = lilength * liheight + 'px'
-                let ultop = ul.offsetTop
-                if (-(ultop) < relativeheight - 280) {
-                    ultop = ultop - liheight
-                    ul.style.top = ultop + 'px'
+                const liLength = li.length
+                const liHeight = li[0].offsetHeight
+                const relativeHeight = liLength * liHeight
+                ul.style.height = liLength * liHeight + 'px'
+                let ulTop = ul.offsetTop
+                if (-(ulTop) < relativeHeight - 280) {
+                    ulTop = ulTop - liHeight
+                    ul.style.top = ulTop + 'px'
                 }
             },
             selectQuestion (num) {
                 const ul = document.querySelector('.question_lists')
                 const li = document.querySelectorAll('.question_item')
-                let currentnum = this.questionList[0].id
+                let currentnum = this.questionsInfo[0].index
                 const liheight = li[0].offsetHeight
                 let ultop = ul.offsetTop
                 ultop = (currentnum - num) * liheight
@@ -386,54 +408,62 @@
                 currentnum = num
             },
             getPaperStatus () {
-                this.$http.get('/course/get_paper_status/', { params: { paper_id: this.paper_id } }).then(res => {
-                    if (res.data.paper_status === 'RELEASE' || res.data.paper_status === 'DRAFT') {
-                        this.getQuestionList()
-                    } else if (res.data.paper_status !== 'RELEASE') {
+                console.log('获取试卷状态')
+                this.$http.get(`/api/project-task/${this.paper_id}/student/`).then(res => {
+                    console.log(res)
+                    if (res.data.status === '已发布') {
+                        this.getQuestionDetail()
+                        // this.getQuestionList()
+                    } else if (res.data.status === '草稿') {
                         this.$bkMessage({
-                            message: res.message,
+                            message: '当前试卷未发布',
                             theme: 'error'
                         })
                         this.toAnswerQuestionIndex()
                     }
                 })
             },
-            getQuestionList () {
-                this.$http.get('/course/answer_or_check_paper/', { params: { paper_id: this.paper_id } }).then(res => {
-                    this.questionTitle['选择题'] = res.data['选择题']
-                    this.questionTitle['多选题'] = res.data['多选题']
-                    this.questionTitle['判断题'] = res.data['判断题']
-                    this.questionTitle['填空题'] = res.data['填空题']
-                    this.questionTitle['简答题'] = res.data['简答题']
-                    for (const item in this.questionTitle) {
-                        if (!res.data[item]) {
-                            delete this.questionTitle[item]
-                        }
-                    }
-                    this.seconds = res.data.cumulative_time
-                    for (const key in res.data) {
-                        if (key !== 'cumulative_time' && key !== 'status') {
-                            for (const item in res.data[key]) {
-                                this.questionList.push(res.data[key][item])
-                            }
-                        }
-                    }
-                    // 题目id排序
-                    this.questionList.sort(function (a, b) {
-                        return a.id - b.id
-                    })
-                    for (const key in res.data) {
-                        // 答题卡id排序
-                        res.data[key].sort(function (a, b) {
-                            return a.id - b.id
+            // 获取学生自己的任务答题详情
+            getQuestionDetail () {
+                this.$http.get(`api/project-task-info/${this.paper_id}/`).then(res => {
+                    console.log('获取详情', res)
+                    if (res.data.status === '已保存' || res.data.status === '未答题') {
+                        this.seconds = res.data.cumulative_time_seconds
+                        this.answer = res.data.stu_answers
+                        this.getQuestionList()
+                    } else {
+                        // this.seconds = 0
+                        this.$bkMessage({
+                            message: '该试卷已提交！',
+                            theme: 'warning'
                         })
+                        this.toAnswerQuestionIndex()
                     }
+                })
+            },
+            // 获取问题列表
+            getQuestionList () {
+                this.$http.get(`/api/project-task/${this.paper_id}/student/`).then(res => {
+                    this.questionsInfo = res.data.questions_info
+                    console.log('this.questionInfo', this.questionsInfo)
+                    for (const item in this.questionsInfo) {
+                        this.questionsInfo[item].stu_answers = ''
+                    }
+                    for (const i in this.answer) {
+                        this.questionsInfo[i].stu_answers = this.answer[i]
+                    }
+                    for (const items in this.questionsInfo) {
+                        if (this.questionsInfo[items].stu_answers === 'HAS_NOT_SOLVED') {
+                            this.questionsInfo[items].stu_answers = ''
+                        }
+                    }
+                    console.log('this.questionsInfo:', this.questionsInfo)
                 })
             },
             submitButtonDisabled () {
                 // 判断是否存在没有做完的题目
-                const someResult = this.questionList.some(function (item) {
-                    return item.student_answer === '' || item.student_answer === null || item.student_answer === '[]'
+                const someResult = this.questionsInfo.some(function (item) {
+                    return item.stu_answers === '' || item.stu_answers === null || item.stu_answers === '[]'
                 })
                 // 如果题目没有做完，提交按钮禁用
                 if (someResult === true) {
@@ -491,12 +521,10 @@
     .answer_sheet h3 {
         text-align: center;
     }
-    #answer_sheet_title{
-        margin-left: 20px;
-        height: 280px;
-        overflow: auto;
-    }
     #answer_sheet_number{
+        margin-left: 20px;
+        overflow: auto;
+        height: 280px;
         display: flex;
         justify-content: flex-start;
         flex-wrap: wrap;

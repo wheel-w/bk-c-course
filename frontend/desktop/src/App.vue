@@ -173,7 +173,7 @@
                     name: '任务题库',
                     pathName: 'set_question_index',
                     children: [],
-                    color: '#fe33be',
+                    color: '#c7b3ff',
                     group: true
                 },
                 // untitled:{
@@ -194,7 +194,7 @@
                     id: 'user_manage',
                     name: '用户管理',
                     pathName: 'user_manage',
-                    color: '#3399FF',
+                    color: '#fea3be',
                     children: [],
                     group: true
                 },
@@ -202,7 +202,7 @@
                     id: 'set_question',
                     name: '出题',
                     pathName: 'set_question',
-                    color: '#33FF99',
+                    color: '#febb5e',
                     children: [],
                     group: true
                 },

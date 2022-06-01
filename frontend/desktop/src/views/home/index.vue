@@ -10,9 +10,9 @@
         <div class="content">
             <div class="content-item" v-for="item in courseList" :key="item.id">
                 <h3 style="margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{{ item.name }}</h3>
-                <p>项目id：{{ item.id }}</p>
-                <p>创建人：{{ item.creator }}</p>
-                <a @click="toMyClassDetail(item.course_id)"><span>查看项目任务</span></a>
+                <p style="margin-top: 10px">项目id：{{ item.id }}</p>
+                <p style="margin-top: 10px">创建人：{{ item.creator }}</p>
+                <a @click="toMyClassDetail(item.id)"><span>查看项目任务</span></a>
             </div>
         </div>
     </div>
@@ -47,17 +47,17 @@
                 this.$router.replace({
                     name: 'answer_question_index',
                     params: {
-                        courseId: id
+                        projectId: id
                     }
                 })
             },
             // 获取课程列表
             async getCourseList () {
-                // this.$http.get('/api/project/').then(res => {
-                //     if (res.data.count !== 0) {
-                //         this.courseList = res.data.results
-                //     }
-                // })
+                this.$http.get('/api/project/').then(res => {
+                    if (res.data.count !== 0) {
+                        this.courseList = res.data.results
+                    }
+                })
                 this.courseList = JSON.parse(sessionStorage.getItem('projects'))
             }
         }
