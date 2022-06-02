@@ -44,8 +44,7 @@
                         :arrow="false"
                         offset="-20, 10"
                         placement="bottom-start"
-                        :tippy-options="{ hideOnClick: false }"
-                    >
+                        :tippy-options="{ hideOnClick: false }">
                         <div class="header-user">
                             {{ $store.state.user.username }}
                             <i class="bk-icon icon-down-shape"></i>
@@ -252,7 +251,7 @@
                     submenuActive: false,
                     title: '课程管理系统'
                 },
-                // 未验证者视图？
+                // 未验证者视图
                 navNotCertified: {
                     list: [views.home],
                     id: 'home',
@@ -330,6 +329,9 @@
             // 点击导航栏跳转对应页面
             handleSelect (id, item) {
                 this.nav.id = id
+                console.log('=========id======', id)
+                console.log('item', item)
+                console.log('=========nav.id=======', this.nav)
                 if (item.pathName === 'exit') {
                     const HOST = `${window.location.protocol}//${window.location.host}`
                     const SITE_URL = window.PROJECT_CONFIG.SITE_URL

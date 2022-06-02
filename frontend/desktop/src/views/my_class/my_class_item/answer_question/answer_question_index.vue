@@ -235,7 +235,7 @@
         watch: {
             // 监听当前课程id的变化
             '$store.state.currentCourseId' () {
-                // this.project_id = this.$store.state.currentCourseId
+                this.project_id = this.$store.state.currentCourseId
                 // 发送网络请求更新课程信息
                 this.getTaskList()
             }
