@@ -13,6 +13,7 @@ specific Language governing permissions and limitations under the License.
 import django_filters
 from django_filters.rest_framework import FilterSet
 
+from project.models import Project
 from user_manager.models import User, UserTag, UserTagContact
 
 
@@ -54,3 +55,10 @@ def filter_by_role(tag_ids, queryset):
     )
     queryset = queryset.filter(id__in=user_ids)
     return True, queryset
+
+
+def filter_by_sub_project(sub_project, queryset):
+    project = Project.objects.filter(name=sub_project).first()
+    if not project:
+        return None
+    return queryset.filter(sub_project=project.id)
