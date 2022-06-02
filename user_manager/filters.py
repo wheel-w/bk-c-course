@@ -42,10 +42,11 @@ class UserFilter(FilterSet):
 class TagFilter(FilterSet):
     is_built_in = django_filters.NumberFilter(field_name="is_built_in")
     tag_value = django_filters.CharFilter(field_name="tag_value")
+    sub_project = django_filters.NumberFilter(field_name="sub_project")
 
     class Meta:
         model = UserTag
-        fields = ["is_built_in", "tag_value"]
+        fields = ["is_built_in", "tag_value", "sub_project"]
 
 
 def filter_by_role(tag_ids, queryset):
