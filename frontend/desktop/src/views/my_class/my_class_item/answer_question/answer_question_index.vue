@@ -31,17 +31,26 @@
                 </bk-table-column>
                 <bk-table-column label="类型"
                     prop="types"
+                    width="90"
                     :filters="typesFilters"
                     :filter-multiple="false"
                     :filter-method="filterMethod">
+                    <template slot-scope="props">
+                        <bk-tag v-if="props.row.types === '日常任务'" type="stroke" style="margin: 0; padding: 0 2px;">日常任务</bk-tag>
+                        <bk-tag v-else theme="info" type="stroke" style="margin: 0; padding: 0 2px;">考核任务</bk-tag>
+                    </template>
                 </bk-table-column>
                 <bk-table-column label="状态"
                     prop="status"
                     :filters="statusFilters"
                     :filter-multiple="false"
                     :filter-method="filterMethod">
+                    <template slot-scope="props">
+                        <bk-tag v-if="props.row.status === '草稿'" theme="warning" type="stroke" style="margin: 0; padding: 0 2px;">草稿</bk-tag>
+                        <bk-tag v-else theme="success" type="stroke" style="margin: 0; padding: 0 2px;">已发布</bk-tag>
+                    </template>
                 </bk-table-column>
-                <bk-table-column label="学生是否可见">
+                <bk-table-column label="学生是否可见" prop="students_visible">
                     <template slot-scope="props">
                         <div v-if="props.row.students_visible === true">
                             <p>是</p>
@@ -77,9 +86,9 @@
                 <bk-table-column label="操作" align="center" width="240" header-align="center">
                     <template slot-scope="props">
                         <bk-button class="mr10" theme="primary" @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;" text>开始答题</bk-button>
-                        <!--<bk-button class="mr10" theme="primary" text>编辑</bk-button>-->
                         <bk-button class="mr10" theme="primary" text @click="removeBefor(props.row)">删除</bk-button>
-                        <bk-button class="mr10" v-if="props.row.status === '草稿'" theme="primary" text @click="releaseBefor(props.row)">发布</bk-button>
+                        <bk-button class="mr10" v-if="props.row.status === '草稿'" theme="primary" text @click="releaseBefor(props.row)">定时发布</bk-button>
+                        <bk-button class="mr10" v-if="props.row.status === '草稿'" theme="primary" text @click="releaseNowBefor(props.row)">立即发布</bk-button>
                         <bk-button class="mr10" v-else-if="props.row.status === '已发布'" theme="primary" text @click="cancleBefor(props.row)">取消发布</bk-button>
 
                     </template>
@@ -113,7 +122,7 @@
                         <h3>确定要删除{{task_id_list.length}}项内容吗？</h3>
                     </div>
                 </bk-dialog>
-                <!--发布任务-->
+                <!--定时发布任务-->
                 <bk-dialog v-model="releaseTaskDialog.primary.visible"
                     theme="primary"
                     :mask-close="true"
@@ -122,6 +131,15 @@
                     title="发布任务">
                     <!--请选择计划发布时间：-->
                     <bk-date-picker v-model="scheduledPublishTime" :placeholder="'请选择计划发布日期时间'" :type="'datetime'"></bk-date-picker>
+                </bk-dialog>
+                <!--立即发布任务-->
+                <bk-dialog v-model="releaseNowTaskDialog.primary.visible"
+                    theme="primary"
+                    :mask-close="true"
+                    @confirm="releaseNowTask(id)"
+                    :header-position="releaseNowTaskDialog.primary.visible"
+                    title="发布任务">
+                    是否要立即发布当前任务？
                 </bk-dialog>
                 <!--取消发布任务-->
                 <bk-dialog v-model="cancleReleaseTaskDialog.primary.visible"
@@ -170,6 +188,12 @@
                     }
                 },
                 releaseTaskDialog: {
+                    primary: {
+                        visible: false,
+                        head: 'left'
+                    }
+                },
+                releaseNowTaskDialog: {
                     primary: {
                         visible: false,
                         head: 'left'
@@ -228,7 +252,7 @@
         methods: {
             // 接收参数
             getParams () {
-                this.project_id = this.$route.params.courseId
+                this.project_id = this.$route.params.projectId
             },
             // 过滤状态、类型、可见范围
             filterMethod (value, row, column) {
@@ -301,16 +325,18 @@
                 this.getTaskList()
                 this.project_task_id = []
             },
-            // 发布任务
+            // 定时发布任务
             releaseBefor (e) {
-                this.publishTaskForm = e
                 this.project_task_id = e.id
                 this.releaseTaskDialog.primary.visible = true
             },
-            // 确认发布任务
+            // 确认定时发布任务
             releaseTask (e) {
-                this.publishTaskForm.scheduled_publish_time = this.scheduledPublishTime
-                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { data: this.publishTaskForm }).then(res => {
+                this.scheduledPublishTime = this.msToDate((this.scheduledPublishTime)).hasTime
+                this.scheduledPublishTime = this.scheduledPublishTime.replace(/ /g, 'T')
+                console.log('this.scheduled_publish_time', this.scheduledPublishTime)
+                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'scheduled_publish_time': this.scheduledPublishTime }).then(res => {
+                    console.log('定时发布res：', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '发布成功',
@@ -332,16 +358,47 @@
                 this.getTaskList()
                 this.id = []
             },
-            // 发布任务
+            // 立即发布任务
+            releaseNowBefor (e) {
+                this.project_task_id = e.id
+                this.releaseNowTaskDialog.primary.visible = true
+            },
+            // 确认立即发布任务
+            releaseNowTask (e) {
+                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'status': 'RELEASE' }).then(res => {
+                    if (res.result) {
+                        this.$bkMessage({
+                            message: '发布成功',
+                            delay: 1000,
+                            theme: 'success',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    } else {
+                        this.$bkMessage({
+                            message: '发布失败',
+                            delay: 1000,
+                            theme: 'error',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    }
+                })
+                this.getTaskList()
+                this.id = []
+            },
+            // 取消发布任务
             cancleBefor (e) {
+                this.publishTaskForm = []
                 this.publishTaskForm = e
                 this.project_task_id = e.id
                 this.cancleReleaseTaskDialog.primary.visible = true
             },
-            // 确认发布任务
+            // 确认取消发布任务
             cancleReleaseTask (e) {
-                this.publishTaskForm.status = 'DRAFT'
-                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { data: this.publishTaskForm }).then(res => {
+                // this.publishTaskForm.status = 'DRAFT'
+                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'status': 'DRAFT' }).then(res => {
+                    console.log('res', res)
                     if (res.result) {
                         this.$bkMessage({
                             message: '取消发布成功',
@@ -370,7 +427,8 @@
                     name: 'answer_question_detail',
                     query: {
                         id,
-                        isAccomplish
+                        isAccomplish,
+                        'project_id': this.project_id
                     }
                 })
             },
@@ -396,92 +454,10 @@
                 this.pagination.current = page
                 this.updateCurrentExerciseList()
             },
-            // 更新当前数组列表
-            updateCurrentExerciseList () {
-                this.currentExerciseList = []
-
-                let interceptLength = this.pagination.limit * this.pagination.current
-                if (interceptLength > this.pagination.count) {
-                    interceptLength = this.pagination.count
-                }
-
-                for (let i = (this.pagination.current - 1) * this.pagination.limit; i < interceptLength; i++) {
-                    this.middleExerciseList[i].start_time = this.dayjs(this.middleExerciseList[i].start_time).format('YYYY-MM-DD HH:mm:ss')
-                    this.middleExerciseList[i].end_time = this.dayjs(this.middleExerciseList[i].end_time).format('YYYY-MM-DD HH:mm:ss')
-                    this.currentExerciseList.push(this.middleExerciseList[i])
-                }
-            },
-            // 获取练习题
-            async getExerciseList () {
-                this.exerciseList = []
-                this.middleExerciseList = []
-
-                this.$http.get('/course/paper/', { params: { course_id: this.$store.state.currentCourseId } }).then(res => {
-                    const exerciseList = res.data
-                    // 进行中的卷子
-                    const underWayList = []
-                    // 已提交的卷子
-                    const submittedList = []
-                    // 已批改的卷子
-                    const markedList = []
-                    // 已结束的卷子
-                    const finishedList = []
-                    // 未开始的卷子
-                    const notStartList = []
-
-                    // 更新试卷状态
-                    for (const item of exerciseList) {
-                        if (new Date().getTime() < Date.parse(item.start_time)) {
-                            item.student_status = 'NOTSTART'
-                            notStartList.push(item)
-                        } else if ((item.student_status === 'SUBMITTED' || item.student_status === 'MARKED') && new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {
-                            item.student_status = 'REALSUBMITTED'
-                            submittedList.push(item)
-                        } else if (item.status === 'MARKED' && new Date().getTime() > Date.parse(item.end_time)) {
-                            item.student_status = 'REALMARKED'
-                            markedList.push(item)
-                        } else if (new Date().getTime() >= Date.parse(item.start_time) && new Date().getTime() <= Date.parse(item.end_time)) {
-                            item.student_status = item.student_status === 'SAVED' ? 'SAVED' : 'UNDERWAY'
-                            underWayList.push(item)
-                        } else if (new Date().getTime() > Date.parse(item.end_time)) {
-                            item.student_status = 'FINISHED'
-                            finishedList.push(item)
-                        }
-                        // 章节过滤器
-                        this.chapterStatusFilters.push({
-                            text: item.chapter_name,
-                            value: item.chapter_id
-                        })
-                    }
-                    // 按照顺序形成试题列表
-                    this.exerciseList.push(...underWayList)
-                    this.exerciseList.push(...submittedList)
-                    this.exerciseList.push(...markedList)
-                    this.exerciseList.push(...finishedList)
-                    this.exerciseList.push(...notStartList)
-                    // 去除草稿试卷
-                    this.exerciseList = this.exerciseList.filter(item => {
-                        return item.status !== 'DRAFT'
-                    })
-                    this.middleExerciseList = this.exerciseList
-                    this.pagination.count = this.middleExerciseList.length
-                    // 去重函数
-                    const trim = () => {
-                        const map = new Map()
-                        for (const item of this.chapterStatusFilters) {
-                            if (!map.has(item.value)) {
-                                map.set(item.value, item)
-                            }
-                        }
-                        return [...map.values()]
-                    }
-                    this.chapterStatusFilters = trim()
-                    this.updateCurrentExerciseList()
-                })
-            },
-            async getTaskList () {
+            getTaskList () {
                 this.taskList = []
                 this.$http.get(`/api/project-task/${this.project_id}/teacher/all/`).then(res => {
+                    console.log('获取任务列表后端返回的数据', res)
                     this.taskList = res.data
                     this.timeReverse()
                 })
@@ -518,23 +494,6 @@
                     withoutTime: result2
                 }
                 return result
-            },
-            timeFormatSeconds (time) {
-                const d = time ? new Date(time) : new Date()
-                const year = d.getFullYear()
-                let month = d.getMonth() + 1
-                let day = d.getDate()
-                let hours = d.getHours()
-                let min = d.getMinutes()
-                let seconds = d.getSeconds()
-
-                if (month < 10) month = '0' + month
-                if (day < 10) day = '0' + day
-                if (hours < 0) hours = '0' + hours
-                if (min < 10) min = '0' + min
-                if (seconds < 10) seconds = '0' + seconds
-
-                return (year + '-' + month + '-' + day + ' ' + hours + ':' + min + ':' + seconds)
             },
             timeReverse () {
                 for (const item in this.taskList) {
