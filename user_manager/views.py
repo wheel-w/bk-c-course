@@ -429,7 +429,7 @@ class TagView(
             for i in data:
                 i["sub_project"] = {"id": i["sub_project"], "name": project_name}
         elif isinstance(project_name, dict):
-            for i in data.data:
+            for i in data:
                 i["sub_project"] = {
                     "id": i["sub_project"],
                     "name": project_name.get(i["sub_project"]),
