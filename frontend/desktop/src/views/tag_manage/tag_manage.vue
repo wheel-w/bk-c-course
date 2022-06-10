@@ -256,6 +256,7 @@
   float: right;
 }
 .tag_group {
+  min-width: 1000px;
   display: grid;
   grid-template-columns: repeat(6, 16%);
   grid-template-rows: 130px;
