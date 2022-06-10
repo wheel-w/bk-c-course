@@ -5,68 +5,72 @@
     <div v-else class="wrapper" ref="top">
         <div class="header">
             <h2>试卷信息</h2>
-            <bk-tag :theme="studentInfo.status === 'MARKED' ? 'success' : 'danger'" radius="10px" type="filled">{{ studentInfo.status === 'MARKED' ? '已批改' : '未批改' }}</bk-tag>
+            <bk-tag :theme="studentInfo.status === '已批改' ? 'success' : 'danger'" radius="10px" type="filled">{{ studentInfo.status === '已批改' ? '已批改' : '未批改' }}</bk-tag>
         </div>
         <div class="studentInfo">
-            <span>学生班级：{{ studentInfo.class === null ? '未认证班级' : studentInfo.class }}</span>
-            <span>学生姓名：{{ studentInfo.name === null ? '未认证姓名' : studentInfo.name }}</span>
-            <span>学生学号：{{ studentInfo.class_number }}</span>
+            <span>学生id：{{ studentInfo.student_id }}</span>
+            <span>学生姓名：{{ studentInfo.student_name }}</span>
+            <span>答题时间：{{studentInfo.cumulative_time}}</span>
             <span>当前分数：{{ totalScore }}</span>
         </div>
-
-        <div v-for="(item,index) in totalQuestion" :key="index">
-            <div v-if="item.length !== 0">
-                <h3>{{ index }}</h3>
-                <bk-card class="radio-common" :title="`${childIndex + 1}.${childItem.question} （${childItem.score}分）`" v-for="(childItem,childIndex) in item" :key="childIndex" :border="false">
-                    <bk-radio-group v-if="childItem.types === 'SINGLE'" class="radio-common" v-model="childItem.student_answer">
+        <div class="gradeCardContent">
+            <div v-for="(item,index) in totalQuestion" :key="index">
+                <div v-if="item.length !== 0">
+                    <hr style="width: 80%; margin-left: 0">
+                    <h3>第{{ index + 1 }}题</h3>
+                    <h4>题目：【{{item.types}}】{{ item.title }}（{{item.score}}分）</h4>
+                    <bk-radio-group v-if="item.types === '单选题'" class="radio-common" v-model="item.stu_answers">-->
                         <bk-radio value="A" :disabled="true">
-                            A：{{ childItem.option_A }}
+                            A：{{ item.option_A }}
                         </bk-radio>
                         <bk-radio value="B" :disabled="true">
-                            B：{{ childItem.option_B }}
+                            B：{{ item.option_B }}
                         </bk-radio>
                         <bk-radio value="C" :disabled="true">
-                            C：{{ childItem.option_C }}
+                            C：{{ item.option_C }}
                         </bk-radio>
                         <bk-radio value="D" :disabled="true">
-                            D：{{ childItem.option_D }}
+                            D：{{ item.option_D }}
                         </bk-radio>
                     </bk-radio-group>
-                    <bk-checkbox-group v-if="childItem.types === 'MULTIPLE'" class="radio-common" v-model="childItem.student_answer">
+                    <bk-checkbox-group v-else-if="item.types === '多选题'" class="radio-common" v-model="item.stu_answers">
                         <bk-checkbox value="A" :disabled="true">
-                            A：{{ childItem.option_A }}
+                            A：{{ item.option_A }}
                         </bk-checkbox>
                         <bk-checkbox value="B" :disabled="true">
-                            B：{{ childItem.option_B }}
+                            B：{{ item.option_B }}
                         </bk-checkbox>
                         <bk-checkbox value="C" :disabled="true">
-                            C：{{ childItem.option_C }}
+                            C：{{ item.option_C }}
                         </bk-checkbox>
                         <bk-checkbox value="D" :disabled="true">
-                            D：{{ childItem.option_D }}
+                            D：{{ item.option_D }}
                         </bk-checkbox>
                         <bk-checkbox value="E" :disabled="true">
-                            E：{{ childItem.option_E }}
+                            E：{{ item.option_E }}
                         </bk-checkbox>
                     </bk-checkbox-group>
-                    <div style="margin-top: 10px">
-                        学生答案：<span>{{ childItem.student_answer }}</span>
+                    <bk-radio-group v-else-if="item.types === '判断题'" class="radio-common" v-model="item.stu_answers">
+                        <bk-radio value="T" :disabled="true">
+                            T：{{ item.option_A }}
+                        </bk-radio>
+                        <bk-radio value="F" :disabled="true">
+                            F：{{ item.option_B }}
+                        </bk-radio>
+                    </bk-radio-group>
+                    <div>
+                        <bk-tag theme="info">学生答案：{{item.stu_answers}}</bk-tag>
+                        <bk-tag theme="success"><span>正确答案：</span>{{item.answer}}</bk-tag>
                     </div>
                     <div style="margin-top: 10px">
-                        正确答案为：
-                        <span v-if="childItem.types === 'JUDGE'">{{ item.answer === 'false' ? 'F' : 'T' }}</span>
-                        <span v-else>{{ childItem.answer }}</span>
+                        请选择该题得分：<bk-input type="number" style="width: 110px" v-model="item.stu_score" :max="item.score" :min="0"></bk-input>
                     </div>
-                    <div style="margin-top: 10px">
-                        打分：<bk-input type="number" style="width: 110px" v-model="childItem.student_score" :max="childItem.score" :min="0"></bk-input>
-                    </div>
-                </bk-card>
+                </div>
             </div>
         </div>
-
         <bk-button style="width: 120px;position: fixed; bottom: 220px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toPreStudent">上一个</bk-button>
         <bk-button style="width: 120px;position: fixed; bottom: 170px; right: 6%;border-radius: 20px;" :theme="'primary'" type="submit" @click="toNextStudent">下一个</bk-button>
-        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="studentInfo.status === 'MARKED' ? 'warning' : 'success'" type="submit" @click="checkAnswer">{{ studentInfo.status === 'MARKED' ? '重新批改' : '确认批改' }}</bk-button>
+        <bk-button style="width: 120px;position: fixed; bottom: 120px; right: 6%;border-radius: 20px;" :theme="studentInfo.status === 'MARKED' ? 'warning' : 'success'" type="submit" @click="checkAnswer">{{ studentInfo.status === '已批改' ? '重新批改' : '确认批改' }}</bk-button>
 
         <bk-button style="width: 120px;position: fixed; bottom: 270px; right: 6%;border-radius: 20px;" @click="gradeCard.visible = true" :theme="'success'" :outline="true">
             展开批改情况
@@ -80,13 +84,13 @@
                 <h3>已提交</h3>
                 <div style="display: flex;flex-wrap: wrap;">
                     <div v-for="(item,index) in studentInfoList" :key="item.student_id">
-                        <bk-button style="margin-left: 10px; margin-bottom: 10px; width: 110px; height: 40px; font-size: 18px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis;" :theme="item.status === 'MARKED' ? 'success' : 'default'" @click="chooseStudent(index)">{{ item.name === null ? item.student_id : item.name }}</bk-button>
+                        <bk-button style="margin-left: 10px; margin-bottom: 10px; width: 110px; height: 40px; font-size: 18px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis;" :theme="item.status === '已批改' ? 'success' : 'primary'" @click="chooseStudent(index)">{{ item.student_name === null ? item.student_id : item.student_name }}</bk-button>
                     </div>
                 </div>
                 <h3>未提交</h3>
                 <div style="display: flex;flex-wrap: wrap;">
                     <div v-for="item in notSubmittedStudentList" :key="item.student_id">
-                        <bk-button style="margin-left: 10px; margin-bottom: 10px; width: 110px; height: 40px; font-size: 18px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis;" theme="danger" disabled>{{ item.name === null ? item.student_id : item.name }}</bk-button>
+                        <bk-button style="margin-left: 10px; margin-bottom: 10px; width: 110px; height: 40px; font-size: 18px; border-radius: 5px; overflow: hidden; text-overflow: ellipsis;" :theme="'danger'" disabled>{{ item.student_name === null ? item.student_id : item.student_name }}</bk-button>
                     </div>
                 </div>
             </div>
@@ -102,6 +106,7 @@
                 paperEmpty: false, // 是否拥有可批改的试卷
                 currentPaperId: 0, // 当前试卷id
                 currentConcatId: 0, // 当前批改学生卷子id
+                currentStuAnswer: [], // 当前学生卷子答案
                 totalQuestion: {}, // 习题列表
                 // 批改上传uploadData参数
                 uploadData: {
@@ -117,20 +122,22 @@
                     position: {
                         top: 100
                     }
-                }
+                },
+                totalScore: 0,
+                score_list: []
             }
         },
         computed: {
             // 展示当前分数
-            totalScore () {
-                let score = 0
-                for (const item in this.totalQuestion) {
-                    for (const childItem of this.totalQuestion[item]) {
-                        score += parseInt(childItem.student_score)
-                    }
-                }
-                return score
-            }
+            // totalScore () {
+            //     let score = 0
+            //     for (const item in this.totalQuestion) {
+            //         for (const childItem of this.totalQuestion[item]) {
+            //             score += parseInt(childItem.student_score)
+            //         }
+            //     }
+            //     return score
+            // }
         },
         watch: {
             // 监听当前课程id的变化
@@ -141,41 +148,56 @@
             }
         },
         mounted () {
-            this.currentPaperId = this.$route.query.paperid
+            this.currentPaperId = this.$route.query.paperId
             this.currentPaperEndTime = Date.parse(this.$route.query.endTime)
             this.getQuestionList()
         },
         methods: {
             // 获取当前学生做答题目列表
             async getStudentQuestionStation () {
-                this.$http.get('/course/mark_or_check_paper/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId, student_id: this.studentInfo.student_id } }).then(res => {
-                    this.currentConcatId = res.data.StudentPaperContact_id
-                    this.totalQuestion = res.data
-                    delete this.totalQuestion['StudentPaperContact_id']
-                    delete this.totalQuestion['total_score']
+                console.log('totalQuestion', this.totalQuestion)
+                this.$http.get(`/api/project-task-info/${this.currentPaperId}/stu-info/${this.currentConcatId}/`).then(res => {
+                    console.log('学生试卷详情', res)
+                    this.studentInfo.cumulative_time = res.data.cumulative_time
+                    this.studentInfo.status = res.data.status
+                    console.log('this.studentInfo', this.studentInfo)
+                    this.currentStuAnswer = res.data.stu_answers
+                    this.totalScore = res.data.total_score
                     for (const item in this.totalQuestion) {
-                        for (const childItem of this.totalQuestion[item]) {
-                            if (childItem.student_answer === null) {
-                                childItem.student_answer = '未作答'
-                            }
-                        }
+                        this.totalQuestion[item].stu_answers = ''
+                        this.totalQuestion[item].stu_score = 0
+                    }
+                    for (const i in this.currentStuAnswer) {
+                        this.totalQuestion[i].stu_answers = this.currentStuAnswer[i]
                     }
                 })
             },
             // 学生答题信息和学生做答题目列表
             getQuestionList () {
-                this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId } }).then(res => {
-                    this.notSubmittedStudentList = res.data.not_submitted
-                    // 根据卷子结束时间添加要批改的学生列表
-                    if (new Date().getTime() > this.currentPaperEndTime) {
-                        this.studentInfoList = res.data.submitted.filter(item => {
-                            return item.status === 'SUBMITTED' || item.status === 'MARKED' || item.status === 'SAVED'
-                        })
-                    } else {
-                        this.studentInfoList = res.data.submitted.filter(item => {
-                            return item.status === 'SUBMITTED' || item.status === 'MARKED'
+                this.$http.get(`/api/project-task/${this.currentPaperId}/teacher/`).then(res => {
+                    console.log(res)
+                    this.totalQuestion = res.data.questions_info
+                    this.notSubmittedStudentList = res.data.student_info
+                    this.studentInfoList = res.data.submitted_student_info
+                    // this.notSubmittedStudentList = this.notSubmittedStudentList.pop(this.studentInfoList)
+                    for (const i in this.studentInfoList) {
+                        const studentId = this.studentInfoList[i].student_id
+                        // 在所有学生列表中删除掉已经提交的学生名单就是未提交的学生名单
+                        this.notSubmittedStudentList = this.notSubmittedStudentList.filter((item) => {
+                            return item.student_id !== studentId
                         })
                     }
+                    console.log('this.notSubmittedStudentList', this.notSubmittedStudentList)
+                    // 根据卷子结束时间添加要批改的学生列表
+                    // if (new Date().getTime() > this.currentPaperEndTime) {
+                    //     this.studentInfoList = res.data.submitted_student_info.filter(item => {
+                    //         return item.status === 'SUBMITTED' || item.status === 'MARKED' || item.status === 'SAVED'
+                    //     })
+                    // } else {
+                    //     this.studentInfoList = res.data.submitted.filter(item => {
+                    //         return item.status === 'SUBMITTED' || item.status === 'MARKED'
+                    //     })
+                    // }
                     // 为空时候代表无卷子需要批改
                     if (this.studentInfoList.length === 0) {
                         this.paperEmpty = true
@@ -183,46 +205,29 @@
                     }
                     this.studentInfo = this.studentInfoList[0]
                     this.currentStudentIndex = 0
+                    this.currentConcatId = this.studentInfo.student_id
                     this.getStudentQuestionStation()
                 })
             },
             // 发起批改试卷请求
-            async checkAnswer () {
-                this.uploadData = {
-                    student_answer_list: [],
-                    student_paper_contact_id: this.currentConcatId,
-                    course_id: this.$store.state.currentCourseId
-                }
-                for (const item in this.totalQuestion) {
-                    for (const childItem of this.totalQuestion[item]) {
-                        this.uploadData.student_answer_list.push(
-                            {
-                                id: childItem.student_answer_id,
-                                score: parseInt(childItem.student_score)
-                            }
-                        )
-                    }
-                }
-                this.$http.post('/course/teacher_correct_paper/', this.uploadData).then(res => {
-                    if (res.code === 200) {
+            checkAnswer () {
+                this.score_list = []
+                this.totalQuestion.forEach(e => {
+                    this.score_list.push(e.stu_score)
+                })
+                this.$http.patch(`/api/project-task-info/${this.currentPaperId}/judge/${this.currentConcatId}/`, { data: { 'score_list': this.score_list } }).then(res => {
+                    console.log('批改试卷res', res)
+                    if (res.message === 'success') {
                         this.$bkMessage({
-                            message: '批改成功',
+                            message: '批改成功！',
                             theme: 'success'
                         })
                         // 更新批改状态
-                        this.$http.get('/course/get_student_answer_info/', { params: { course_id: this.$store.state.currentCourseId, paper_id: this.currentPaperId } }).then(res => {
-                            this.notSubmittedStudentList = res.data.not_submitted
-                            // 根据卷子结束时间添加要批改的学生列表
-                            if (new Date().getTime() > this.currentPaperEndTime) {
-                                this.studentInfoList = res.data.submitted.filter(item => {
-                                    return item.status === 'SUBMITTED' || item.status === 'MARKED' || item.status === 'SAVED'
-                                })
-                            } else {
-                                this.studentInfoList = res.data.submitted.filter(item => {
-                                    return item.status === 'SUBMITTED' || item.status === 'MARKED'
-                                })
-                            }
-                            this.studentInfo = this.studentInfoList[this.currentStudentIndex]
+                        this.getQuestionList()
+                    } else {
+                        this.$bkMessage({
+                            message: '批改失败！',
+                            theme: 'error'
                         })
                     }
                 })
@@ -260,7 +265,7 @@
             async chooseStudent (index) {
                 this.currentStudentIndex = index
                 this.studentInfo = this.studentInfoList[this.currentStudentIndex]
-                this.getStudentQuestionStation()
+                await this.getStudentQuestionStation()
                 this.toTop()
                 this.gradeCard.visible = false
             },
@@ -290,12 +295,20 @@
     flex-direction: column;
     justify-content: space-around;
     box-shadow: none;
+    margin-bottom: 20px;
+}
+.radio-common .bk-form-radio, .radio-common .bk-form-checkbox{
+    margin: 5px;
 }
 
 .studentInfo {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
+    margin-left: 0px;
+    /*display: flex;*/
+    /*align-items: center;*/
+    /*justify-content: space-around;*/
+}
+.studentInfo span{
+    margin-right: 100px;
 }
 
 .gradeCardContent {
@@ -303,5 +316,22 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+}
+.gradeCardContent::-webkit-scrollbar {
+    /*滚动条整体样式*/
+    width: 5px;  /*高宽分别对应横竖滚动条的尺寸*/
+    height: 1px;
+}
+.gradeCardContent::-webkit-scrollbar-thumb {
+    /*滚动条里面小方块*/
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px rgb(255, 255, 255);
+    background: #868686;
+}
+.gradeCardContent::-webkit-scrollbar-track {
+    /*滚动条里面轨道*/
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    background: #ededed;
 }
 </style>
