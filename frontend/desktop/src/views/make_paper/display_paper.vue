@@ -1,156 +1,271 @@
 <template>
     <div>
-        <bk-dialog v-model="viewQrCode.primary.visible"
-            theme="primary"
-            ok-text="下载图片"
-            cancel-text="关闭"
-            :mask-close="false"
-            :confirm-fn="saveQrCode"
-            :header-position="viewQrCode.primary.headerPosition"
-            @cancel="$refs.qrCodeUrl.innerHTML = ''">
-            <div id="qrCodeBox" class="qrCodeBox">
-                <div class="qrcode" id="qrCode" ref="qrCodeUrl"></div><br>
-                <bk-tag theme="info">请扫描上方二维码答题</bk-tag>
-            </div>
-        </bk-dialog>
-        <bk-dialog v-model="dialogsetting.custom.visible"
-            width="720"
-            ok-text="开始选题"
-            @confirm="check"
-            :auto-close="false"
-            :position="dialogsetting.custom.position"
-            @cancel="$refs.addform.clearError(), formData.start = undefined, formData.end = undefined"
-            title="新增试卷">
-            <bk-form ref="addform" :model="formData" :rules="rules1" label-width="200">
-                <bk-form-item :required="true" :error-display-type="'normal'" :property="'papertype'" label="卷子类型:">
-                    <bk-radio-group v-model="formData.papertype">
-                        <bk-radio :value="'EXAM'">测试卷</bk-radio>
-                        <bk-radio :value="'EXERCISE'">练习卷</bk-radio>
-                    </bk-radio-group>
-                </bk-form-item>
-                <bk-form-item :required="true" :error-display-type="'normal'" :property="'papername'" style="width:460px" label="卷子名称:">
-                    <bk-input v-model="formData.papername"></bk-input>
-                </bk-form-item>
-                <bk-form-item :required="true" :error-display-type="'normal'" :property="'chapter'" style="width:460px" label="所属章节:">
-                    <bk-select v-model="formData.chapter" searchable>
-                        <bk-option v-for="option in chapterlist"
-                            :key="option.name"
-                            :id="option.id"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                </bk-form-item>
-                <bk-form-item :required="true" :error-display-type="'normal'" :property="'start'" label="开始时间:">
-                    <bk-date-picker v-model="formData.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
-                </bk-form-item>
-                <bk-form-item :required="true" :error-display-type="'normal'" :property="'end'" label="结束时间:">
-                    <bk-date-picker v-model="formData.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
-                </bk-form-item>
-            </bk-form>
-        </bk-dialog>
-        <bk-dialog v-model="editdialog.custom.visible"
-            width="720"
-            :position="editdialog.custom.position"
-            ok-text="保存"
-            :auto-close="false"
-            @confirm="validatedata"
-            @cancel="edit = true, $refs.paperinfo.clearError(), selectdata.start = undefined, selectdata.end = undefined"
-            title="修改试卷信息">
-            <bk-form label-width="200" :model="selectdata" :rules="rules" ref="paperinfo">
-                <bk-form-item :error-display-type="'normal'" label="卷子类型:" :required="true" :property="'papertype'">
-                    <bk-radio-group v-model="selectdata.papertype">
-                        <bk-radio :disabled="edit" :value="'EXERCISE'">练习卷</bk-radio>
-                        <bk-radio :disabled="edit" :value="'EXAM'">测试卷</bk-radio>
-                    </bk-radio-group>
-                </bk-form-item>
-                <bk-form-item :error-display-type="'normal'" style="width:460px" label="卷子名称:" :required="true" :property="'papername'">
-                    <bk-input
-                        :readonly="edit"
-                        v-model="selectdata.papername"></bk-input>
-                </bk-form-item>
-                <bk-form-item :error-display-type="'normal'" style="width:460px" label="所属章节:" :property="'paperchapterid'">
-                    <bk-select v-model="selectdata.paperchapterid" searchable :readonly="edit">
-                        <bk-option v-for="option in chapterlist"
-                            :key="option.id"
-                            :id="option.id"
-                            :name="option.name">
-                        </bk-option>
-                    </bk-select>
-                </bk-form-item>
-                <bk-form-item :required="true" :error-display-type="'normal'" :property="'start'" label="开始时间:">
-                    <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
-                </bk-form-item>
-                <bk-form-item :required="true" :error-display-type="'normal'" :property="'end'" label="结束时间:">
-                    <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
-                </bk-form-item>
-                <bk-form-item>
-                    <bk-button v-if="edit" @click="edit = false" theme="primary">编辑</bk-button>
-                </bk-form-item>
-            </bk-form>
-        </bk-dialog>
-        <bk-button @click="dialogsetting.custom.visible = true" theme="primary">新增试卷</bk-button>
-        <bk-table style="margin-top: 15px;"
-            ref="table"
-            max-height="500px"
-            :data="paperlist"
+        <bk-button @click="dialogsetting.custom.visible = true" style="margin: 20px" theme="primary">新增试卷</bk-button>
+        <bk-table :data="taskList"
+            :size="'small'"
+            height="450"
+            :outer-border="false"
+            :header-border="false"
+            :pagination="pagination"
             :virtual-render="true"
-            :pagination="pagination">
-            <bk-table-column align="center" label="试卷名" prop="papername"></bk-table-column>
-            <bk-table-column
-                :filters="typeFilters"
-                :filter-method="typeFilterMethod"
-                align="center"
-                label="类型"
-                width="75"
-                prop="papertype"></bk-table-column>
-            <bk-table-column
-                align="center"
-                :filters="chapterFilters"
-                :filter-method="chapterFilterMethod"
-                label="所属章节"
-                prop="paperchapter"></bk-table-column>
-            <bk-table-column
-                align="center"
-                :filters="statusFilters"
-                :filter-method="statusFilterMethod"
-                label="状态"
-                width="75"
-                prop="paperstatus"></bk-table-column>
-            <bk-table-column
-                align="center"
-                label="开始时间"
-                prop="starttime"></bk-table-column>
-            <bk-table-column
-                align="center"
-                label="结束时间"
-                prop="endtime"></bk-table-column>
-            <bk-table-column
-                align="center"
-                label="提交人数/总人数"
-                prop="rate"></bk-table-column>
-            <bk-table-column align="center" label="操作" width="280">
+            @selection-change="handleSelect"
+            @page-change="handlePageChange"
+            @page-limit-change="handlePageLimitChange">
+            <bk-table-column type="selection" align="center" header-align="center"></bk-table-column>
+            <bk-table-column label="id" prop="id" width="50"></bk-table-column>
+            <bk-table-column label="任务名称" prop="title">
+                <!--                    <template slot-scope="props">-->
+                <!--                        <div>-->
+                <!--                            <bk-button v-if="props.row.student_status === 'NOTSTART'" theme="primary" text disabled>{{ props.row.paper_name }}</bk-button>-->
+                <!--                            <bk-button v-else-if="props.row.student_status === 'UNDERWAY'" theme="primary" text @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;">{{ props.row.paper_name }}</bk-button>-->
+                <!--                            <bk-button v-else-if="props.row.student_status === 'SAVED'" theme="primary" text @click="toAnswer(props.row.id, false)">{{ props.row.paper_name }}</bk-button>-->
+                <!--                            <bk-button v-else-if="props.row.student_status === 'REALMARKED'" theme="primary" text @click="toAnalyze(props.row.id, true, true)">{{ props.row.paper_name }}</bk-button>-->
+                <!--                            <bk-button v-else-if="props.row.student_status === 'FINISHED' || props.row.student_status === 'REALSUBMITTED'" theme="primary" text @click="toAnalyze(props.row.id, true, false)">{{ props.row.paper_name }}</bk-button>-->
+                <!--                        </div>-->
+                <!--                    </template>-->
+            </bk-table-column>
+            <bk-table-column label="任务描述" prop="describe">
                 <template slot-scope="props">
-                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '草稿'" @click="publishpaper(props.row)">发布</bk-button>
-                    <bk-button class="mr10" theme="primary" text v-else :disabled="props.row.paperstatus === '已批阅'" @click="cancel(props.row)">取消</bk-button>
-                    <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus !== '草稿'" @click="modifiypaper(props.row)">选题</bk-button>
-                    <bk-button class="mr10" theme="primary" text :disabled="props.row.paperstatus === '草稿'" @click="markpaper(props.row)">批改</bk-button>
-                    <bk-button class="mr10" theme="primary" text v-if="props.row.paperstatus === '已批阅'" @click="cancleScore(props.row)">撤回成绩</bk-button>
-                    <bk-button class="mr10" theme="primary" text v-else :disabled="props.row.paperstatus === '草稿'" @click="publishScore(props.row)">发布成绩</bk-button>
+                    <bk-popover placement="top" v-if="props.row.describe.length !== 0">
+                        <span>{{props.row.describe.toString().slice(0,5) + (props.row.describe.toString().length > 5 ? '...' : '')}}</span>
+                        <div slot="content">
+                            <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.describe}}</div>
+                        </div>
+                    </bk-popover>
+                </template>
+            </bk-table-column>
+            <bk-table-column label="类型"
+                prop="types"
+                width="90"
+                :filters="typesFilters"
+                :filter-multiple="false"
+                :filter-method="filterMethod">
+                <template slot-scope="props">
+                    <bk-tag v-if="props.row.types === '日常任务'" type="stroke" style="margin: 0; padding: 0 2px;">日常任务</bk-tag>
+                    <bk-tag v-else theme="info" type="stroke" style="margin: 0; padding: 0 2px;">考核任务</bk-tag>
+                </template>
+            </bk-table-column>
+            <bk-table-column label="状态"
+                prop="status"
+                :filters="statusFilters"
+                :filter-multiple="false"
+                :filter-method="filterMethod">
+                <template slot-scope="props">
+                    <bk-tag v-if="props.row.status === '草稿'" theme="warning" type="stroke" style="margin: 0; padding: 0 2px;">草稿</bk-tag>
+                    <bk-tag v-else theme="success" type="stroke" style="margin: 0; padding: 0 2px;">已发布</bk-tag>
+                </template>
+            </bk-table-column>
+            <bk-table-column label="学生是否可见" prop="students_visible">
+                <template slot-scope="props">
+                    <div v-if="props.row.students_visible === true">
+                        <p>是</p>
+                    </div>
+                    <div v-else>
+                        <p>否</p>
+                    </div>
+                </template>
+            </bk-table-column>
+            <bk-table-column label="总人数" prop="student_total_count"></bk-table-column>
+            <bk-table-column label="提交人数" prop="submitted_count"></bk-table-column>
+            <bk-table-column label="批阅数量" prop="marked_count"></bk-table-column>
+            <bk-table-column label="开始时间" prop="start_time" width="100">
+                <template slot-scope="props">
+                    <bk-popover placement="top" v-if="props.row.start_time.length !== 0">
+                        <span>{{props.row.start_time.toString().slice(0,10) + (props.row.start_time.toString().length > 10 ? '' : '')}}</span>
+                        <div slot="content">
+                            <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.start_time}}</div>
+                        </div>
+                    </bk-popover>
+                </template>
+            </bk-table-column>
+            <bk-table-column label="截止时间" prop="end_time" width="100">
+                <template slot-scope="props">
+                    <bk-popover placement="top" v-if="props.row.end_time.length !== 0">
+                        <span>{{props.row.end_time.toString().slice(0,10) + (props.row.end_time.toString().length > 10 ? '' : '')}}</span>
+                        <div slot="content">
+                            <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.end_time}}</div>
+                        </div>
+                    </bk-popover>
+                </template>
+            </bk-table-column>
+            <bk-table-column label="操作" align="center" width="240" header-align="center">
+                <template slot-scope="props">
+                    <bk-button class="mr10" theme="primary" @click="toAnswer(props.row.id, false)" text>查看试卷</bk-button>
+                    <bk-button class="mr10" theme="primary" text :disabled="props.row.status === '草稿'" @click="markpaper(props.row)">批改</bk-button>
                     <bk-popover class="dot-menu" placement="bottom-left" theme="dot-menu light" trigger="click"
                         :arrow="false" offset="15" :distance="0">
                         <span class="dot-menu-trigger"></span>
                         <ul class="dot-menu-list" slot="content">
                             <li class="dot-menu-item">
-                                <bk-button class="mr10" theme="primary" text @click="openedit(props.row)">修改</bk-button>
+                                <bk-button class="mr10" v-if="props.row.status === '已发布'" theme="primary" size="small" text @click="cancleBefor(props.row)">取消发布</bk-button>
                             </li>
                             <li class="dot-menu-item">
-                                <bk-button class="mr10" theme="primary" text :disabled="props.row.isend" @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
+                                <bk-button class="mr10" theme="primary" size="small" text :disabled="props.row.isend" @click="viewQrCode.primary.visible = true, code(props.row)">扫码</bk-button>
+                            </li>
+                            <li class="dot-menu-item">
+                                <bk-button class="mr10" v-if="props.row.status === '草稿'" theme="primary" size="small" text @click="releaseBefor(props.row)">定时发布</bk-button>
+                            </li>
+                            <li class="dot-menu-item">
+                                <bk-button class="mr10" v-if="props.row.status === '草稿'" theme="primary" size="small" text @click="releaseNowBefor(props.row)">立即发布</bk-button>
+                            </li>
+                            <li class="dot-menu-item">
+                                <bk-button class="mr10" theme="primary" text v-if="props.row.status === '已批阅'" @click="cancleScore(props.row)">撤回成绩</bk-button>
+                            </li>
+                            <li class="dot-menu-item">
+                                <bk-button class="mr10" theme="primary" size="small" text @click="removeBefor(props.row)">删除试卷</bk-button>
+                            </li>
+                            <li class="dot-menu-item">
+                                <bk-button class="mr10" theme="primary" size="small" text v-if="Number(props.row.marked_count) > 0" :disabled="props.row.status === '草稿'" @click="publishScore(props.row)">发布成绩</bk-button>
                             </li>
                         </ul>
                     </bk-popover>
                 </template>
             </bk-table-column>
         </bk-table>
+        <div id="dialog">
+            <bk-dialog v-model="startAnswer.primary.visible" @confirm="toAnswer(startAnswer.primary.paperId, false)"
+                theme="primary"
+                :mask-close="false"
+                :header-position="startAnswer.primary.head"
+                title="查看">
+                是否确认开始答题？
+            </bk-dialog>
+            <!--删除任务-->
+            <bk-dialog v-model="deleteTaskDialog.primary.visible"
+                theme="primary"
+                :mask-close="true"
+                @confirm="removeTask(id)"
+                :header-position="deleteTaskDialog.primary.head"
+                title="删除任务">
+                是否要删除该任务？
+            </bk-dialog>
+            <!-- 批量删除 -->
+            <bk-dialog v-model="deleteAllTaskDialog.primary.visible"
+                width="530"
+                position="'top'"
+                :mask-close="false"
+                :header-position="deleteAllTaskDialog.primary.head"
+                @confirm="removeMultiTask(id)">
+                <div class="dialog-body">
+                    <h3>确定要删除{{task_id_list.length}}项内容吗？</h3>
+                </div>
+            </bk-dialog>
+            <!--定时发布任务-->
+            <bk-dialog v-model="releaseTaskDialog.primary.visible"
+                theme="primary"
+                :mask-close="true"
+                @confirm="releaseTask(id)"
+                :header-position="releaseTaskDialog.primary.visible"
+                title="发布任务">
+                <bk-date-picker v-model="scheduledPublishTime" :placeholder="'请选择计划发布日期时间'" :type="'datetime'"></bk-date-picker>
+            </bk-dialog>
+            <!--立即发布任务-->
+            <bk-dialog v-model="releaseNowTaskDialog.primary.visible"
+                theme="primary"
+                :mask-close="true"
+                @confirm="releaseNowTask(id)"
+                :header-position="releaseNowTaskDialog.primary.visible"
+                title="发布任务">
+                是否要立即发布当前任务？
+            </bk-dialog>
+            <!--取消发布任务-->
+            <bk-dialog v-model="cancleReleaseTaskDialog.primary.visible"
+                theme="primary"
+                :mask-close="true"
+                @confirm="cancleReleaseTask(id)"
+                :header-position="cancleReleaseTaskDialog.primary.visible"
+                title="取消发布任务">
+                确认要取消发布该任务嘛？
+            </bk-dialog>
+            <bk-dialog v-model="viewQrCode.primary.visible"
+                theme="primary"
+                ok-text="下载图片"
+                cancel-text="关闭"
+                :mask-close="false"
+                :confirm-fn="saveQrCode"
+                :header-position="viewQrCode.primary.headerPosition"
+                @cancel="$refs.qrCodeUrl.innerHTML = ''">
+                <div id="qrCodeBox" class="qrCodeBox">
+                    <div class="qrcode" id="qrCode" ref="qrCodeUrl"></div><br>
+                    <bk-tag theme="info">请扫描上方二维码答题</bk-tag>
+                </div>
+            </bk-dialog>
+            <bk-dialog v-model="dialogsetting.custom.visible"
+                width="720"
+                ok-text="开始选题"
+                @confirm="check"
+                :auto-close="false"
+                :position="dialogsetting.custom.position"
+                @cancel="$refs.addform.clearError(), formData.start = undefined, formData.end = undefined"
+                title="新增试卷">
+                <bk-form ref="addform" :model="formData" :rules="rules1" label-width="200">
+                    <bk-form-item :required="true" :error-display-type="'normal'" :property="'papertype'" label="卷子类型:">
+                        <bk-radio-group v-model="formData.papertype">
+                            <bk-radio :value="'EXAM'">测试卷</bk-radio>
+                            <bk-radio :value="'EXERCISE'">练习卷</bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item :required="true" :error-display-type="'normal'" :property="'papername'" style="width:460px" label="卷子名称:">
+                        <bk-input v-model="formData.papername"></bk-input>
+                    </bk-form-item>
+                    <bk-form-item :required="true" :error-display-type="'normal'" :property="'chapter'" style="width:460px" label="所属章节:">
+                        <bk-select v-model="formData.chapter" searchable>
+                            <bk-option v-for="option in chapterlist"
+                                :key="option.name"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </bk-form-item>
+                    <bk-form-item :required="true" :error-display-type="'normal'" :property="'start'" label="开始时间:">
+                        <bk-date-picker v-model="formData.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    </bk-form-item>
+                    <bk-form-item :required="true" :error-display-type="'normal'" :property="'end'" label="结束时间:">
+                        <bk-date-picker v-model="formData.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    </bk-form-item>
+                </bk-form>
+            </bk-dialog>
+            <bk-dialog v-model="editdialog.custom.visible"
+                width="720"
+                :position="editdialog.custom.position"
+                ok-text="保存"
+                :auto-close="false"
+                @confirm="validatedata"
+                @cancel="edit = true, $refs.paperinfo.clearError(), selectdata.start = undefined, selectdata.end = undefined"
+                title="修改试卷信息">
+                <bk-form label-width="200" :model="selectdata" :rules="rules" ref="paperinfo">
+                    <bk-form-item :error-display-type="'normal'" label="卷子类型:" :required="true" :property="'papertype'">
+                        <bk-radio-group v-model="selectdata.papertype">
+                            <bk-radio :disabled="edit" :value="'EXERCISE'">练习卷</bk-radio>
+                            <bk-radio :disabled="edit" :value="'EXAM'">测试卷</bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+                    <bk-form-item :error-display-type="'normal'" style="width:460px" label="卷子名称:" :required="true" :property="'papername'">
+                        <bk-input
+                            :readonly="edit"
+                            v-model="selectdata.papername"></bk-input>
+                    </bk-form-item>
+                    <bk-form-item :error-display-type="'normal'" style="width:460px" label="所属章节:" :property="'paperchapterid'">
+                        <bk-select v-model="selectdata.paperchapterid" searchable :readonly="edit">
+                            <bk-option v-for="option in chapterlist"
+                                :key="option.id"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
+                    </bk-form-item>
+                    <bk-form-item :required="true" :error-display-type="'normal'" :property="'start'" label="开始时间:">
+                        <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.start" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    </bk-form-item>
+                    <bk-form-item :required="true" :error-display-type="'normal'" :property="'end'" label="结束时间:">
+                        <bk-date-picker :clearable="!edit" :readonly="edit" v-model="selectdata.end" :time-picker-options="timePickerOptions" :type="'datetime'"></bk-date-picker>
+                    </bk-form-item>
+                    <bk-form-item>
+                        <bk-button v-if="edit" @click="edit = false" theme="primary">编辑</bk-button>
+                    </bk-form-item>
+                </bk-form>
+            </bk-dialog>
+        </div>
         <bk-dialog v-model="publishScoreControl.visible"
             width="400"
             :header-position="publishScoreControl.headerPosition"
@@ -221,7 +336,7 @@
                 ],
                 chapterFilters: [
                 ],
-                statusFilters: [
+                statusFilter: [
                     {
                         text: '草稿',
                         value: '草稿'
@@ -384,23 +499,96 @@
                             trigger: 'blur'
                         }
                     ]
-                }
+
+                },
+                // 分页器配置项
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                // 确认是否答题控制
+                startAnswer: {
+                    primary: {
+                        visible: false,
+                        headerPosition: 'left',
+                        paperId: 0
+                    }
+                },
+                // 删除任务
+                deleteTaskDialog: {
+                    primary: {
+                        visible: false,
+                        head: 'left'
+                    }
+                },
+                deleteAllTaskDialog: {
+                    primary: {
+                        visible: false,
+                        head: 'left'
+                    }
+                },
+                releaseTaskDialog: {
+                    primary: {
+                        visible: false,
+                        head: 'left'
+                    }
+                },
+                releaseNowTaskDialog: {
+                    primary: {
+                        visible: false,
+                        head: 'left'
+                    }
+                },
+                cancleReleaseTaskDialog: {
+                    primary: {
+                        visible: false,
+                        head: 'left'
+                    }
+                },
+                taskList: [],
+                typesFilters: [
+                    {
+                        value: '日常任务',
+                        text: '日常任务'
+                    },
+                    {
+                        value: '考核任务',
+                        text: '考核任务'
+                    }
+                ],
+                statusFilters: [
+                    {
+                        value: '草稿',
+                        text: '草稿'
+                    },
+                    {
+                        value: '已发布',
+                        text: '已发布'
+                    }
+                ],
+                scheduledPublishTime: new Date(),
+                publishTaskForm: [],
+                project_task_id: '',
+                task_id_list: []
             }
         },
         computed: {
-            CourseId: function () {
+            project_id: function () {
                 return this.$store.state.currentCourseId
             }
         },
         watch: {
-            CourseId: {
+            project_id: {
                 handler () {
-                    this.getchapterlist()
+                    // this.getchapterlist()
+                    this.getTaskList()
                 }
             }
         },
         created () {
-            this.getchapterlist()
+            // this.getchapterlist()
+            this.getTaskList()
         },
         methods: {
             // 撤回成绩
@@ -528,7 +716,8 @@
                 const property = column.property
                 return row[property] === value
             },
-            async getchapterlist () { // 获得章节
+            // 获得章节
+            getchapterlist () {
                 this.$http.get('/course/get_chapter_list/', { params: { course_id: this.CourseId } }).then(res => {
                     this.chapterFilters.splice(0, this.chapterFilters.length)
                     this.$set(this.chapterFilters, 0, {
@@ -553,7 +742,8 @@
                     this.getpaperlist() // 获得试卷
                 })
             },
-            getpaperlist () { // 获得试卷
+            // 获得试卷
+            getpaperlist () {
                 this.$http.get('/course/paper/', { params: { course_id: this.CourseId } }).then(res => {
                     this.paperlist = []
                     if (res.data.length !== 0) {
@@ -622,7 +812,8 @@
                     }
                 })
             },
-            check () { // 创建试卷并跳转
+            // 创建试卷并跳转
+            check () {
                 this.$refs.addform.validate().then(validator => {
                     this.dialogsetting.custom.visible = false
                     const data = {
@@ -694,11 +885,13 @@
                     })
                 }
             },
-            open (row) { // 打开发布对话框
+            // 打开发布对话框
+            open (row) {
                 this.publishdialog.visible = true
                 this.selectpaper = row.id
             },
-            openedit (row) { // 打开修改试卷信息对话框
+            // 打开修改试卷信息对话框
+            openedit (row) {
                 this.editdialog.custom.visible = true
                 this.selectdata.paperid = row.id
                 this.selectdata.papername = row.papername
@@ -810,7 +1003,7 @@
                 this.$router.push({
                     name: 'correct_paper',
                     query: {
-                        paperid: row.id,
+                        paperId: row.id,
                         endTime: row.endtime
                     }
                 })
@@ -852,6 +1045,248 @@
                 a.download = '答题二维码.png'
                 // 点击
                 a.click()
+            },
+            // 接收参数
+            getParams () {
+                this.project_id = this.$route.params.projectId
+            },
+            // 过滤状态、类型、可见范围
+            filterMethod (value, row, column) {
+                const property = column.property
+                return row[property] === value
+            },
+            // 删除任务
+            removeBefor (e) {
+                this.project_task_id = ''
+                this.project_task_id = e.id
+                this.deleteTaskDialog.primary.visible = true
+            },
+            // 确认删除任务
+            removeTask (e) {
+                this.$http.delete(`/api/project-task/${this.project_task_id}/`).then(res => {
+                    if (res.result) {
+                        this.$bkMessage({
+                            message: '删除成功',
+                            delay: 1000,
+                            theme: 'success',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    } else {
+                        this.$bkMessage({
+                            message: '删除失败',
+                            delay: 1000,
+                            theme: 'error',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    }
+                })
+                this.getTaskList()
+                this.project_task_id = ''
+            },
+            // 删除多项
+            handleSelect (selection) {
+                this.task_id_list = []
+                selection.forEach(e => {
+                    this.task_id_list.push(e.id)
+                })
+            },
+            removeMultiBefor () {
+                if (this.task_id_list.length !== 0) {
+                    this.deleteAllTaskDialog.primary.visible = true
+                }
+            },
+            // 确认删除多项
+            removeMultiTask (e) {
+                this.$http.delete('/api/project-task/', { data: { 'task_id_list': this.task_id_list } }).then(res => {
+                    if (res.result) {
+                        this.$bkMessage({
+                            message: '批量删除成功',
+                            delay: 1000,
+                            theme: 'success',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    } else {
+                        this.$bkMessage({
+                            message: '批量删除失败',
+                            delay: 1000,
+                            theme: 'error',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    }
+                })
+                this.getTaskList()
+                this.project_task_id = []
+            },
+            // 定时发布任务
+            releaseBefor (e) {
+                this.project_task_id = e.id
+                this.releaseTaskDialog.primary.visible = true
+            },
+            // 确认定时发布任务
+            releaseTask (e) {
+                this.scheduledPublishTime = this.msToDate((this.scheduledPublishTime)).hasTime
+                this.scheduledPublishTime = this.scheduledPublishTime.replace(/ /g, 'T')
+                console.log('this.scheduled_publish_time', this.scheduledPublishTime)
+                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'scheduled_publish_time': this.scheduledPublishTime }).then(res => {
+                    console.log('定时发布res：', res)
+                    if (res.result) {
+                        this.$bkMessage({
+                            message: '发布成功',
+                            delay: 1000,
+                            theme: 'success',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    } else {
+                        this.$bkMessage({
+                            message: '发布失败',
+                            delay: 1000,
+                            theme: 'error',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    }
+                })
+                this.getTaskList()
+                this.id = []
+            },
+            // 立即发布任务
+            releaseNowBefor (e) {
+                this.project_task_id = e.id
+                this.releaseNowTaskDialog.primary.visible = true
+            },
+            // 确认立即发布任务
+            releaseNowTask (e) {
+                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'status': 'RELEASE' }).then(res => {
+                    if (res.result) {
+                        this.$bkMessage({
+                            message: '发布成功',
+                            delay: 1000,
+                            theme: 'success',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    } else {
+                        this.$bkMessage({
+                            message: '发布失败',
+                            delay: 1000,
+                            theme: 'error',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    }
+                })
+                this.getTaskList()
+                this.id = []
+            },
+            // 取消发布任务
+            cancleBefor (e) {
+                this.publishTaskForm = []
+                this.publishTaskForm = e
+                this.project_task_id = e.id
+                this.cancleReleaseTaskDialog.primary.visible = true
+            },
+            // 确认取消发布任务
+            cancleReleaseTask (e) {
+                // this.publishTaskForm.status = 'DRAFT'
+                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'status': 'DRAFT' }).then(res => {
+                    console.log('res', res)
+                    if (res.result) {
+                        this.$bkMessage({
+                            message: '取消发布成功',
+                            delay: 1000,
+                            theme: 'success',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    } else {
+                        this.$bkMessage({
+                            message: '取消发布失败',
+                            delay: 1000,
+                            theme: 'error',
+                            offsetY: 60,
+                            ellipsisLine: 2 })
+                        this.getTaskList()
+                    }
+                })
+                this.getTaskList()
+                this.project_task_id = ''
+            },
+            // 监听pagination的限制个数变化
+            handlePageLimitChange () {
+                this.pagination.limit = arguments[0]
+                this.pagination.current = 1
+                this.updateCurrentExerciseList()
+            },
+            // 监听pagination的当前页码发生变化
+            handlePageChange (page) {
+                this.pagination.current = page
+                this.updateCurrentExerciseList()
+            },
+            getTaskList () {
+                this.taskList = []
+                this.$http.get(`/api/project-task/${this.project_id}/teacher/all/`).then(res => {
+                    console.log('获取任务列表后端返回的数据', res)
+                    this.taskList = res.data
+                    this.timeReverse()
+                })
+            },
+            // 时间格式化
+            msToDate (msec) {
+                const datetime = new Date(msec)
+                const year = datetime.getFullYear()
+                const month = datetime.getMonth()
+                const date = datetime.getDate()
+                const hour = datetime.getHours()
+                const minute = datetime.getMinutes()
+                const second = datetime.getSeconds()
+                const result1 = year
+                    + '-'
+                    + ((month + 1) >= 10 ? (month + 1) : '0' + (month + 1))
+                    + '-'
+                    + ((date + 1) < 10 ? '0' + date : date)
+                    + ' '
+                    + ((hour + 1) < 10 ? '0' + hour : hour)
+                    + ':'
+                    + ((minute + 1) < 10 ? '0' + minute : minute)
+                    + ':'
+                    + ((second + 1) < 10 ? '0' + second : second)
+
+                const result2 = year
+                    + '-'
+                    + ((month + 1) >= 10 ? (month + 1) : '0' + (month + 1))
+                    + '-'
+                    + ((date + 1) < 10 ? '0' + date : date)
+
+                const result = {
+                    hasTime: result1,
+                    withoutTime: result2
+                }
+                return result
+            },
+            timeReverse () {
+                for (const item in this.taskList) {
+                    this.taskList[item]['time_created'] = this.msToDate((this.taskList[item]['time_created'])).hasTime
+                    this.taskList[item]['time_updated'] = this.msToDate((this.taskList[item]['time_updated'])).hasTime
+                    this.taskList[item]['start_time'] = this.msToDate((this.taskList[item]['start_time'])).hasTime
+                    this.taskList[item]['end_time'] = this.msToDate((this.taskList[item]['end_time'])).hasTime
+                }
+            },
+            // 查看试卷，跳转答题页面
+            toAnswer (id, isAccomplish) {
+                this.startAnswer.primary.visible = false
+                this.$router.push({
+                    name: 'answer_question_detail',
+                    query: {
+                        id,
+                        isAccomplish,
+                        'project_id': this.project_id
+                    }
+                })
             }
         }
     }
