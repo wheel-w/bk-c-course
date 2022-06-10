@@ -1,11 +1,6 @@
 <template>
     <div class="wrapper">
         <div class="content">
-            <bk-button theme="primary"
-                :outline="true"
-                style="margin-bottom: 20px; background: #88a2ef;"
-                @click="removeMultiBefor"
-                :disabled="task_id_list.length === 0">批量删除</bk-button>
             <bk-table :data="taskList"
                 :size="'small'"
                 height="450"
@@ -16,9 +11,9 @@
                 @selection-change="handleSelect"
                 @page-change="handlePageChange"
                 @page-limit-change="handlePageLimitChange">
-                <bk-table-column type="selection" align="center" header-align="center"></bk-table-column>
                 <bk-table-column label="id" prop="id" width="50"></bk-table-column>
-                <bk-table-column label="任务名称" prop="title"></bk-table-column>
+                <bk-table-column label="任务名称" prop="title">
+                </bk-table-column>
                 <bk-table-column label="任务描述" prop="describe">
                     <template slot-scope="props">
                         <bk-popover placement="top" v-if="props.row.describe.length !== 0">
@@ -50,7 +45,7 @@
                         <bk-tag v-else theme="success" type="stroke" style="margin: 0; padding: 0 2px;">已发布</bk-tag>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="学生是否可见" prop="students_visible">
+                <bk-table-column label="学生是否可见" prop="students_visible" width="120">
                     <template slot-scope="props">
                         <div v-if="props.row.students_visible === true">
                             <p>是</p>
@@ -60,9 +55,6 @@
                         </div>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="需要完成人数" prop="student_total_count"></bk-table-column>
-                <bk-table-column label="提交人数" prop="submitted_count"></bk-table-column>
-                <bk-table-column label="批阅数量" prop="marked_count"></bk-table-column>
                 <bk-table-column label="开始时间" prop="start_time" width="100">
                     <template slot-scope="props">
                         <bk-popover placement="top" v-if="props.row.start_time.length !== 0">
@@ -83,14 +75,31 @@
                         </bk-popover>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="操作" align="center" width="240" header-align="center">
+                <bk-table-column label="创建人" prop="creator">
+                    <template slot-scope="props">
+                        <bk-popover placement="top" v-if="props.row.creator.length !== 0">
+                            <span>{{props.row.creator.toString().slice(0,6) + (props.row.creator.toString().length > 6 ? '...' : '')}}</span>
+                            <div slot="content">
+                                <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.creator}}</div>
+                            </div>
+                        </bk-popover>
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="更新人" prop="updater">
+                    <template slot-scope="props">
+                        <bk-popover placement="top" v-if="props.row.updater.length !== 0">
+                            <span>{{props.row.updater.toString().slice(0,6) + (props.row.updater.toString().length > 6 ? '...' : '')}}</span>
+                            <div slot="content">
+                                <div class="bk-text pt10 pb5 pl10 pr10">{{props.row.updater}}</div>
+                            </div>
+                        </bk-popover>
+                    </template>
+                </bk-table-column>
+                <bk-table-column label="我的得分" prop="total_score"></bk-table-column>
+                <bk-table-column label="操作" align="center" header-align="center" width="200">
                     <template slot-scope="props">
                         <bk-button class="mr10" theme="primary" @click="startAnswer.primary.visible = true; startAnswer.primary.paperId = props.row.id;" text>开始答题</bk-button>
-                        <bk-button class="mr10" theme="primary" text @click="removeBefor(props.row)">删除</bk-button>
-                        <bk-button class="mr10" v-if="props.row.status === '草稿'" theme="primary" text @click="releaseBefor(props.row)">定时发布</bk-button>
-                        <bk-button class="mr10" v-if="props.row.status === '草稿'" theme="primary" text @click="releaseNowBefor(props.row)">立即发布</bk-button>
-                        <bk-button class="mr10" v-else-if="props.row.status === '已发布'" theme="primary" text @click="cancleBefor(props.row)">取消发布</bk-button>
-
+                        <bk-button class="mr10" theme="primary" @click="toAnalyze(props.row.id, true, true)" text>查看试卷解析</bk-button>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -101,54 +110,6 @@
                     :header-position="startAnswer.primary.head"
                     title="开始答题">
                     是否确认开始答题？
-                </bk-dialog>
-                <!--删除任务-->
-                <bk-dialog v-model="deleteTaskDialog.primary.visible"
-                    theme="primary"
-                    :mask-close="true"
-                    @confirm="removeTask(id)"
-                    :header-position="deleteTaskDialog.primary.head"
-                    title="删除任务">
-                    是否要删除该任务？
-                </bk-dialog>
-                <!-- 批量删除 -->
-                <bk-dialog v-model="deleteAllTaskDialog.primary.visible"
-                    width="530"
-                    position="'top'"
-                    :mask-close="false"
-                    :header-position="deleteAllTaskDialog.primary.head"
-                    @confirm="removeMultiTask(id)">
-                    <div class="dialog-body">
-                        <h3>确定要删除{{task_id_list.length}}项内容吗？</h3>
-                    </div>
-                </bk-dialog>
-                <!--定时发布任务-->
-                <bk-dialog v-model="releaseTaskDialog.primary.visible"
-                    theme="primary"
-                    :mask-close="true"
-                    @confirm="releaseTask(id)"
-                    :header-position="releaseTaskDialog.primary.visible"
-                    title="发布任务">
-                    <!--请选择计划发布时间：-->
-                    <bk-date-picker v-model="scheduledPublishTime" :placeholder="'请选择计划发布日期时间'" :type="'datetime'"></bk-date-picker>
-                </bk-dialog>
-                <!--立即发布任务-->
-                <bk-dialog v-model="releaseNowTaskDialog.primary.visible"
-                    theme="primary"
-                    :mask-close="true"
-                    @confirm="releaseNowTask(id)"
-                    :header-position="releaseNowTaskDialog.primary.visible"
-                    title="发布任务">
-                    是否要立即发布当前任务？
-                </bk-dialog>
-                <!--取消发布任务-->
-                <bk-dialog v-model="cancleReleaseTaskDialog.primary.visible"
-                    theme="primary"
-                    :mask-close="true"
-                    @confirm="cancleReleaseTask(id)"
-                    :header-position="cancleReleaseTaskDialog.primary.visible"
-                    title="取消发布任务">
-                    确认要取消发布该任务嘛？
                 </bk-dialog>
             </div>
         </div>
@@ -174,38 +135,6 @@
                         paperId: 0
                     }
                 },
-                // 删除任务
-                deleteTaskDialog: {
-                    primary: {
-                        visible: false,
-                        head: 'left'
-                    }
-                },
-                deleteAllTaskDialog: {
-                    primary: {
-                        visible: false,
-                        head: 'left'
-                    }
-                },
-                releaseTaskDialog: {
-                    primary: {
-                        visible: false,
-                        head: 'left'
-                    }
-                },
-                releaseNowTaskDialog: {
-                    primary: {
-                        visible: false,
-                        head: 'left'
-                    }
-                },
-                cancleReleaseTaskDialog: {
-                    primary: {
-                        visible: false,
-                        head: 'left'
-                    }
-                },
-                taskList: [],
                 typesFilters: [
                     {
                         value: '日常任务',
@@ -216,20 +145,8 @@
                         text: '考核任务'
                     }
                 ],
-                statusFilters: [
-                    {
-                        value: '草稿',
-                        text: '草稿'
-                    },
-                    {
-                        value: '已发布',
-                        text: '已发布'
-                    }
-                ],
-                scheduledPublishTime: new Date(),
-                publishTaskForm: [],
-                project_task_id: '',
-                task_id_list: []
+                taskList: [],
+                project_task_id: ''
             }
         },
         watch: {
@@ -254,172 +171,7 @@
             getParams () {
                 this.project_id = this.$route.params.projectId
             },
-            // 过滤状态、类型、可见范围
-            filterMethod (value, row, column) {
-                const property = column.property
-                return row[property] === value
-            },
-            // 删除任务
-            removeBefor (e) {
-                this.project_task_id = ''
-                this.project_task_id = e.id
-                this.deleteTaskDialog.primary.visible = true
-            },
-            // 确认删除任务
-            removeTask (e) {
-                this.$http.delete(`/api/project-task/${this.project_task_id}/`).then(res => {
-                    if (res.result) {
-                        this.$bkMessage({
-                            message: '删除成功',
-                            delay: 1000,
-                            theme: 'success',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    } else {
-                        this.$bkMessage({
-                            message: '删除失败',
-                            delay: 1000,
-                            theme: 'error',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    }
-                })
-                this.getTaskList()
-                this.project_task_id = ''
-            },
-            // 删除多项
-            handleSelect (selection) {
-                this.task_id_list = []
-                selection.forEach(e => {
-                    this.task_id_list.push(e.id)
-                })
-            },
-            removeMultiBefor () {
-                if (this.task_id_list.length !== 0) {
-                    this.deleteAllTaskDialog.primary.visible = true
-                }
-            },
-            // 确认删除多项
-            removeMultiTask (e) {
-                this.$http.delete('/api/project-task/', { data: { 'task_id_list': this.task_id_list } }).then(res => {
-                    if (res.result) {
-                        this.$bkMessage({
-                            message: '批量删除成功',
-                            delay: 1000,
-                            theme: 'success',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    } else {
-                        this.$bkMessage({
-                            message: '批量删除失败',
-                            delay: 1000,
-                            theme: 'error',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    }
-                })
-                this.getTaskList()
-                this.project_task_id = []
-            },
-            // 定时发布任务
-            releaseBefor (e) {
-                this.project_task_id = e.id
-                this.releaseTaskDialog.primary.visible = true
-            },
-            // 确认定时发布任务
-            releaseTask (e) {
-                this.scheduledPublishTime = this.msToDate((this.scheduledPublishTime)).hasTime
-                this.scheduledPublishTime = this.scheduledPublishTime.replace(/ /g, 'T')
-                console.log('this.scheduled_publish_time', this.scheduledPublishTime)
-                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'scheduled_publish_time': this.scheduledPublishTime }).then(res => {
-                    console.log('定时发布res：', res)
-                    if (res.result) {
-                        this.$bkMessage({
-                            message: '发布成功',
-                            delay: 1000,
-                            theme: 'success',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    } else {
-                        this.$bkMessage({
-                            message: '发布失败',
-                            delay: 1000,
-                            theme: 'error',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    }
-                })
-                this.getTaskList()
-                this.id = []
-            },
-            // 立即发布任务
-            releaseNowBefor (e) {
-                this.project_task_id = e.id
-                this.releaseNowTaskDialog.primary.visible = true
-            },
-            // 确认立即发布任务
-            releaseNowTask (e) {
-                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'status': 'RELEASE' }).then(res => {
-                    if (res.result) {
-                        this.$bkMessage({
-                            message: '发布成功',
-                            delay: 1000,
-                            theme: 'success',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    } else {
-                        this.$bkMessage({
-                            message: '发布失败',
-                            delay: 1000,
-                            theme: 'error',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    }
-                })
-                this.getTaskList()
-                this.id = []
-            },
-            // 取消发布任务
-            cancleBefor (e) {
-                this.publishTaskForm = []
-                this.publishTaskForm = e
-                this.project_task_id = e.id
-                this.cancleReleaseTaskDialog.primary.visible = true
-            },
-            // 确认取消发布任务
-            cancleReleaseTask (e) {
-                // this.publishTaskForm.status = 'DRAFT'
-                this.$http.patch(`/api/project-task/${this.project_task_id}/`, { 'status': 'DRAFT' }).then(res => {
-                    console.log('res', res)
-                    if (res.result) {
-                        this.$bkMessage({
-                            message: '取消发布成功',
-                            delay: 1000,
-                            theme: 'success',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    } else {
-                        this.$bkMessage({
-                            message: '取消发布失败',
-                            delay: 1000,
-                            theme: 'error',
-                            offsetY: 60,
-                            ellipsisLine: 2 })
-                        this.getTaskList()
-                    }
-                })
-                this.getTaskList()
-                this.project_task_id = ''
-            },
+
             // 跳转答题页面
             toAnswer (id, isAccomplish) {
                 this.startAnswer.primary.visible = false
@@ -456,7 +208,7 @@
             },
             getTaskList () {
                 this.taskList = []
-                this.$http.get(`/api/project-task/${this.project_id}/teacher/all/`).then(res => {
+                this.$http.get(`/api/project-task/${this.project_id}/student/all/`).then(res => {
                     console.log('获取任务列表后端返回的数据', res)
                     this.taskList = res.data
                     this.timeReverse()
