@@ -1,15 +1,70 @@
 <template>
     <div id="tag_manage">
         <div class="tag_control">
-            <bk-button @click="editDialog.visible = true" theme="primary"
+            <bk-button
+                @click="
+                    editDialog.visible = true;
+                    editDialog.form = {};
+                "
+                theme="primary"
             >新增标签</bk-button
             >
+            <!-- 筛选 -->
+            <div class="screen">
+                <bk-icon type="sort" />
+                <bk-select
+                    placeholder="所属项目"
+                    v-model="screen.project"
+                    style="width: 100px"
+                    ext-cls="select-custom"
+                    ext-popover-cls="select-popover-custom"
+                    :clearable="false"
+                    @selected="handleScreen"
+                >
+                    <bk-option
+                        v-for="option in projectList"
+                        :key="option.id"
+                        :id="option.id"
+                        :name="option.name"
+                    >
+                    </bk-option>
+                </bk-select>
+                <bk-select
+                    placeholder="标签类型"
+                    v-model="screen.is_built_in"
+                    style="width: 100px"
+                    ext-cls="select-custom"
+                    ext-popover-cls="select-popover-custom"
+                    :clearable="false"
+                    @selected="handleScreen"
+                >
+                    <bk-option :key="1" :id="1" name="系统标签"> </bk-option>
+                    <bk-option :key="0" :id="0" name="用户标签"> </bk-option>
+                </bk-select>
+                <bk-input
+                    left-icon="bk-icon icon-search"
+                    placeholder="搜索标签"
+                    v-model="screen.keyword"
+                    @blur="getTagList()"
+                    @keyup.enter.native="getTagList()"
+                    style="width: 200px"
+                >
+                    <!-- <bk-input
+                    left-icon="bk-icon icon-search"
+                    placeholder="搜索用户"
+                    @blur="get()"
+                    @keyup.enter.native="getUserlist()"
+                    style="width: 300px"
+                > -->
+                </bk-input>
+                <bk-button @click="handleClearScreen">清除筛选条件</bk-button>
+            </div>
         </div>
         <!-- 标签们 -->
         <div class="tag_group">
             <tag
                 v-for="tag in tags"
-                :key="tag"
+                :key="tag.id"
                 :tag="tag"
                 @listChange="getTagList"
                 @updateTag="handleEditTag"
@@ -27,7 +82,11 @@
                 <bk-form-item label="标签名称" :required="true">
                     <bk-input v-model="editDialog.form.tag_value"></bk-input>
                 </bk-form-item>
-                <bk-form-item label="所属项目" :required="true">
+                <bk-form-item
+                    label="所属项目"
+                    :required="true"
+                    v-if="!editDialog.form.id"
+                >
                     <!-- <bk-input v-model="editDialog.form.sub_project"></bk-input> -->
                     <bk-select
                         v-model="editDialog.form.sub_project"
@@ -67,26 +126,36 @@
                     visible: false,
                     form: {}
                 },
-                projectList
+                projectList,
+                screen: {
+                    project: '',
+                    is_built_in: ''
+                }
             }
         },
         mounted () {
             this.getTagList()
-        // this.addTag()
-        // this.delTag()
         },
         methods: {
             getTagList () {
-                return this.$http.get('/api/tags/').then((res) => {
-                    if (res.code === 0) {
-                        // 有些标签的所属项目id根本不存在
-                        // res.data.map(
-                        //     (e) =>
-                        //         (e.projectName = this.projectList.find((i) => (i.id === e.sub_project)).name)
-                        // )
-                        this.tags = res.data
-                    }
-                })
+                return this.$http
+                    .get('/api/tags/', {
+                        params: {
+                            sub_project: this.screen.project,
+                            is_built_in: this.screen.is_built_in,
+                            tagvalue: this.screen.keyword
+                        }
+                    })
+                    .then((res) => {
+                        if (res.code === 0) {
+                            // 有些标签的所属项目id根本不存在
+                            // res.data.map(
+                            //     (e) =>
+                            //         (e.projectName = this.projectList.find((i) => (i.id === e.sub_project)).name)
+                            // )
+                            this.tags = res.data
+                        }
+                    })
             },
             addTag () {
                 return new Promise((resolve, reject) => {
@@ -101,6 +170,7 @@
                                 message: res.message,
                                 theme: res.code === 0 ? 'success' : 'error'
                             })
+                            this.editDialog.form = {}
                             this.getTagList()
                         })
                 })
@@ -109,14 +179,14 @@
                 return this.$http
                     .put(`/api/tags/${id}/`, {
                         tag_value: this.editDialog.form.tag_value,
-                        tag_color: this.editDialog.form.tag_color.slice(-6),
-                        sub_project: this.editDialog.form.sub_project
+                        tag_color: this.editDialog.form.tag_color.slice(-6)
                     })
                     .then((res) => {
                         this.$bkMessage({
                             message: res.message,
                             theme: res.code === 0 ? 'success' : 'error'
                         })
+                        this.editDialog.form = {}
                         this.getTagList()
                     })
             },
@@ -126,7 +196,7 @@
                     || !this.editDialog.form.sub_project
                     || !this.editDialog.form.tag_value
                 ) {
-                    alert('不完整')
+                    alert('请完整填写')
                     return null
                 }
 
@@ -142,6 +212,14 @@
             handleEditTag (tag) {
                 this.editDialog.form = tag
                 this.editDialog.visible = true
+            },
+            handleScreen () {
+                console.log(this.screen)
+                this.getTagList()
+            },
+            handleClearScreen () {
+                this.screen = {}
+                this.getTagList()
             }
         }
     }
@@ -149,8 +227,30 @@
 
 <style lang="postcss">
 .tag_control {
+  display: flex;
   background-color: rgb(194, 243, 232);
+  .screen {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 200px;
+    background-color: #fff;
+
+    & > div,
+    & > button {
+      width: 150px;
+      margin-right: 15px;
+    }
+    .bk-icon.icon-sort:before {
+      font-size: 26px;
+      line-height: 30px;
+    }
+  }
+  button {
+    width: 200px;
+  }
 }
+/* dot-menu */
 .tag_menu {
   width: fit-content;
   float: right;
@@ -159,6 +259,9 @@
   display: grid;
   grid-template-columns: repeat(6, 16%);
   grid-template-rows: 130px;
-  align-items: center;
+  /* 兼容ie */
+  * {
+    align-self: center;
+  }
 }
 </style>
