@@ -41,22 +41,22 @@
                     <bk-option :key="1" :id="1" name="系统标签"> </bk-option>
                     <bk-option :key="0" :id="0" name="用户标签"> </bk-option>
                 </bk-select>
-                <bk-input
+                <!-- <bk-input
                     left-icon="bk-icon icon-search"
                     placeholder="搜索标签"
                     v-model="screen.keyword"
                     @blur="getTagList()"
                     @keyup.enter.native="getTagList()"
                     style="width: 200px"
-                >
-                    <!-- <bk-input
+                > -->
+                <!-- <bk-input
                     left-icon="bk-icon icon-search"
                     placeholder="搜索用户"
                     @blur="get()"
                     @keyup.enter.native="getUserlist()"
                     style="width: 300px"
                 > -->
-                </bk-input>
+                <!-- </bk-input> -->
                 <bk-button @click="handleClearScreen">清除筛选条件</bk-button>
             </div>
         </div>
