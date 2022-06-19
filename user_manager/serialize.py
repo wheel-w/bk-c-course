@@ -75,7 +75,7 @@ class UserTagContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("用户不存在")
 
     def validate_tag_id(self, tag_id):
-        if UserTag.objects.filter(id=tag_id):
+        if UserTag.objects.filter(id=tag_id).exists():
             return tag_id
         else:
             raise serializers.ValidationError("标签不存在")
@@ -132,8 +132,6 @@ class UserSerializer(serializers.ModelSerializer):
     last_login = serializers.DateTimeField(source="account.last_login", read_only=True)
     # 用户名
     username = serializers.CharField(source="account.username", read_only=True)
-    # 标签
-    role = serializers.CharField(min_length=2, max_length=4, read_only=True)
 
     class Meta:
         model = models.User
@@ -141,7 +139,6 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "last_login",
-            "role",
             "name",
             "gender",
             "phone_number",

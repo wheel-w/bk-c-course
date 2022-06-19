@@ -11,6 +11,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific Language governing permissions and limitations under the License.
 """
 import json
+from collections import defaultdict
 
 import requests
 from django.core.exceptions import ObjectDoesNotExist
@@ -64,33 +65,23 @@ class OriginAccountView(ViewSet):
         # 获取返回的用户名列表
         account_username = {account["username"] for account in src_data}
         # 获取存在本系统中的用户列表
-        exist_user = User.objects.filter(
-            account_id__username__in=account_username
-        ).values_list("account_id__username", flat=True)
+        exist_user = set(
+            User.objects.filter(account_id__username__in=account_username).values_list(
+                "account_id__username", flat=True
+            )
+        )
         # 重构数据
-        store_list = []
-        exist_user_list = []
-        for elem in src_data:
-            if elem["username"] in exist_user:
-                exist_user_list.append(
-                    {
-                        "username": elem["username"],
-                        "display_name": elem["display_name"],
-                        "departments": elem["departments"][0]["name"],
-                        "is_import": True,
-                    }
-                )
-            else:
-                store_list.append(
-                    {
-                        "username": elem["username"],
-                        "display_name": elem["display_name"],
-                        "departments": elem["departments"][0]["name"],
-                        "is_import": False,
-                    }
-                )
-        store_list.extend(exist_user_list)
-        return Response(store_list)
+        ret_data = [
+            {
+                "username": account["username"],
+                "display_name": account["display_name"],
+                "departments": account["departments"][0]["name"],
+                "is_import": True if account["username"] in exist_user else False,
+            }
+            for account in src_data
+        ]
+
+        return Response(ret_data)
 
     def retrieve(self, request, *args, **kwargs):
         """获取用户信息, 如果没有则自动创建一个将username当做name的user"""
@@ -214,11 +205,11 @@ class UserBatchView(ViewSet):
         queryset = self.queryset.filter(id__in=id_list)
         tag_conn_queryset = UserTagContact.objects.filter(user_id__in=id_list)
         delete_users = []
-        for i in queryset:
+        for user in queryset:
             # 记录删除的用户姓名
-            delete_users.append(i.name)
+            delete_users.append(user.name)
             # 在删除列表中删除已经找到的用户名
-            id_list.remove(i.id)
+            id_list.remove(user.id)
         if not queryset:
             return Response("没有找到任何对应用户", exception=True)
         # 统一删除
@@ -312,55 +303,50 @@ class UserView(GenericViewSet, UpdateModelMixin):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             # 在返回的字段中添加tag字段(与 listMixin 的唯一区别)
-            self.add_tag(serializer.data)
+            self.add_tag(
+                serializer.data, list(map(lambda x: x.get("id"), serializer.data))
+            )
             return self.get_paginated_response(serializer.data)
         # 序列化信息
         serializer = self.get_serializer(queryset, many=True)
-        self.add_tag(serializer.data)
+        self.add_tag(serializer.data, queryset.values_list("id", flat=True))
         return Response(serializer.data)
 
-    def add_tag(self, users):
+    def add_tag(self, users, user_ids):
         """给每一个返回的 User 增加一个tag字段"""
-        user_ids = [user.get("id") for user in users]
         user_tag_dic = self.get_user_tag_map(user_ids)
         for user in users:
             # 遍历每一个获取到user 查看其是否有标签
-            if user.get("id") in user_tag_dic:
-                user["tag"] = user_tag_dic.get(user.get("id")).values()
-            else:
-                user["tag"] = None
+            user["tag"] = user_tag_dic.get(user.get("id"), None)
         return users
 
     @staticmethod
     def get_user_tag_map(user_ids):
         """获取每一个返回的 User 所拥有的标签列表"""
         tag_conns = UserTagContact.objects.filter(user_id__in=user_ids)
-        tag_ids = {tag_conn.tag_id for tag_conn in tag_conns}
-        tags = UserTag.objects.filter(id__in=tag_ids)
-        tags_dic = {}  # key: 标签id  value: tag_value, tag_color
-        for tag in tags:
-            tags_dic[tag.id] = {
+        tags = UserTag.objects.filter(
+            id__in=tag_conns.values_list("tag_id", flat=True).distinct()
+        )
+        # key: 标签id  value: tag_value, tag_color
+        tags_dic = {
+            tag.id: {
                 "tag_id": tag.id,
                 "tag_value": tag.tag_value,
                 "tag_color": tag.tag_color,
             }
-        user_tag_dic = {}  # key: user_id  value: {tags_dic ...}
+            for tag in tags
+        }
+
+        user_tag_dic = defaultdict(list)  # key: user_id  value: {tags_dic ...}
         for tag_conn in tag_conns:
-            if user_tag_dic.get(tag_conn.user_id):
-                user_tag_dic[tag_conn.user_id][tag_conn.tag_id] = tags_dic.get(
-                    tag_conn.tag_id
-                )
-            else:
-                user_tag_dic[tag_conn.user_id] = {
-                    tag_conn.tag_id: tags_dic.get(tag_conn.tag_id)
-                }
+            user_tag_dic[tag_conn.user_id].append(tags_dic.get(tag_conn.tag_id))
         return user_tag_dic
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = dict(serializer.data)
-        data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id).values()
+        data["tag"] = self.get_user_tag_map([data.get("id")]).get(instance.id)
         return Response(data)
 
     def destroy(self, request, *args, **kwargs):
@@ -424,15 +410,15 @@ class TagView(
         return Response(serializer.data)
 
     @staticmethod
-    def convert_sub_project(project_name, data):
+    def convert_sub_project(project_name, tags):
         if isinstance(project_name, str):
-            for i in data:
-                i["sub_project"] = {"id": i["sub_project"], "name": project_name}
+            for tag in tags:
+                tag["sub_project"] = {"id": tag["sub_project"], "name": project_name}
         elif isinstance(project_name, dict):
-            for i in data:
-                i["sub_project"] = {
-                    "id": i["sub_project"],
-                    "name": project_name.get(i["sub_project"]),
+            for tag in tags:
+                tag["sub_project"] = {
+                    "id": tag["sub_project"],
+                    "name": project_name.get(tag["sub_project"]),
                 }
 
 
@@ -490,7 +476,7 @@ class ContactBatch(GenericViewSet):
                 User.objects.filter(id__in=user_ids).values_list("id", flat=True)
             )
             if not exist_user:
-                return Response("用户不存在")
+                return Response("用户不存在", exception=True)
             for user_id in exist_user - exist_contact:
                 insert_arr.append(UserTagContact(tag_id=tag_ids[0], user_id=user_id))
         elif type_ == UserTagContactFindType.USER:
