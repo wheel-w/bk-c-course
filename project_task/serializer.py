@@ -13,6 +13,7 @@ specific language governing permissions and limitations under the License.
 
 import datetime
 
+from django.db.models import Q
 from django.utils.timezone import utc
 from rest_framework import serializers
 
@@ -112,6 +113,7 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
     student_info = serializers.SerializerMethodField()  # 学生信息列表
     marked_student_info = serializers.SerializerMethodField()  # # 已批阅的学生信息列表
     submitted_student_info = serializers.SerializerMethodField()  # 已提交的学生信息列表
+    unsubmitted_student_info = serializers.SerializerMethodField()  # 已提交的学生信息列表
     types = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
 
@@ -164,6 +166,29 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
             StudentProjectTaskInfo.objects.filter(
                 project_task_id=data.id,
                 status=STATUS.SUBMITTED,
+            ).values_list("student_id", flat=True)
+        )
+
+        student_name_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        )
+
+        student_info = []
+
+        for student_id, student_name in zip(student_id_list, student_name_list):
+            single_info = {
+                "student_id": student_id,
+                "student_name": student_name,
+            }
+            student_info.append(single_info)
+
+        return student_info
+
+    def get_unsubmitted_student_info(self, data):
+        student_id_list = list(
+            StudentProjectTaskInfo.objects.filter(
+                Q(status=STATUS.SAVED) | Q(status=STATUS.NOT_ANSWER),
+                project_task_id=data.id,
             ).values_list("student_id", flat=True)
         )
 
