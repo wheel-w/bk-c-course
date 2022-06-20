@@ -210,6 +210,8 @@ class PerformAndJudgeViewSet(viewsets.ViewSet):
     def judge_task(self, request, *args, **kwargs):
         project_task_id = kwargs["project_task_id"]
         student_id = kwargs["student_id"]
+        # FIXME
+        request.user.id = 1
 
         request.data["updater_id"] = request.user.id
         request.data["updater"] = request.user.username
