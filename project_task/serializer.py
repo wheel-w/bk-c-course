@@ -146,16 +146,16 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
                 "student_id", flat=True
             )
         )
-        student_name_list = list(
-            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        student_info_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("id", "name")
         )
 
         student_info = []
 
-        for student_id, student_name in zip(student_id_list, student_name_list):
+        for student in student_info_list:
             single_info = {
-                "student_id": student_id,
-                "student_name": student_name,
+                "student_id": student[0],
+                "student_name": student[1],
             }
             student_info.append(single_info)
 
@@ -169,16 +169,16 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
             ).values_list("student_id", flat=True)
         )
 
-        student_name_list = list(
-            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        student_info_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("id", "name")
         )
 
         student_info = []
 
-        for student_id, student_name in zip(student_id_list, student_name_list):
+        for student in student_info_list:
             single_info = {
-                "student_id": student_id,
-                "student_name": student_name,
+                "student_id": student[0],
+                "student_name": student[1],
             }
             student_info.append(single_info)
 
@@ -192,16 +192,16 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
             ).values_list("student_id", flat=True)
         )
 
-        student_name_list = list(
-            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        student_info_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("id", "name")
         )
 
         student_info = []
 
-        for student_id, student_name in zip(student_id_list, student_name_list):
+        for student in student_info_list:
             single_info = {
-                "student_id": student_id,
-                "student_name": student_name,
+                "student_id": student[0],
+                "student_name": student[1],
             }
             student_info.append(single_info)
 
@@ -215,16 +215,16 @@ class ProjectTaskDetailForTeacherSerializer(serializers.ModelSerializer):
             ).values_list("student_id", flat=True)
         )
 
-        student_name_list = list(
-            User.objects.filter(id__in=student_id_list).values_list("name", flat=True)
+        student_info_list = list(
+            User.objects.filter(id__in=student_id_list).values_list("id", "name")
         )
 
         student_info = []
 
-        for student_id, student_name in zip(student_id_list, student_name_list):
+        for student in student_info_list:
             single_info = {
-                "student_id": student_id,
-                "student_name": student_name,
+                "student_id": student[0],
+                "student_name": student[1],
             }
             student_info.append(single_info)
 
