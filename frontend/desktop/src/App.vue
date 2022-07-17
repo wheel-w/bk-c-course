@@ -100,7 +100,8 @@
                     </bk-navigation-menu-item>
                 </bk-navigation-menu>
             </template>
-            <div class="monitor-navigation-content" id="a">
+            <!-- 主面板 -->
+            <div class="monitor-navigation-content" id="mainPanel">
                 <main
                     class="main-content"
                     v-bkloading="{ isLoading: mainContentLoading, opacity: 1 }"
@@ -393,6 +394,10 @@
 /*    width: 18px;*/
 /*    height: 18px;*/
 /*}*/
+/* 控制主面板缩放 */
+#mainPanel {
+  min-height: 500px;
+}
 .bk-dialog-content {
   background-image: url("./images/add_dialog_bg.png");
 }
@@ -659,6 +664,7 @@
   border: 1px solid rgba(220, 222, 229, 1);
   .main-content {
     height: 100%;
+    overflow: hidden;
     .wrapper {
       height: 100%;
     }

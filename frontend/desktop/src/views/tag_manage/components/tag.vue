@@ -5,9 +5,8 @@
         </div>
         <div class="tag_info">
             <bk-popover placement="bottom-start" width="300">
-                <p>所属项目：{{ tag.sub_project }}</p>
-                <p>颜色：#{{ tag.tag_color.slice(-6) }}</p>
-                <!-- <p>备注：{{ tag.tag_comment }}</p> -->
+                <p>所属项目：{{ tag.sub_project.name }}</p>
+                <!-- <p>颜色：#{{ tag.tag_color.slice(-6) }}</p> -->
                 <div slot="content" style="white-space: normal">
                     <div class="pt10 pb5 pl10 pr10">{{ tag }}</div>
                 </div>
@@ -24,8 +23,20 @@
                 >
                     <span class="dot-menu-trigger"></span>
                     <ul class="dot-menu-list" slot="content">
-                        <li class="dot-menu-item" @click="handleDelTag">删除</li>
-                        <li class="dot-menu-item" @click="handleEditTag">修改</li>
+                        <li
+                            class="dot-menu-item"
+                            @click="handleDelTag"
+                            :disabled="tag.is_built_in === 1"
+                        >
+                            删除
+                        </li>
+                        <li
+                            class="dot-menu-item"
+                            @click="handleEditTag"
+                            :disabled="tag.is_built_in === 1"
+                        >
+                            修改
+                        </li>
                     </ul>
                 </bk-popover>
             </div>
@@ -110,6 +121,13 @@
     }
   }
   .tag_info {
+      padding-left: 5px;
+      line-height: 36px;
   }
+}
+/* 禁止修改删除 */
+.dot-menu-list li[disabled] {
+  pointer-events: none;
+  color: rgb(172, 172, 172);
 }
 </style>
